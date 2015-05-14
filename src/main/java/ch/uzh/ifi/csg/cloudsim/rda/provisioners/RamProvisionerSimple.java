@@ -1,11 +1,3 @@
-/*
- * Title:        CloudSim Toolkit
- * Description:  CloudSim (Cloud Simulation) Toolkit for Modeling and Simulation of Clouds
- * Licence:      GPL - http://www.gnu.org/copyleft/gpl.html
- *
- * Copyright (c) 2009-2012, The University of Melbourne, Australia
- */
-
 package ch.uzh.ifi.csg.cloudsim.rda.provisioners;
 
 import java.util.HashMap;
@@ -15,12 +7,10 @@ import org.cloudbus.cloudsim.Vm;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
 
 /**
- * RamProvisionerSimple is an extension of RamProvisioner which uses a best-effort policy to
- * allocate memory to a VM.
+ * RamProvisionerSimple is an extension of RamProvisioner which uses a
+ * best-effort policy to allocate memory to a VM.
  * 
- * @author Rodrigo N. Calheiros
- * @author Anton Beloglazov
- * @since CloudSim Toolkit 1.0
+ * @author Patrick A. Taddei
  */
 public class RamProvisionerSimple extends RamProvisioner {
 
@@ -30,7 +20,8 @@ public class RamProvisionerSimple extends RamProvisioner {
 	/**
 	 * Instantiates a new ram provisioner simple.
 	 * 
-	 * @param availableRam the available ram
+	 * @param availableRam
+	 *            the available ram
 	 */
 	public RamProvisionerSimple(double availableRam) {
 		super(availableRam);
@@ -39,7 +30,10 @@ public class RamProvisionerSimple extends RamProvisioner {
 
 	/*
 	 * (non-Javadoc)
-	 * @see cloudsim.provisioners.RamProvisioner#allocateRamForVm(cloudsim.Vm, double)
+	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner#allocateRamForVm
+	 * (org.cloudbus.cloudsim.Vm, double)
 	 */
 	@Override
 	public boolean allocateRamForVm(Vm vm, double ram) {
@@ -52,20 +46,24 @@ public class RamProvisionerSimple extends RamProvisioner {
 		deallocateRamForVm(vm);
 
 		if (getAvailableRam() >= ram) {
-			setAvailableRam((double) (Math.round((getAvailableRam() - ram)*100)/100.0));
+			setAvailableRam((double) (Math
+					.round((getAvailableRam() - ram) * 100) / 100.0));
 			getRamTable().put(vm.getUid(), ram);
-			((RdaVm)vm).setCurrentAllocatedRam(getAllocatedRamForVm(vm));
+			((RdaVm) vm).setCurrentAllocatedRam(getAllocatedRamForVm(vm));
 			return true;
 		}
 
-		((RdaVm)vm).setCurrentAllocatedRam(getAllocatedRamForVm(vm));
+		((RdaVm) vm).setCurrentAllocatedRam(getAllocatedRamForVm(vm));
 
 		return false;
 	}
 
 	/*
 	 * (non-Javadoc)
-	 * @see cloudsim.provisioners.RamProvisioner#getAllocatedRamForVm(cloudsim.Vm)
+	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner#getAllocatedRamForVm
+	 * (org.cloudbus.cloudsim.Vm)
 	 */
 	@Override
 	public double getAllocatedRamForVm(Vm vm) {
@@ -77,7 +75,10 @@ public class RamProvisionerSimple extends RamProvisioner {
 
 	/*
 	 * (non-Javadoc)
-	 * @see cloudsim.provisioners.RamProvisioner#deallocateRamForVm(cloudsim.Vm)
+	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner#deallocateRamForVm
+	 * (org.cloudbus.cloudsim.Vm)
 	 */
 	@Override
 	public void deallocateRamForVm(Vm vm) {
@@ -90,7 +91,9 @@ public class RamProvisionerSimple extends RamProvisioner {
 
 	/*
 	 * (non-Javadoc)
-	 * @see cloudsim.provisioners.RamProvisioner#deallocateRamForVm(cloudsim.Vm)
+	 * 
+	 * @see ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner#
+	 * deallocateRamForAllVms()
 	 */
 	@Override
 	public void deallocateRamForAllVms() {
@@ -100,7 +103,10 @@ public class RamProvisionerSimple extends RamProvisioner {
 
 	/*
 	 * (non-Javadoc)
-	 * @see cloudsim.provisioners.RamProvisioner#isSuitableForVm(cloudsim.Vm, double)
+	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner#isSuitableForVm
+	 * (org.cloudbus.cloudsim.Vm, double)
 	 */
 	@Override
 	public boolean isSuitableForVm(Vm vm, double ram) {
@@ -125,7 +131,8 @@ public class RamProvisionerSimple extends RamProvisioner {
 	/**
 	 * Sets the ram table.
 	 * 
-	 * @param ramTable the ram table
+	 * @param ramTable
+	 *            the ram table
 	 */
 	protected void setRamTable(Map<String, Double> ramTable) {
 		this.ramTable = ramTable;

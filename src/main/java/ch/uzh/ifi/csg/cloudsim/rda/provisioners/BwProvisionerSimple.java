@@ -1,27 +1,18 @@
-/*
- * Title:        CloudSim Toolkit
- * Description:  CloudSim (Cloud Simulation) Toolkit for Modeling and Simulation of Clouds
- * Licence:      GPL - http://www.gnu.org/copyleft/gpl.html
- *
- * Copyright (c) 2009-2012, The University of Melbourne, Australia
- */
-
 package ch.uzh.ifi.csg.cloudsim.rda.provisioners;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.cloudbus.cloudsim.Vm;
+
 import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
 
 /**
  * BwProvisionerSimple is a class that implements a simple best effort
- * allocation policy: if there is bw available to request, it allocates;
+ * allocation policy: if there is bw available to request, it allocates,
  * otherwise, it fails.
  * 
- * @author Rodrigo N. Calheiros
- * @author Anton Beloglazov
- * @since CloudSim Toolkit 1.0
+ * @author Patrick A. Taddei
  */
 public class BwProvisionerSimple extends BwProvisioner {
 
@@ -42,14 +33,16 @@ public class BwProvisionerSimple extends BwProvisioner {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see cloudsim.provisioners.BwProvisioner#allocateBwForVm(cloudsim.Vm,
-	 * double)
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner#allocateBwForVm
+	 * (org.cloudbus.cloudsim.Vm, double)
 	 */
 	@Override
 	public boolean allocateBwForVm(Vm vm, double bw) {
 		deallocateBwForVm(vm);
 
-		double roundedBw = (double) (Math.round(((getAvailableBw() - bw) * 100)) / 100.0);
+		double roundedBw = (double) (Math
+				.round(((getAvailableBw() - bw) * 100)) / 100.0);
 		if (getAvailableBw() >= roundedBw) {
 			setAvailableBw(roundedBw);
 			getBwTable().put(vm.getUid(), bw);
@@ -64,7 +57,9 @@ public class BwProvisionerSimple extends BwProvisioner {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see cloudsim.provisioners.BwProvisioner#getAllocatedBwForVm(cloudsim.Vm)
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner#getAllocatedBwForVm
+	 * (org.cloudbus.cloudsim.Vm)
 	 */
 	@Override
 	public double getAllocatedBwForVm(Vm vm) {
@@ -77,7 +72,9 @@ public class BwProvisionerSimple extends BwProvisioner {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see cloudsim.provisioners.BwProvisioner#deallocateBwForVm(cloudsim.Vm)
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner#deallocateBwForVm
+	 * (org.cloudbus.cloudsim.Vm)
 	 */
 	@Override
 	public void deallocateBwForVm(Vm vm) {
@@ -91,7 +88,9 @@ public class BwProvisionerSimple extends BwProvisioner {
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see cloudsim.provisioners.BwProvisioner#deallocateBwForVm(cloudsim.Vm)
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner#deallocateBwForAllVms
+	 * ()
 	 */
 	@Override
 	public void deallocateBwForAllVms() {
@@ -103,8 +102,8 @@ public class BwProvisionerSimple extends BwProvisioner {
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * gridsim.virtualization.power.provisioners.BWProvisioner#isSuitableForVm
-	 * (gridsim.virtualization .power.VM, double)
+	 * ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner#isSuitableForVm
+	 * (org.cloudbus.cloudsim.Vm, double)
 	 */
 	@Override
 	public boolean isSuitableForVm(Vm vm, double bw) {

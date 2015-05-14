@@ -4,7 +4,7 @@
  * @Copyright: tetrade ltd., Switzerland, 2006, All Rights Reserved.
  */
 
-package ch.uzh.ifi.csg.cloudsim.rda;
+package ch.uzh.ifi.csg.cloudsim.rda.util;
 
 /**
  * Copyright 2005 Bytecode Pty Ltd.

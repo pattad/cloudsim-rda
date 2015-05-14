@@ -18,6 +18,8 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.Consts;
 import org.cloudbus.cloudsim.Log;
 
+import ch.uzh.ifi.csg.cloudsim.rda.util.CsvReader;
+
 public class RdaCloudlet extends Cloudlet {
 
 	private double mips;

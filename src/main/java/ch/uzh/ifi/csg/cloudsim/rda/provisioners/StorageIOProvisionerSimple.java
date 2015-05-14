@@ -1,11 +1,3 @@
-/*
- * Title:        CloudSim Toolkit
- * Description:  CloudSim (Cloud Simulation) Toolkit for Modeling and Simulation of Clouds
- * Licence:      GPL - http://www.gnu.org/copyleft/gpl.html
- *
- * Copyright (c) 2009-2012, The University of Melbourne, Australia
- */
-
 package ch.uzh.ifi.csg.cloudsim.rda.provisioners;
 
 import java.util.HashMap;
@@ -18,7 +10,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
  * allocation policy: if there is storageIO available to request, it allocates;
  * otherwise, it fails.
  * 
- * @author P. Taddei
+ * @author Patrick A. Taddei
  */
 public class StorageIOProvisionerSimple extends StorageIOProvisioner {
 

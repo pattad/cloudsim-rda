@@ -1,23 +1,15 @@
-/*
- * Title:        CloudSim Toolkit
- * Description:  CloudSim (Cloud Simulation) Toolkit for Modeling and Simulation of Clouds
- * Licence:      GPL - http://www.gnu.org/copyleft/gpl.html
- *
- * Copyright (c) 2009-2012, The University of Melbourne, Australia
- */
-
 package ch.uzh.ifi.csg.cloudsim.rda.provisioners;
 
 import org.cloudbus.cloudsim.Vm;
 
 /**
- * RamProvisioner is an abstract class that represents the provisioning policy of memory to virtual
- * machines inside a Host. When extending this class, care must be taken to guarantee that the field
- * availableMemory will always contain the amount of free memory available for future allocations.
+ * This implementation of the bandwidth provisioner allows a more fine
+ * allocation of resources. This class is implemented adequate to the
+ * org.cloudbus.cloudsim.provisioners.RamProvisioner except that it works with
+ * Double values instead of Long values.
  * 
- * @author Rodrigo N. Calheiros
- * @author Anton Beloglazov
- * @since CloudSim Toolkit 1.0
+ * @author Patrick A. Taddei
+ * @see org.cloudbus.cloudsim.provisioners.RamProvisioner
  */
 public abstract class RamProvisioner {
 

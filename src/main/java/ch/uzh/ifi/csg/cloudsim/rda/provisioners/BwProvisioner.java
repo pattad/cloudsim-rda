@@ -1,24 +1,15 @@
-/*
- * Title:        CloudSim Toolkit
- * Description:  CloudSim (Cloud Simulation) Toolkit for Modeling and Simulation of Clouds
- * Licence:      GPL - http://www.gnu.org/copyleft/gpl.html
- *
- * Copyright (c) 2009-2012, The University of Melbourne, Australia
- */
-
 package ch.uzh.ifi.csg.cloudsim.rda.provisioners;
 
 import org.cloudbus.cloudsim.Vm;
 
 /**
- * BwProvisioner is an abstract class that represents the provisioning policy of bandwidth to
- * virtual machines inside a Host. When extending this class, care must be taken to guarantee that
- * the field availableBw will always contain the amount of free bandwidth available for future
- * allocations.
+ * This implementation of the bandwidth provisioner allows a more fine
+ * allocation of resources. This class is implemented adequate to the
+ * org.cloudbus.cloudsim.provisioners.BwProvisioner except that it works with
+ * Double values instead of Long values.
  * 
- * @author Rodrigo N. Calheiros
- * @author Anton Beloglazov
- * @since CloudSim Toolkit 1.0
+ * @author Patrick A. Taddei
+ * @see org.cloudbus.cloudsim.provisioners.BwProvisioner
  */
 public abstract class BwProvisioner {
 
@@ -31,7 +22,8 @@ public abstract class BwProvisioner {
 	/**
 	 * Creates the new BwProvisioner.
 	 * 
-	 * @param bw overall amount of bandwidth available in the host.
+	 * @param bw
+	 *            overall amount of bandwidth available in the host.
 	 * 
 	 * @pre bw >= 0
 	 * @post $none
@@ -44,8 +36,10 @@ public abstract class BwProvisioner {
 	/**
 	 * Allocates BW for a given VM.
 	 * 
-	 * @param vm virtual machine for which the bw are being allocated
-	 * @param bw the bw
+	 * @param vm
+	 *            virtual machine for which the bw are being allocated
+	 * @param bw
+	 *            the bw
 	 * 
 	 * @return $true if the bw could be allocated; $false otherwise
 	 * 
@@ -57,7 +51,8 @@ public abstract class BwProvisioner {
 	/**
 	 * Gets the allocated BW for VM.
 	 * 
-	 * @param vm the VM
+	 * @param vm
+	 *            the VM
 	 * 
 	 * @return the allocated BW for vm
 	 */
@@ -66,7 +61,8 @@ public abstract class BwProvisioner {
 	/**
 	 * Releases BW used by a VM.
 	 * 
-	 * @param vm the vm
+	 * @param vm
+	 *            the vm
 	 * 
 	 * @pre $none
 	 * @post none
@@ -86,8 +82,10 @@ public abstract class BwProvisioner {
 	/**
 	 * Checks if BW is suitable for vm.
 	 * 
-	 * @param vm the vm
-	 * @param bw the bw
+	 * @param vm
+	 *            the vm
+	 * @param bw
+	 *            the bw
 	 * 
 	 * @return true, if BW is suitable for vm
 	 */
@@ -105,7 +103,8 @@ public abstract class BwProvisioner {
 	/**
 	 * Sets the bw.
 	 * 
-	 * @param bw the new bw
+	 * @param bw
+	 *            the new bw
 	 */
 	protected void setBw(double bw) {
 		this.bw = bw;
@@ -138,7 +137,8 @@ public abstract class BwProvisioner {
 	/**
 	 * Sets the available bw.
 	 * 
-	 * @param availableBw the new available bw
+	 * @param availableBw
+	 *            the new available bw
 	 */
 	protected void setAvailableBw(double availableBw) {
 		this.availableBw = availableBw;

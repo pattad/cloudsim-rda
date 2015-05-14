@@ -1,16 +1,6 @@
-/*
- * Title:        CloudSim Toolkit
- * Description:  CloudSim (Cloud Simulation) Toolkit for Modeling and Simulation of Clouds
- * Licence:      GPL - http://www.gnu.org/copyleft/gpl.html
- *
- * Copyright (c) 2009-2012, The University of Melbourne, Australia
- */
-
 package ch.uzh.ifi.csg.cloudsim.rda.provisioners;
 
 import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
-
-
 
 /**
  * StorageIOProvisioner is an abstract class that represents the provisioning
@@ -19,7 +9,8 @@ import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
  * always contain the amount of free storage IO available for future
  * allocations. // XXX comment this class little better
  * 
- * @author P. Taddei
+ * 
+ * @author Patrick A. Taddei
  */
 public abstract class StorageIOProvisioner {
 
