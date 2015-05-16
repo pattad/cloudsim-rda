@@ -8,7 +8,7 @@ import java.util.Map;
  * 
  * @author Patrick A. Taddei
  * @see UserAwareDatacenter
- * @see UserAwareVmScheduler
+ * @see RdaUserAwareVmScheduler
  */
 public interface UserAwareHost {
 

@@ -19,10 +19,10 @@ import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
-import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareVmScheduler;
+import ch.uzh.ifi.csg.cloudsim.rda.useraware.RdaUserAwareVmScheduler;
 
 public class VmSchedulerGreedinessAllocationAlgorithm extends
-		VmSchedulerTimeShared implements UserAwareVmScheduler {
+		VmSchedulerTimeShared implements RdaUserAwareVmScheduler {
 
 	RamProvisioner ramProvisioner;
 	BwProvisioner bwProvisioner;

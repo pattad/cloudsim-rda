@@ -16,10 +16,22 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
 
 /**
  * This RDA specific host, supports the resource dependency aware scheduling
- * mechanisms and represents as its superclass a individual host in the
+ * mechanisms and represents like its superclass an individual host in the
  * datacenter that may run VMs.
  * 
- * The class of a host supporting dynamic workloads and performance degradation.
+ * It uses the RDA specific resource provisioners for a finer allocation that
+ * works with decimal places (doubles). Because of this, some methods of the
+ * superclass Host had to be overridden and adapted to work with the RDA
+ * provisioners.
+ * 
+ * However, the central method that does process the workloads on the host is:
+ * 
+ * public double updateVmsProcessing(double currentTime)
+ * 
+ * This methods call then the scheduler the VM scheduler to reallocate the
+ * resources for all VMs on the particular host. It supports scheduling for
+ * multiple resources, such as cpu, ram, bandwidth and storage I/O.
+ * 
  * 
  * @author Patrick A. Taddei
  */
@@ -64,6 +76,7 @@ public class RdaHost extends PowerHost {
 		this.ramProvisioner = ramProvisioner;
 	}
 
+	@Override
 	public boolean vmCreate(Vm vm) {
 		if (getStorage() < vm.getSize()) {
 			Log.printConcatLine("[VmScheduler.vmCreate] Allocation of VM #",
@@ -100,13 +113,7 @@ public class RdaHost extends PowerHost {
 		return true;
 	}
 
-	/**
-	 * Checks if is suitable for vm.
-	 * 
-	 * @param vm
-	 *            the vm
-	 * @return true, if is suitable for vm
-	 */
+	@Override
 	public boolean isSuitableForVm(Vm vm) {
 		return (getVmScheduler().getPeCapacity() >= vm
 				.getCurrentRequestedMaxMips()
@@ -117,26 +124,11 @@ public class RdaHost extends PowerHost {
 					.isSuitableForVm(vm, vm.getCurrentRequestedBw()));
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see cloudsim.Host#updateVmsProcessing(double)
-	 */
 	@Override
 	public double updateVmsProcessing(double currentTime) {
 
-		if (getVmScheduler() instanceof MultipleResourcesVmScheduler) {
-			((MultipleResourcesVmScheduler) getVmScheduler())
-					.allocateResourcesForAllVms(currentTime, getVmList());
-		} else {
-			for (Vm vm : getVmList()) {
-				getVmScheduler().deallocatePesForVm(vm);
-			}
-			for (Vm vm : getVmList()) {
-				getVmScheduler().allocatePesForVm(vm,
-						((RdaVm) vm).getCurrentRequestedMips(currentTime));
-			}
-		}
+		((RdaVmScheduler) getVmScheduler())
+				.allocateResourcesForAllVms(currentTime, getVmList());
 
 		double smallerTime = Double.MAX_VALUE;
 		for (Vm vm : getVmList()) {
@@ -298,11 +290,7 @@ public class RdaHost extends PowerHost {
 		return smallerTime;
 	}
 
-	/**
-	 * Gets the completed vms.
-	 * 
-	 * @return the completed vms
-	 */
+	@Override
 	public List<Vm> getCompletedVms() {
 		List<Vm> vmsToRemove = new ArrayList<Vm>();
 		for (Vm vm : getVmList()) {
@@ -319,7 +307,7 @@ public class RdaHost extends PowerHost {
 
 			// if there is no mips allocated, remove it.
 			if (total == 0) {
-				vmsToRemove.add(vm); 
+				vmsToRemove.add(vm);
 			}
 		}
 		return vmsToRemove;

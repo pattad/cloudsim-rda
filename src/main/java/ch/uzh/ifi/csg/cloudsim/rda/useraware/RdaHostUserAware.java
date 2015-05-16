@@ -1,11 +1,3 @@
-/*
- * Title:        CloudSim Toolkit
- * Description:  CloudSim (Cloud Simulation) Toolkit for Modeling and Simulation of Clouds
- * Licence:      GPL - http://www.gnu.org/copyleft/gpl.html
- *
- * Copyright (c) 2009-2012, The University of Melbourne, Australia
- */
-
 package ch.uzh.ifi.csg.cloudsim.rda.useraware;
 
 import java.util.List;
@@ -21,10 +13,6 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
 
-/**
- * The class of a host supporting dynamic workloads and performance degradation.
- * 
- */
 public class RdaHostUserAware extends RdaHost implements
 		UserAwareHost {
 
@@ -54,14 +42,14 @@ public class RdaHostUserAware extends RdaHost implements
 
 	public Map<String, Float> getUserPriorities(double currentTime) {
 
-		return ((UserAwareVmScheduler) getVmScheduler())
+		return ((RdaUserAwareVmScheduler) getVmScheduler())
 				.getUserPriorities(currentTime, getVmList());
 
 	}
 
 	public double updateVmsProcessing(double currentTime,
 			Map<String, Float> priorities) {
-		((UserAwareVmScheduler) getVmScheduler())
+		((RdaUserAwareVmScheduler) getVmScheduler())
 				.allocateResourcesForAllVms(currentTime, getVmList(),
 						priorities);
 
@@ -83,11 +71,6 @@ public class RdaHostUserAware extends RdaHost implements
 		return smallerTime;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ch.uzh.ifi.csg.cloudsim.rda.RdaHost#updateVmsProcessing(double)
-	 */
 	@Override
 	public double updateVmsProcessing(double currentTime) {
 		throw new UnsupportedOperationException();

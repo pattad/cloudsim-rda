@@ -13,7 +13,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
 
 public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
-		MultipleResourcesVmScheduler {
+		RdaVmScheduler {
 
 	MaxMinAlgorithm maxMin = new MaxMinAlgorithm();
 
