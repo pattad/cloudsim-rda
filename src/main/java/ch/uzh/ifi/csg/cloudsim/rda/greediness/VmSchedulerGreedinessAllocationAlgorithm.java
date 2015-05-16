@@ -89,7 +89,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			double reqCpu = ((RdaVm) vm)
 					.getCurrentRequestedTotalMips(currentTime);
 
-			requestedResources += ((RdaVm) vm).getOwner() + " " + reqCpu + " "
+			requestedResources += ((RdaVm) vm).getCustomer() + " " + reqCpu + " "
 					+ reqRam + " " + reqBw + " " + reqStorage + " ";
 
 		}
@@ -141,8 +141,8 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 	}
 
 	/*
-	 * rounding up to the 7th position behind the comma. If there is some minor
-	 * number behind the 7th position the result will be rounded up. e.g.
+	 * rounding up to the 9th position behind the comma. If there is some minor
+	 * number behind the 9th position the result will be rounded up. e.g.
 	 * 0.0000000001235 will be rounded up to 0.00000001
 	 */
 	private double round(double d) {
@@ -188,7 +188,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			reqBw = round(reqBw);
 			reqRam = round(reqRam);
 
-			String owner = ((RdaVm) vm).getOwner();
+			String owner = ((RdaVm) vm).getCustomer();
 			requestedResources += owner + " " + userPriorities.get(owner) + " "
 					+ reqCpu + " " + reqRam + " " + reqBw + " " + reqStorage
 					+ " ";

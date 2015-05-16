@@ -20,7 +20,7 @@ public class RdaVm extends PowerVm {
 	/** The current allocated bw. */
 	private double currentAllocatedBw;
 	
-	private String owner;
+	private String customer;
 	
 	public RdaVm(int id, int userId, double mips, int pesNumber, int ram,
 			long bw, long size, int priority, String vmm,
@@ -183,12 +183,13 @@ public class RdaVm extends PowerVm {
 	public void setCurrentAllocatedStorageIO(double currentAllocatedStorageIO) {
 		this.currentAllocatedStorageIO = currentAllocatedStorageIO;
 	}
-	public String getOwner() {
-		return owner;
+	
+	public String getCustomer() {
+		return customer;
 	}
 
 
-	public void setOwner(String owner) {
-		this.owner = owner;
+	public void setCustomer(String customer) {
+		this.customer = customer;
 	}
 }

@@ -7,39 +7,18 @@ import java.util.Map;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Storage;
-import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
 import org.cloudbus.cloudsim.core.CloudSim;
-import org.cloudbus.cloudsim.core.CloudSimTags;
-import org.cloudbus.cloudsim.core.predicates.PredicateType;
-import org.cloudbus.cloudsim.power.PowerDatacenter;
 import org.cloudbus.cloudsim.power.PowerHost;
+
+import ch.uzh.ifi.csg.cloudsim.rda.RdaDatacenter;
 
 /**
  * 
  * @author Patrick A. Taddei
  */
-public class UserAwareDatacenter extends PowerDatacenter {
+public class UserAwareDatacenter extends RdaDatacenter {
 
-	/**
-	 * Instantiates a new datacenter.
-	 * 
-	 * @param name
-	 *            the name
-	 * @param characteristics
-	 *            the res config
-	 * @param schedulingInterval
-	 *            the scheduling interval
-	 * @param utilizationBound
-	 *            the utilization bound
-	 * @param vmAllocationPolicy
-	 *            the vm provisioner
-	 * @param storageList
-	 *            the storage list
-	 * 
-	 * @throws Exception
-	 *             the exception
-	 */
 	public UserAwareDatacenter(String name,
 			DatacenterCharacteristics characteristics,
 			VmAllocationPolicy vmAllocationPolicy, List<Storage> storageList,
@@ -48,152 +27,37 @@ public class UserAwareDatacenter extends PowerDatacenter {
 				schedulingInterval);
 	}
 
-	/**
-	 * Updates processing of each cloudlet running in this PowerDatacenter. It
-	 * is necessary because Hosts and VirtualMachines are simple objects, not
-	 * entities. So, they don't receive events and updating cloudlets inside
-	 * them must be called from the outside.
-	 * 
-	 * @pre $none
-	 * @post $none
-	 */
 	@Override
-	protected void updateCloudletProcessing() {
-		if (getCloudletSubmitted() == -1
-				|| getCloudletSubmitted() == CloudSim.clock()) {
-			CloudSim.cancelAll(getId(), new PredicateType(
-					CloudSimTags.VM_DATACENTER_EVENT));
-			schedule(getId(), getSchedulingInterval(),
-					CloudSimTags.VM_DATACENTER_EVENT);
-			return;
+	protected double processHosts(double currentTime, double minTime) {
+		Map<String, Float> userPriorities = new HashMap<String, Float>();
+
+		for (PowerHost host : this.<PowerHost> getHostList()) {
+
+			Map<String, Float> updatedUsers = ((UserAwareHost) host)
+					.getUserPriorities(currentTime);
+
+			for (String userName : updatedUsers.keySet()) {
+				if (userPriorities.containsKey(userName)) {
+					Float currentVal = userPriorities.get(userName);
+					userPriorities.put(userName,
+							currentVal + updatedUsers.get(userName));
+				} else {
+					userPriorities.put(userName, updatedUsers.get(userName));
+				}
+			}
 		}
-		double currentTime = CloudSim.clock();
-		double timeframePower = 0.0;
 
-		if (currentTime > getLastProcessTime()) {
-			double timeDiff = currentTime - getLastProcessTime();
-			double minTime = Double.MAX_VALUE;
+		for (PowerHost host : this.<PowerHost> getHostList()) {
+			Log.formatLine("\n%.2f: Host #%d", CloudSim.clock(), host.getId());
 
-			Log.printLine("\n");
+			double time = ((UserAwareHost) host).updateVmsProcessing(
+					currentTime, userPriorities);
 
-			for (PowerHost host : this.<PowerHost> getHostList()) {
-				Log.formatLine("%.2f: Host #%d", CloudSim.clock(), host.getId());
-
-				double hostPower = 0.0;
-
-				try {
-					hostPower = host.getMaxPower() * timeDiff;
-					timeframePower += hostPower;
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-
-				Log.formatLine("%.2f: Host #%d utilization is %.2f%%",
-						CloudSim.clock(), host.getId(),
-						host.getUtilizationOfCpu() * 100);
-				Log.formatLine("%.2f: Host #%d energy is %.2f W*sec",
-						CloudSim.clock(), host.getId(), hostPower);
+			if (time < minTime) {
+				minTime = time;
 			}
-
-			Log.formatLine("\n%.2f: Consumed energy is %.2f W*sec\n",
-					CloudSim.clock(), timeframePower);
-
-			Log.printLine("\n\n--------------------------------------------------------------\n\n");
-
-			Map<String, Float> userPriorities = new HashMap<String, Float>();
-
-			for (PowerHost host : this.<PowerHost> getHostList()) {
-
-				Map<String, Float> updatedUsers = ((UserAwareHost) host)
-						.getUserPriorities(currentTime);
-
-				for (String userName : updatedUsers.keySet()) {
-					if (userPriorities.containsKey(userName)) {
-						Float currentVal = userPriorities.get(userName);
-						userPriorities.put(userName, currentVal + updatedUsers.get(userName));
-					} else {
-						userPriorities.put(userName, updatedUsers.get(userName));
-					}
-				}
-			}
-
-
-			for (PowerHost host : this.<PowerHost> getHostList()) {
-				Log.formatLine("\n%.2f: Host #%d", CloudSim.clock(),
-						host.getId());
-
-				double time = ((UserAwareHost) host).updateVmsProcessing(
-						currentTime, userPriorities);
-
-				if (time < minTime) {
-					minTime = time;
-				}
-			}
-
-			setPower(getPower() + timeframePower);
-
-			checkCloudletCompletion();
-
-			/** Remove completed VMs **/
-			for (PowerHost host : this.<PowerHost> getHostList()) {
-				for (Vm vm : host.getCompletedVms()) {
-					getVmAllocationPolicy().deallocateHostForVm(vm);
-					getVmList().remove(vm);
-					Log.printLine("VM #" + vm.getId()
-							+ " has been deallocated from host #"
-							+ host.getId());
-				}
-			}
-
-			Log.printLine();
-
-			if (!isDisableMigrations()) {
-				List<Map<String, Object>> migrationMap = getVmAllocationPolicy()
-						.optimizeAllocation(getVmList());
-
-				if (migrationMap != null) {
-					for (Map<String, Object> migrate : migrationMap) {
-						Vm vm = (Vm) migrate.get("vm");
-						PowerHost targetHost = (PowerHost) migrate.get("host");
-						PowerHost oldHost = (PowerHost) vm.getHost();
-
-						if (oldHost == null) {
-							Log.formatLine(
-									"%.2f: Migration of VM #%d to Host #%d is started",
-									CloudSim.clock(), vm.getId(),
-									targetHost.getId());
-						} else {
-							Log.formatLine(
-									"%.2f: Migration of VM #%d from Host #%d to Host #%d is started",
-									CloudSim.clock(), vm.getId(),
-									oldHost.getId(), targetHost.getId());
-						}
-
-						targetHost.addMigratingInVm(vm);
-						incrementMigrationCount();
-
-						/**
-						 * VM migration delay = RAM / bandwidth + C (C = 10 sec)
-						 **/
-						send(getId(), vm.getRam()
-								/ ((double) vm.getBw() / 8000) + 10,
-								CloudSimTags.VM_MIGRATE, migrate);
-					}
-				}
-			}
-
-			// schedules an event to the next time
-			if (minTime != Double.MAX_VALUE) {
-				if (minTime < super.getSchedulingInterval()) {
-					minTime = super.getSchedulingInterval();
-				}
-				CloudSim.cancelAll(getId(), new PredicateType(
-						CloudSimTags.VM_DATACENTER_EVENT));
-				send(getId(), minTime, CloudSimTags.VM_DATACENTER_EVENT);
-			}
-
-			setLastProcessTime(currentTime);
 		}
+
+		return minTime;
 	}
-
 }

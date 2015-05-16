@@ -15,15 +15,20 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
 
 /**
+ * This RDA specific host, supports the resource dependency aware scheduling
+ * mechanisms and represents as its superclass a individual host in the
+ * datacenter that may run VMs.
+ * 
  * The class of a host supporting dynamic workloads and performance degradation.
  * 
+ * @author Patrick A. Taddei
  */
 public class RdaHost extends PowerHost {
 
 	public double scarcitySchedulingInterval;
 
 	public StorageIOProvisioner storageIOProvisioner;
-	
+
 	/** The ram provisioner. */
 	private RamProvisioner ramProvisioner;
 
@@ -304,9 +309,17 @@ public class RdaHost extends PowerHost {
 			if (vm.isInMigration()) {
 				continue;
 			}
-			if (vm.getCurrentRequestedTotalMips() == 0) {
-				// vmsToRemove.add(vm); //we don't remove VM's if the mips is 0
-				// XXX
+
+			// get total mips for the current VM
+			List<Double> mips = ((RdaVm) vm).getCurrentAllocatedMips();
+			double total = 0.0d;
+			for (Double m : mips) {
+				total += m;
+			}
+
+			// if there is no mips allocated, remove it.
+			if (total == 0) {
+				vmsToRemove.add(vm); 
 			}
 		}
 		return vmsToRemove;

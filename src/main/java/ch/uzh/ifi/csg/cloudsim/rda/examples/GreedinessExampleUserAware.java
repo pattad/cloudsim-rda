@@ -125,13 +125,13 @@ public class GreedinessExampleUserAware {
 			Vm vm = new RdaVm(vmid, brokerId, mips, pesNumber, ram, bw, size,
 					1, vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
 							pesNumber,scarcitySchedulingInterval), schedulingInterval);
-			((RdaVm) vm).setOwner("user1");
+			((RdaVm) vm).setCustomer("user1");
 			vmlist.add(vm);
 
 			vm = new RdaVm(1, brokerId, mips, pesNumber, ram, bw, size, 1, vmm,
 					new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber,scarcitySchedulingInterval),
 					schedulingInterval);
-			((RdaVm) vm).setOwner("user2");
+			((RdaVm) vm).setCustomer("user2");
 			vmlist.add(vm);
 
 			// submit vm list to the broker

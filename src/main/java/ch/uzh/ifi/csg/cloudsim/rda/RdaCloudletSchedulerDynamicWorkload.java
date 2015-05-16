@@ -67,7 +67,7 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		double nextEvent = Double.MAX_VALUE;
 
 		// XXX remove this
-		if (String.valueOf(currentTime).startsWith("1.12")) {
+		if (String.valueOf(currentTime).startsWith("3")) {
 			System.out.println("XXX");
 		}
 		double timeSpan = getTimeSpan(currentTime);
