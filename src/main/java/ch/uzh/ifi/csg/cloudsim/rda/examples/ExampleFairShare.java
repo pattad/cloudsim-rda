@@ -27,30 +27,33 @@ import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.power.PowerVmAllocationPolicySimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
-
 import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudlet;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudletSchedulerDynamicWorkload;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaDatacenter;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaHost;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
-import ch.uzh.ifi.csg.cloudsim.rda.greediness.VmSchedulerGreedinessAllocationAlgorithm;
+import ch.uzh.ifi.csg.cloudsim.rda.VmSchedulerMaxMinFairShare;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
 
 /**
  * A simple example showing how to create a data center with one host and run
- * one cloudlet on it.
+ * one cloudlet on it. 
+ * 
+ * XXX somehow the ram is more than input, why that ???
+ * 
  */
-public class GreedinessExample {
+public class ExampleFairShare {
 	/** The cloudlet list. */
 	private static List<Cloudlet> cloudletList;
 	/** The vmlist. */
 	private static List<Vm> vmlist;
 
-	private static double schedulingInterval = 0.00000001;
+	private static double schedulingInterval = 0.000000001; // nano second
 	private static double scarcitySchedulingInterval = 0.01; // milli second
-	private static String pythonPath = "C:\\Program Files (x86)\\Python34\\python";
+	private static boolean record = true;
+
 	/**
 	 * Creates main() to run this example.
 	 *
@@ -119,26 +122,25 @@ public class GreedinessExample {
 			vmlist = new ArrayList<Vm>();
 
 			// VM description
-			int vmid = 0;
-			int mips = 500;
+			int mips = 200;
 			long size = 10000; // image size (MB)
 			int ram = 512; // vm memory (MB)
-			long bw = 500;
+			long bw = 1000;
 			int pesNumber = 1; // number of cpus
 			String vmm = "Xen"; // VMM name
 
-
-			Vm vm = new RdaVm(vmid, brokerId, mips, pesNumber, ram, bw, size,
+			// create VM
+			Vm vm = new RdaVm(0, brokerId, mips, pesNumber, ram, bw, size,
 					1, vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
-							pesNumber), schedulingInterval);
+							pesNumber,scarcitySchedulingInterval), schedulingInterval);
+			// add the VM to the vmList
+			vmlist.add(vm);
+			 vm = new RdaVm(1, brokerId, mips, pesNumber, ram, bw, size,
+					1, vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
+							pesNumber,scarcitySchedulingInterval), schedulingInterval);
+			// add the VM to the vmList
 			vmlist.add(vm);
 
-			
-			vm = new RdaVm(1, brokerId, mips, pesNumber, ram, bw, size,
-					1, vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
-							pesNumber), schedulingInterval);
-			vmlist.add(vm);
-			
 			// submit vm list to the broker
 			broker.submitVmList(vmlist);
 
@@ -146,43 +148,32 @@ public class GreedinessExample {
 			cloudletList = new ArrayList<Cloudlet>();
 
 			// Cloudlet properties
-			int id = 0;
 			long length = 4000;
 			long fileSize = 300;
 			long outputSize = 300;
-			boolean record = false;
 
 			Cloudlet cloudlet = new RdaCloudlet(
-					id,
+					1,
 					pesNumber,
 					fileSize,
 					outputSize,
-					"src\\main\\resources\\input1.csv",
+					"src\\main\\resources\\input4.csv",
 					record);
 			cloudlet.setUserId(brokerId);
 			cloudlet.setVmId(0);
 			cloudletList.add(cloudlet);
 
-			cloudlet = new RdaCloudlet(
-					1,
-					pesNumber,
-					fileSize,
-					outputSize,
-					"src\\main\\resources\\input2.csv",
-					record);
-			cloudlet.setUserId(brokerId);
-			cloudlet.setVmId(1);
-			cloudletList.add(cloudlet);
-			cloudlet = new RdaCloudlet(
-					2,
-					pesNumber,
-					fileSize,
-					outputSize,
-					"src\\main\\resources\\input3.csv",
-					record);
-			cloudlet.setUserId(brokerId);
-			cloudlet.setVmId(vmid);
+//			cloudlet = new RdaCloudlet(
+//					2,
+//					pesNumber,
+//					fileSize,
+//					outputSize,
+//					"src\\main\\resources\\input2.csv",
+//					record);
+//			cloudlet.setUserId(brokerId);
+//			cloudlet.setVmId(1);
 //			cloudletList.add(cloudlet);
+			
 
 			// submit cloudlet list to the broker
 			broker.submitCloudletList(cloudletList);
@@ -222,7 +213,7 @@ public class GreedinessExample {
 		// In this example, it will have only one core.
 		List<Pe> peList = new ArrayList<Pe>();
 
-		int mips = 1000;
+		int mips = 200;
 
 		// 3. Create PEs and add these into a list.
 		peList.add(new Pe(0, new PeProvisionerSimple(mips))); // need to store
@@ -234,15 +225,14 @@ public class GreedinessExample {
 		int hostId = 0;
 		int ram = 2048; // host memory (MB)
 		long storage = 1000000; // host storage
-		int bw = 1000;
+		int bw = 10000;
 
 		RamProvisionerSimple ramProvisioner = new RamProvisionerSimple(ram);
 		BwProvisionerSimple bwProvisioner = new BwProvisionerSimple(bw);
 		StorageIOProvisionerSimple storageIO = new StorageIOProvisionerSimple(10000);
 		hostList.add(new RdaHost(hostId, ramProvisioner, bwProvisioner,storageIO,
-				storage, peList, new VmSchedulerGreedinessAllocationAlgorithm(
-						peList, ramProvisioner,bwProvisioner,storageIO, pythonPath),scarcitySchedulingInterval));
-		
+				storage, peList, new VmSchedulerMaxMinFairShare(
+						peList, ramProvisioner,bwProvisioner,storageIO),scarcitySchedulingInterval)); // This
 
 		// 5. Create a DatacenterCharacteristics object that stores the
 		// properties of a data center: architecture, OS, list of

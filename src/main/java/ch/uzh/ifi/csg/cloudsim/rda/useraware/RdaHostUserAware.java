@@ -6,7 +6,7 @@
  * Copyright (c) 2009-2012, The University of Melbourne, Australia
  */
 
-package ch.uzh.ifi.csg.cloudsim.rda.greediness;
+package ch.uzh.ifi.csg.cloudsim.rda.useraware;
 
 import java.util.List;
 import java.util.Map;
@@ -14,18 +14,18 @@ import java.util.Map;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmScheduler;
+
 import ch.uzh.ifi.csg.cloudsim.rda.RdaHost;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
-import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareHost;
 
 /**
  * The class of a host supporting dynamic workloads and performance degradation.
  * 
  */
-public class RdaHostGreedinessUserAware extends RdaHost implements
+public class RdaHostUserAware extends RdaHost implements
 		UserAwareHost {
 
 	/**
@@ -44,7 +44,7 @@ public class RdaHostGreedinessUserAware extends RdaHost implements
 	 * @param vmScheduler
 	 *            the VM scheduler
 	 */
-	public RdaHostGreedinessUserAware(int id, RamProvisioner ramProvisioner,
+	public RdaHostUserAware(int id, RamProvisioner ramProvisioner,
 			BwProvisioner bwProvisioner, StorageIOProvisioner sProvisioner,
 			long storage, List<? extends Pe> peList, VmScheduler vmScheduler,
 			double scarcitySchedulingInterval) {
@@ -54,14 +54,14 @@ public class RdaHostGreedinessUserAware extends RdaHost implements
 
 	public Map<String, Float> getUserPriorities(double currentTime) {
 
-		return ((VmSchedulerGreedinessAllocationAlgorithmUserAware) getVmScheduler())
-				.getUserGreediness(currentTime, getVmList());
+		return ((UserAwareVmScheduler) getVmScheduler())
+				.getUserPriorities(currentTime, getVmList());
 
 	}
 
 	public double updateVmsProcessing(double currentTime,
 			Map<String, Float> priorities) {
-		((VmSchedulerGreedinessAllocationAlgorithmUserAware) getVmScheduler())
+		((UserAwareVmScheduler) getVmScheduler())
 				.allocateResourcesForAllVms(currentTime, getVmList(),
 						priorities);
 

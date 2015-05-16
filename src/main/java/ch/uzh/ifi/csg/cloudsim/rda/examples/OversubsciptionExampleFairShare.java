@@ -129,12 +129,12 @@ public class OversubsciptionExampleFairShare {
 			// create VM
 			Vm vm = new RdaVm(0, brokerId, mips, pesNumber, ram, bw, size,
 					1, vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
-							pesNumber), schedulingInterval);
+							pesNumber,scarcitySchedulingInterval), schedulingInterval);
 			// add the VM to the vmList
 			vmlist.add(vm);
 			 vm = new RdaVm(1, brokerId, mips, pesNumber, ram, bw, size,
 					1, vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
-							pesNumber), schedulingInterval);
+							pesNumber,scarcitySchedulingInterval), schedulingInterval);
 			// add the VM to the vmList
 			vmlist.add(vm);
 

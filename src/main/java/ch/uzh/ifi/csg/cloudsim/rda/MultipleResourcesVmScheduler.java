@@ -6,6 +6,6 @@ import org.cloudbus.cloudsim.Vm;
 
 public interface MultipleResourcesVmScheduler {
 	
-	public void allocateResourcesForAllVms(double currentTime, List<Vm> vms);
+	public abstract void allocateResourcesForAllVms(double currentTime, List<Vm> vms);
 	
 }

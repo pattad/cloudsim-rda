@@ -22,11 +22,11 @@ import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudlet;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudletSchedulerDynamicWorkload;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
-import ch.uzh.ifi.csg.cloudsim.rda.greediness.RdaHostGreedinessUserAware;
-import ch.uzh.ifi.csg.cloudsim.rda.greediness.VmSchedulerGreedinessAllocationAlgorithmUserAware;
+import ch.uzh.ifi.csg.cloudsim.rda.greediness.VmSchedulerGreedinessAllocationAlgorithm;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
+import ch.uzh.ifi.csg.cloudsim.rda.useraware.RdaHostUserAware;
 import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareDatacenter;
 
 /**
@@ -124,12 +124,12 @@ public class GreedinessExampleUserAware {
 
 			Vm vm = new RdaVm(vmid, brokerId, mips, pesNumber, ram, bw, size,
 					1, vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
-							pesNumber), schedulingInterval);
+							pesNumber,scarcitySchedulingInterval), schedulingInterval);
 			((RdaVm) vm).setOwner("user1");
 			vmlist.add(vm);
 
 			vm = new RdaVm(1, brokerId, mips, pesNumber, ram, bw, size, 1, vmm,
-					new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber),
+					new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber,scarcitySchedulingInterval),
 					schedulingInterval);
 			((RdaVm) vm).setOwner("user2");
 			vmlist.add(vm);
@@ -226,9 +226,9 @@ public class GreedinessExampleUserAware {
 		BwProvisionerSimple bwProvisioner = new BwProvisionerSimple(bw);
 		StorageIOProvisionerSimple storageIO = new StorageIOProvisionerSimple(
 				10000);
-		hostList.add(new RdaHostGreedinessUserAware(hostId, ramProvisioner,
+		hostList.add(new RdaHostUserAware(hostId, ramProvisioner,
 				bwProvisioner, storageIO, storage, peList,
-				new VmSchedulerGreedinessAllocationAlgorithmUserAware(peList,
+				new VmSchedulerGreedinessAllocationAlgorithm(peList,
 						ramProvisioner, bwProvisioner, storageIO, pythonPath),
 				scarcitySchedulingInterval)); // This
 		// is

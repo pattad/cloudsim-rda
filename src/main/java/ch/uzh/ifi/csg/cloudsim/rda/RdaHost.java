@@ -209,10 +209,6 @@ public class RdaHost extends PowerHost {
 
 	protected double checkForScarcity(double smallerTime, double currentTime) {
 
-		if (String.valueOf(currentTime).startsWith("6.01")) {
-			System.out.println("XXX");
-		}
-
 		double totalGradCpu = 0.0;
 		double totalReqCpu = 0.0;
 		double totalGradBw = 0.0;

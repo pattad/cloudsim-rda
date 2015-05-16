@@ -29,6 +29,8 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 
 	/** The total mips. */
 	private double totalMips;
+	
+	public double scarcitySchedulingInterval;
 
 	/**
 	 * Instantiates a new vM scheduler time shared.
@@ -38,11 +40,12 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	 * @param numberOfPes
 	 *            the pes number
 	 */
-	public RdaCloudletSchedulerDynamicWorkload(double mips, int numberOfPes) {
+	public RdaCloudletSchedulerDynamicWorkload(double mips, int numberOfPes, double scarcitySchedulingInterval) {
 		super();
 		setMips(mips);
 		setNumberOfPes(numberOfPes);
 		setTotalMips(getNumberOfPes() * getMips());
+		this.scarcitySchedulingInterval = scarcitySchedulingInterval;
 	}
 
 	/**
@@ -63,7 +66,8 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		setCurrentMipsShare(mipsShare);
 		double nextEvent = Double.MAX_VALUE;
 
-		if(String.valueOf(currentTime).startsWith("6.01")){
+		// XXX remove this
+		if (String.valueOf(currentTime).startsWith("1.12")) {
 			System.out.println("XXX");
 		}
 		double timeSpan = getTimeSpan(currentTime);
@@ -176,22 +180,22 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 			} else {
 				effectiveGradient = cloudlet.getGradOfCpu();
 			}
-			
+
 			// XXX remove this traces
-//			Log.printLine("effective Grad: " + effectiveGradient);
-//			Log.printLine("last CPU: " + lastCPU);
-//			Log.printLine("timeSpan: " + timeSpan);
-//			Log.printLine("current_time: " + currentTime);
+			// Log.printLine("effective Grad: " + effectiveGradient);
+			// Log.printLine("last CPU: " + lastCPU);
+			// Log.printLine("timeSpan: " + timeSpan);
+			// Log.printLine("current_time: " + currentTime);
 			long processedInstructions;
 			if (effectiveGradient != 0.0) {
-				double a = (effectiveGradient / 2.0
-						* (timeSpan * timeSpan) + lastCPU * timeSpan);				
+				double a = (effectiveGradient / 2.0 * (timeSpan * timeSpan) + lastCPU
+						* timeSpan);
 				processedInstructions = Math.round(a * (double) Consts.MILLION);
 			} else {
 				processedInstructions = Math.round(effectiveProcessingSpeed
 						* timeSpan * Consts.MILLION);
 			}
-//			Log.printLine("processedInstr.: "+processedInstructions);
+			// Log.printLine("processedInstr.: "+processedInstructions);
 			cloudlet.setUtilizationOfCpu(effectiveProcessingSpeed);
 			cloudlet.updateInstructionsFinishedSoFar(processedInstructions);
 			rcl.updateCloudletFinishedSoFar(processedInstructions);
@@ -210,7 +214,7 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 					+ "; getRemainingCloudletLength() "
 					+ cloudlet.getRemainingCloudletLength());
 
-			if (cloudlet.getRemainingCloudletLength() == 0) {
+			if (cloudlet.getRemainingCloudletLength() <= 0) {
 				// finished
 				cloudletsToFinish.add(rcl);
 				cloudlet.stopRecording();
@@ -218,12 +222,15 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 				continue;
 			} else { // not finshed get the time of the next utilization change
 				double nextChangeTime;
-				 if (effectiveProcessingSpeed != requestedProcessingSpeed) {
-					nextChangeTime = 0.01d; // XXX smaller interval
+				if (effectiveProcessingSpeed != requestedProcessingSpeed) {
+					nextChangeTime = scarcitySchedulingInterval; 
 				} else {
 					nextChangeTime = cloudlet.getEstimatedNextChangeTime();
 				}
-				Log.printLine("nextChangeTime: " + nextChangeTime); // XXX remove this traces
+				Log.printLine("nextChangeTime: " + nextChangeTime); // XXX
+																	// remove
+																	// this
+																	// traces
 				if (nextChangeTime < nextEvent) {
 					nextEvent = nextChangeTime;
 				}
