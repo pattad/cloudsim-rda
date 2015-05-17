@@ -14,12 +14,40 @@ import java.util.Date;
 import java.util.LinkedList;
 
 import org.cloudbus.cloudsim.Cloudlet;
-import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.Consts;
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.core.CloudSim;
 
 import ch.uzh.ifi.csg.cloudsim.rda.util.CsvReader;
 
+/**
+ * This Cloudlet works in a progress aware fashion. This means that it requests
+ * computing resources, dependent on the already progressed workload. This
+ * behavior becomes visible, as soon as there is a time of scarcity and it
+ * didn't got all requested resources. This is resulting into a down-graded
+ * processing speed for the time, where scarcity exists. Naturally, this is also
+ * reflected in the overall processing time of the Cloudlet that will increase.
+ * 
+ * It must be instantiated with a CSV input file that contains the requested
+ * resources for cpu, ram, bandwidth & storage I/O. <br/>
+ * Example CSV file:<br/>
+ * <code>
+ * cpu,ram,network,storage
+ * 150,50,0,0
+ * 280,300,0,0
+ * </code> <br/>
+ * cpu in MIPS (million instructions per second)<br/>
+ * ram in MB<br/>
+ * network in MB/s<br/>
+ * storage in MB/s<br/>
+ * 
+ * The fist line of the input values represents the requested values at 0
+ * second, second line 1 second and so on.
+ * 
+ * @author Patrick A. Taddei
+ * @see RdaCloudletSchedulerDynamicWorkload
+ *
+ */
 public class RdaCloudlet extends Cloudlet {
 
 	private double mips;
@@ -299,7 +327,8 @@ public class RdaCloudlet extends Cloudlet {
 					dist = data[i + 1][INST_INDEX] - instructionsFinishedSoFar;
 					break;
 				} else {
-					// instructionsFinishedSoFar is right on the last measuring point
+					// instructionsFinishedSoFar is right on the last measuring
+					// point
 					break;
 				}
 			} else if (data[i][INST_INDEX] > instructionsFinishedSoFar) {
@@ -307,7 +336,7 @@ public class RdaCloudlet extends Cloudlet {
 				break;
 			}
 		}
-		
+
 		return dist;
 	}
 

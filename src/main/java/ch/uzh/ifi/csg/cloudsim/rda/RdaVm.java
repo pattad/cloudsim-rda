@@ -8,20 +8,25 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.power.PowerVm;
 
 /**
-
+ * The RdaVm particularly supports multiple resources. The central method
+ * updateVmProcessing() had to be extended to support the bandwidth and storage
+ * I/O, besides cpu speed. Moreover, some methods had also to be adapted to
+ * support decimal places for ram and bandwidth.
+ * 
+ * @author Patrick A. Taddei
  */
 public class RdaVm extends PowerVm {
 
 	private double currentAllocatedStorageIO;
-	
+
 	/** The current allocated ram. */
 	private double currentAllocatedRam;
 
 	/** The current allocated bw. */
 	private double currentAllocatedBw;
-	
+
 	private String customer;
-	
+
 	public RdaVm(int id, int userId, double mips, int pesNumber, int ram,
 			long bw, long size, int priority, String vmm,
 			CloudletScheduler cloudletScheduler, double schedulingInterval) {
@@ -29,7 +34,6 @@ public class RdaVm extends PowerVm {
 				cloudletScheduler, schedulingInterval);
 	}
 
-	
 	/**
 	 * Updates the processing of cloudlets running on this VM.
 	 * 
@@ -41,8 +45,6 @@ public class RdaVm extends PowerVm {
 	 * @return time predicted completion time of the earliest finishing
 	 *         cloudlet, or 0 if there is no next events
 	 * 
-	 * @pre currentTime >= 0
-	 * @post $none
 	 */
 	public double updateVmProcessing(final double currentTime,
 			final List<Double> mipsShare, double bwShare, double storageShare) {
@@ -66,13 +68,19 @@ public class RdaVm extends PowerVm {
 		return time;
 	}
 
+	@Override
+	public double updateVmProcessing(final double currentTime,
+			final List<Double> mipsShare) {
+		throw new UnsupportedOperationException();
+	}
 
-	public double getCurrentAllocatedStorageIO(){
+	public double getCurrentAllocatedStorageIO() {
 		return this.currentAllocatedStorageIO;
 	}
-	
+
 	public List<Double> getCurrentRequestedMips(double currentTime) {
-		List<Double> currentRequestedMips = ((RdaCloudletScheduler)getCloudletScheduler()).getCurrentRequestedMips(currentTime);
+		List<Double> currentRequestedMips = ((RdaCloudletScheduler) getCloudletScheduler())
+				.getCurrentRequestedMips(currentTime);
 		if (isBeingInstantiated()) {
 			currentRequestedMips = new ArrayList<Double>();
 			for (int i = 0; i < getNumberOfPes(); i++) {
@@ -81,6 +89,7 @@ public class RdaVm extends PowerVm {
 		}
 		return currentRequestedMips;
 	}
+
 	/**
 	 * Gets the current requested total mips.
 	 * 
@@ -93,42 +102,52 @@ public class RdaVm extends PowerVm {
 		}
 		return totalRequestedMips;
 	}
-	
+
 	public double getCurrentRequestedGradCpu() {
-		return ((RdaCloudletScheduler)getCloudletScheduler()).getCurrentRequestedGradCpu();
+		return ((RdaCloudletScheduler) getCloudletScheduler())
+				.getCurrentRequestedGradCpu();
 	}
+
 	public double getCurrentRequestedGradBw() {
-		return ((RdaCloudletScheduler)getCloudletScheduler()).getCurrentRequestedGradBw();
+		return ((RdaCloudletScheduler) getCloudletScheduler())
+				.getCurrentRequestedGradBw();
 	}
+
 	public double getCurrentRequestedGradStorageIO() {
-		return ((RdaCloudletScheduler)getCloudletScheduler()).getCurrentRequestedGradStorageIO();
+		return ((RdaCloudletScheduler) getCloudletScheduler())
+				.getCurrentRequestedGradStorageIO();
 	}
+
 	/**
 	 * Gets the current requested storage IO.
 	 * 
 	 * @return the current requested storage IO
 	 */
 	public double getCurrentRequestedStorageIO(double currentTime) {
-		return ((RdaCloudletScheduler)getCloudletScheduler()).getCurrentRequestedUtilizationOfStorageIO(currentTime);
+		return ((RdaCloudletScheduler) getCloudletScheduler())
+				.getCurrentRequestedUtilizationOfStorageIO(currentTime);
 	}
-	
+
 	/**
 	 * Gets the current requested storage IO.
 	 * 
 	 * @return the current requested storage IO
 	 */
 	public double getCurrentRequestedBw(double currentTime) {
-		return ((RdaCloudletScheduler)getCloudletScheduler()).getCurrentRequestedUtilizationOfBw(currentTime);
+		return ((RdaCloudletScheduler) getCloudletScheduler())
+				.getCurrentRequestedUtilizationOfBw(currentTime);
 	}
-	
+
 	/**
 	 * Gets the current requested storage IO.
 	 * 
 	 * @return the current requested storage IO
 	 */
 	public double getCurrentRequestedRam(double currentTime) {
-		return ((RdaCloudletScheduler)getCloudletScheduler()).getCurrentRequestedUtilizationOfRam(currentTime);
+		return ((RdaCloudletScheduler) getCloudletScheduler())
+				.getCurrentRequestedUtilizationOfRam(currentTime);
 	}
+
 	/**
 	 * Gets the current requested bw.
 	 * 
@@ -138,7 +157,8 @@ public class RdaVm extends PowerVm {
 		if (isBeingInstantiated()) {
 			return getBw();
 		}
-		return (long)getCloudletScheduler().getCurrentRequestedUtilizationOfBw();
+		return (long) getCloudletScheduler()
+				.getCurrentRequestedUtilizationOfBw();
 	}
 
 	/**
@@ -150,18 +170,19 @@ public class RdaVm extends PowerVm {
 		if (isBeingInstantiated()) {
 			return getRam();
 		}
-		return (int)getCloudletScheduler().getCurrentRequestedUtilizationOfRam();
+		return (int) getCloudletScheduler()
+				.getCurrentRequestedUtilizationOfRam();
 	}
-	
+
 	@Override
 	public int getCurrentAllocatedRam() {
 		return (int) Math.round(currentAllocatedRam);
 	}
-	
+
 	public double getCurrentAllocatedRamFine() {
 		return currentAllocatedRam;
 	}
-	
+
 	public void setCurrentAllocatedRam(double currentAllocatedRam) {
 		this.currentAllocatedRam = currentAllocatedRam;
 	}
@@ -170,7 +191,7 @@ public class RdaVm extends PowerVm {
 	public long getCurrentAllocatedBw() {
 		return Math.round(currentAllocatedBw);
 	}
-	
+
 	public double getCurrentAllocatedBwFine() {
 		return currentAllocatedBw;
 	}
@@ -179,15 +200,13 @@ public class RdaVm extends PowerVm {
 		this.currentAllocatedBw = currentAllocatedBw;
 	}
 
-
 	public void setCurrentAllocatedStorageIO(double currentAllocatedStorageIO) {
 		this.currentAllocatedStorageIO = currentAllocatedStorageIO;
 	}
-	
+
 	public String getCustomer() {
 		return customer;
 	}
-
 
 	public void setCustomer(String customer) {
 		this.customer = customer;

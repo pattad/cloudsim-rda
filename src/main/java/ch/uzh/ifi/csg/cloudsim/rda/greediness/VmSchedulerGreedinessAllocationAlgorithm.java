@@ -21,6 +21,18 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.useraware.RdaUserAwareVmScheduler;
 
+/**
+ * The greediness scheduling algorithm, was developed to achieve an overall
+ * fairness among multiple customers within the same cloud, thereafter, it
+ * implements the RdaUserAwareVmScheduler interface, which supports a
+ * user/customer aware scenario.
+ * 
+ * This class solely wraps the python script, where one can find the actual
+ * implementation of the greediness metric.
+ * 
+ * @author Patrick A. Taddei
+ *
+ */
 public class VmSchedulerGreedinessAllocationAlgorithm extends
 		VmSchedulerTimeShared implements RdaUserAwareVmScheduler {
 
@@ -37,25 +49,24 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 	Process p2;
 	BufferedReader in2;
 
-	public VmSchedulerGreedinessAllocationAlgorithm(
-			List<? extends Pe> pelist) {
+	public VmSchedulerGreedinessAllocationAlgorithm(List<? extends Pe> pelist) {
 		super(pelist);
 		throw new UnsupportedOperationException(
 				"This constructor is not supported by this scheduler.");
 	}
 
-	public VmSchedulerGreedinessAllocationAlgorithm(
-			List<? extends Pe> pelist, RamProvisioner ramProvisioner,
-			BwProvisioner bwProvisioner, StorageIOProvisioner sProvisioner,
-			String pythonPath) {
+	public VmSchedulerGreedinessAllocationAlgorithm(List<? extends Pe> pelist,
+			RamProvisioner ramProvisioner, BwProvisioner bwProvisioner,
+			StorageIOProvisioner sProvisioner, String pythonPath) {
 		super(pelist);
 		this.pythonPath = pythonPath;
 		this.ramProvisioner = ramProvisioner;
 		this.bwProvisioner = bwProvisioner;
 		this.sProvisioner = sProvisioner;
 		try {
-			p = Runtime.getRuntime().exec(
-					pythonPath
+			p = Runtime
+					.getRuntime()
+					.exec(pythonPath
 							+ " src\\main\\resources\\python\\getGreediness.py");
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -75,8 +86,12 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 		out2 = new BufferedWriter(new OutputStreamWriter(p2.getOutputStream()));
 	}
 
-	/* (non-Javadoc)
-	 * @see ch.uzh.ifi.csg.cloudsim.rda.greediness.UserAwareVmScheduler#getUserPriorities(double, java.util.List)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.greediness.UserAwareVmScheduler#getUserPriorities
+	 * (double, java.util.List)
 	 */
 	public Map<String, Float> getUserPriorities(double currentTime, List<Vm> vms) {
 
@@ -89,8 +104,8 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			double reqCpu = ((RdaVm) vm)
 					.getCurrentRequestedTotalMips(currentTime);
 
-			requestedResources += ((RdaVm) vm).getCustomer() + " " + reqCpu + " "
-					+ reqRam + " " + reqBw + " " + reqStorage + " ";
+			requestedResources += ((RdaVm) vm).getCustomer() + " " + reqCpu
+					+ " " + reqRam + " " + reqBw + " " + reqStorage + " ";
 
 		}
 
@@ -141,8 +156,8 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 	}
 
 	/*
-	 * rounding up to the 9th position behind the comma. If there is some minor
-	 * number behind the 9th position the result will be rounded up. e.g.
+	 * rounding up to the 8th position behind the comma. If there is some minor
+	 * number behind the 8th position the result will be rounded up. e.g.
 	 * 0.0000000001235 will be rounded up to 0.00000001
 	 */
 	private double round(double d) {
@@ -156,8 +171,11 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 		return a;
 	}
 
-	/* (non-Javadoc)
-	 * @see ch.uzh.ifi.csg.cloudsim.rda.greediness.UserAwareVmScheduler#allocateResourcesForAllVms(double, java.util.List, java.util.Map)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.uzh.ifi.csg.cloudsim.rda.greediness.UserAwareVmScheduler#
+	 * allocateResourcesForAllVms(double, java.util.List, java.util.Map)
 	 */
 	public void allocateResourcesForAllVms(double currentTime, List<Vm> vms,
 			Map<String, Float> userPriorities) {

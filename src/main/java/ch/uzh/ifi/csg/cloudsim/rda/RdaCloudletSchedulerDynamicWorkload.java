@@ -13,9 +13,23 @@ import org.cloudbus.cloudsim.ResCloudlet;
 import org.cloudbus.cloudsim.core.CloudSim;
 
 /**
- * CloudletSchedulerDynamicWorkload implements a policy of scheduling performed
- * by a virtual machine assuming that there is just one cloudlet which is
- * working as an online service.
+ * Implements a policy of scheduling performed by a virtual machine. Currently
+ * this scheduler only supports one cloudlet at a time. If multiple cloudlets
+ * are submitted, they will proportionally degraded, in case of scarcity. A an
+ * implementation with the Max-Min Fair-Share algorithm would be appropriate in
+ * such situations. Please feel free to contribute such an update.
+ * 
+ * This cloudlet scheduler, makes sure that the Leontief dependencies are taken
+ * care of. This results in an equal percentage drop of the other resources, as
+ * soon as one resource experiences scarcity. It checks, which resource is the
+ * most scarce resource and down-grades the other resources according to this
+ * drop. The central method where the scheduling is processed, is like in the
+ * RdaVm class the method updateVmProcessing(). This method also had to be
+ * extended to support bandwidth and storageIO, besides the cpu speed.
+ * 
+ * @author Patrick A. Taddei
+ * @see RdaVm
+ * @see RdaCloudlet
  * 
  */
 public class RdaCloudletSchedulerDynamicWorkload extends
@@ -29,7 +43,7 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 
 	/** The total mips. */
 	private double totalMips;
-	
+
 	public double scarcitySchedulingInterval;
 
 	/**
@@ -40,7 +54,8 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	 * @param numberOfPes
 	 *            the pes number
 	 */
-	public RdaCloudletSchedulerDynamicWorkload(double mips, int numberOfPes, double scarcitySchedulingInterval) {
+	public RdaCloudletSchedulerDynamicWorkload(double mips, int numberOfPes,
+			double scarcitySchedulingInterval) {
 		super();
 		setMips(mips);
 		setNumberOfPes(numberOfPes);
@@ -55,11 +70,14 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	 * @param currentTime
 	 *            current simulation time
 	 * @param mipsShare
-	 *            array with MIPS share of each Pe available to the scheduler
+	 *            list with MIPS share of each Pe available to the scheduler
+	 * @param bwShare
+	 *            bandwidth share available
+	 * @param storageIOShare
+	 *            storage IO share available
+	 * 
 	 * @return time predicted completion time of the earliest finishing
 	 *         cloudlet, or 0 if there is no next events
-	 * @pre currentTime >= 0
-	 * @post $none
 	 */
 	public double updateVmProcessing(double currentTime,
 			List<Double> mipsShare, double bwShare, double storageIOShare) {
@@ -223,7 +241,7 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 			} else { // not finshed get the time of the next utilization change
 				double nextChangeTime;
 				if (effectiveProcessingSpeed != requestedProcessingSpeed) {
-					nextChangeTime = scarcitySchedulingInterval; 
+					nextChangeTime = scarcitySchedulingInterval;
 				} else {
 					nextChangeTime = cloudlet.getEstimatedNextChangeTime();
 				}
@@ -345,6 +363,11 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		rcl.setCloudletStatus(Cloudlet.SUCCESS);
 		rcl.finalizeCloudlet();
 		getCloudletFinishedList().add(rcl);
+	}
+
+	@Override
+	public double updateVmProcessing(double currentTime, List<Double> mipsShare) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
