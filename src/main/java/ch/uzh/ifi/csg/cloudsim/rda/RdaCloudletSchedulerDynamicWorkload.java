@@ -270,10 +270,6 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	}
 
 	private double getTimeSpan(double currentTime) {
-		if (getPreviousTime() == 0) {
-			setPreviousTime(currentTime - CloudSim.getMinTimeBetweenEvents());
-		}
-
 		double timeSpan = currentTime - getPreviousTime();
 		return timeSpan;
 	}

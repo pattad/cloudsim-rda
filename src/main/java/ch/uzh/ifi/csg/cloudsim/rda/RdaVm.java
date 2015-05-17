@@ -56,15 +56,6 @@ public class RdaVm extends PowerVm {
 		} else {
 			return time;
 		}
-		if (currentTime > getPreviousTime()
-				&& (currentTime - 0.1) % getSchedulingInterval() == 0) {
-			double utilization = getTotalUtilizationOfCpu(getCloudletScheduler()
-					.getPreviousTime());
-			if (CloudSim.clock() != 0 || utilization != 0) {
-				addUtilizationHistoryValue(utilization);
-			}
-			setPreviousTime(currentTime);
-		}
 		return time;
 	}
 

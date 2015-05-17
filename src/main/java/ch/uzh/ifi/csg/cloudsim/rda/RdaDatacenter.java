@@ -8,8 +8,10 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
+import org.cloudbus.cloudsim.VmScheduler;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
+import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.core.predicates.PredicateType;
 import org.cloudbus.cloudsim.power.PowerDatacenter;
 import org.cloudbus.cloudsim.power.PowerHost;
@@ -45,6 +47,36 @@ public class RdaDatacenter extends PowerDatacenter {
 				schedulingInterval);
 	}
 
+	@Override
+	protected void processVmCreate(SimEvent ev, boolean ack) {
+		RdaVm vm = (RdaVm) ev.getData();
+
+		boolean result = getVmAllocationPolicy().allocateHostForVm(vm);
+
+		if (ack) {
+			int[] data = new int[3];
+			data[0] = getId();
+			data[1] = vm.getId();
+
+			if (result) {
+				data[2] = CloudSimTags.TRUE;
+			} else {
+				data[2] = CloudSimTags.FALSE;
+			}
+			send(vm.getUserId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.VM_CREATE_ACK, data);
+		}
+
+		if (result) {
+			getVmList().add(vm);
+
+			if (vm.isBeingInstantiated()) {
+				vm.setBeingInstantiated(false);
+			}
+
+		}
+
+	}
+	
 	/**
 	 * Updates processing of each cloudlet running in this datacenter. It
 	 * is necessary because Hosts and VirtualMachines are simple objects, not
@@ -197,7 +229,7 @@ public class RdaDatacenter extends PowerDatacenter {
 	 */
 	private double round(double d) {
 
-		double a = Math.round(d * 100000000) / 100000000.0;
+		double a = Math.round(d * 1000000000) / 1000000000.0;
 
 		return a;
 	}

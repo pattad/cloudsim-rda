@@ -50,14 +50,25 @@ import ch.uzh.ifi.csg.cloudsim.rda.util.CsvReader;
  */
 public class RdaCloudlet extends Cloudlet {
 
+	// current allocated resource values
 	private double mips;
 	private double bandwidth;
 	private double storageIO;
 	private double ram;
+
 	private boolean record = true;
 
+	// instructions already processed by this cloudlet
 	private long instructionsFinishedSoFar = 0l;
 
+	// input array for requested resources
+	// columns: INSTRUCTIONS, CPU, RAM, BW, STORAGE
+	// e.g.values: 0, 200, 50, 55, 1
+	// 205000000, 210, 40, 22, 2
+	// 210000000, 210, 41, 23, 1
+	// the INSTRUCTIONS column contains the cummulated processed instructions
+	// average between CPU bounds is taken as length to get a linear behavior
+	// between 2 bounds.
 	private final long[][] data;
 
 	/* index in input data array */
@@ -68,8 +79,28 @@ public class RdaCloudlet extends Cloudlet {
 	private static final int BW_INDEX = 3;
 	private static final int STORAGE_INDEX = 4;
 
+	// for CSV output with processing values.
 	private PrintWriter recorder;
 
+	/**
+	 * Instantiates the Cloudlet.
+	 * 
+	 * @param cloudletId
+	 *            the unique ID of this Cloudlet
+	 * @param cloudletFileSize
+	 *            the file size (in byte) of this cloudlet <tt>BEFORE</tt>
+	 *            submitting to a PowerDatacenter
+	 * @param cloudletOutputSize
+	 *            the file size (in byte) of this cloudlet <tt>AFTER</tt> finish
+	 *            executing by a PowerDatacenter
+	 * @param inputPath
+	 *            The path to the CSV file.
+	 * @param record
+	 *            True, if the output should be written into a CSV file. (File
+	 *            name is: yyyyMMddhhmmss.csv)
+	 * @throws FileNotFoundException
+	 * @throws UnsupportedEncodingException
+	 */
 	public RdaCloudlet(int cloudletId, int pesNumber, long cloudletFileSize,
 			long cloudletOutputSize, String inputPath, boolean record)
 			throws FileNotFoundException, UnsupportedEncodingException {
@@ -134,6 +165,10 @@ public class RdaCloudlet extends Cloudlet {
 		return getFirstBound(this.instructionsFinishedSoFar, CPU_INDEX);
 	}
 
+	/**
+	 * 
+	 * @return Returns the gradient of the CPU.
+	 */
 	public double getGradOfCpu() {
 		double pastCPU = this.getFirstBoundOfCpu();
 		double futureProcessingSpeed = this.getFirstBound(
@@ -142,6 +177,10 @@ public class RdaCloudlet extends Cloudlet {
 		return futureProcessingSpeed - pastCPU;
 	}
 
+	/**
+	 * 
+	 * @return Returns the gradient of the bandwidth
+	 */
 	public double getGradOfBw() {
 		double past = this.getFirstBound(this.instructionsFinishedSoFar,
 				BW_INDEX);
@@ -150,6 +189,10 @@ public class RdaCloudlet extends Cloudlet {
 		return future - past;
 	}
 
+	/**
+	 * 
+	 * @return Returns the gradient of storage I/O.
+	 */
 	public double getGradOfStorageIO() {
 		double past = this.getFirstBound(this.instructionsFinishedSoFar,
 				STORAGE_INDEX);
@@ -158,6 +201,10 @@ public class RdaCloudlet extends Cloudlet {
 		return future - past;
 	}
 
+	/**
+	 * 
+	 * @return Returns the gradient of ram.
+	 */
 	public double getGradOfRam() {
 		double past = this.getFirstBound(this.instructionsFinishedSoFar,
 				RAM_INDEX);
@@ -166,6 +213,13 @@ public class RdaCloudlet extends Cloudlet {
 		return future - past;
 	}
 
+	/**
+	 * Assesses the current progress of the cloudlet and computes the time to
+	 * the next consumption change. This corresponds the given input values.
+	 * Generally, a consumption change might be a change of the gradient.
+	 * 
+	 * @return The estimated time when there is a consumption change.
+	 */
 	public double getEstimatedNextChangeTime() {
 
 		double grad = this.getGradOfCpu();
@@ -191,15 +245,40 @@ public class RdaCloudlet extends Cloudlet {
 
 	}
 
+	/**
+	 * This method computes the requested utilization at the desired time.
+	 * 
+	 * To retrieve this value the current progress of the Cloudlet is taken into
+	 * account. This is done by using the instructionsFinishedSoFar and
+	 * calculating from that the expected time to be in the current timeframe.
+	 * 
+	 * When we have this time, we retrieve the requested value at this time
+	 * (pastTime). To get then to the requested value at the desired time span,
+	 * the gradient and the pastTime can be set into a simple linear function.
+	 * 
+	 * @param timeSpan
+	 *            Time span since last resource processing.
+	 * @param resourceGrad
+	 *            The gradient of the resource to be evaluated.
+	 * @param resource
+	 *            The resource index.
+	 * @return the requested utilization
+	 */
 	private double getRequestedUtilization(final double timeSpan,
-			double resourceGrad, double currentRequestedSpeed, int resource) {
+			double resourceGrad, int resource) {
+
+		double currentRequestedSpeed = 0.0d;
+
+		// we go thru all timeframe starting points
 		for (int i = 0; i < data.length; i++) {
 			if (data[i][INST_INDEX] == instructionsFinishedSoFar) {
+				// we are right on the beginning of an instruction interval
 				currentRequestedSpeed = resourceGrad * timeSpan
 						+ data[i][resource];
 				break;
 			} else if (data[i][INST_INDEX] >= instructionsFinishedSoFar) {
-
+				// we get to the first instruction interval that we have not
+				// finished yet
 				if (resourceGrad != 0) {
 					double expectedTime;
 					double pastRequestedSpeed;
@@ -211,11 +290,22 @@ public class RdaCloudlet extends Cloudlet {
 						double currentInst = instructionsFinishedSoFar
 								- data[i - 1][INST_INDEX];
 
-						double d = (pastSpeedCpu * pastSpeedCpu) + 2
+						// calculating the expected time to be with the integral
+						// function: gradCpu * x + pastSpeedCpu
+						// integral function: gradCpu/2 * x2 + pastSpeedCpu*x
+						//
+						// we know currentInst, thereafter
+						// currentInst = gradCpu/2 * x2 + pastSpeedCpu*x
+						//
+						// resolving after x, with the standard formula for
+						// squared equations
+						// we get the expected time. (x == expectedTime)
+						//
+						double discriminant = (pastSpeedCpu * pastSpeedCpu) + 2
 								* this.getGradOfCpu()
 								* (currentInst / Consts.MILLION);
 
-						expectedTime = (-pastSpeedCpu + Math.sqrt(d))
+						expectedTime = (-pastSpeedCpu + Math.sqrt(discriminant))
 								/ this.getGradOfCpu();
 
 					} else {
@@ -223,13 +313,18 @@ public class RdaCloudlet extends Cloudlet {
 								- data[i - 1][INST_INDEX];
 						double instSpan = data[i][INST_INDEX]
 								- data[i - 1][INST_INDEX];
+						// if the grad of the CPU is 0, we simply take the
+						// proportion within the timeframe
 						expectedTime = currentInst / instSpan;
 					}
 
 					double pastSpeedResource = data[i - 1][resource];
 
+					// the requestedSpeed without the timeSpan
 					pastRequestedSpeed = resourceGrad * expectedTime
 							+ pastSpeedResource;
+
+					// the requested Speed with the timeSpan
 					currentRequestedSpeed = resourceGrad * timeSpan
 							+ pastRequestedSpeed;
 
@@ -243,47 +338,89 @@ public class RdaCloudlet extends Cloudlet {
 		return currentRequestedSpeed;
 	}
 
+	/**
+	 * Computes the requested utilization at the desired time, depending from
+	 * the current processing progress of this cloudlet.
+	 * 
+	 * @param timeSpan
+	 *            Time span since last resource processing.
+	 * 
+	 * @return the requested utilization of the cpu
+	 */
 	public double getRequestedUtilizationOfCpu(final double timeSpan) {
 		double grad = this.getGradOfCpu();
 		double currentRequestedSpeed = 0.0d;
 
 		currentRequestedSpeed = getRequestedUtilization(timeSpan, grad,
-				currentRequestedSpeed, CPU_INDEX);
+				CPU_INDEX);
 
 		return currentRequestedSpeed;
 	}
 
+	/**
+	 * Computes the requested utilization at the desired time, depending from
+	 * the current processing progress of this cloudlet.
+	 * 
+	 * @param timeSpan
+	 *            Time span since last resource processing.
+	 * 
+	 * @return the requested utilization of the bandwidth
+	 */
 	public double getRequestedUtilizationOfBw(final double timeSpan) {
 
-		double currentRequestedSpeed = 0.0d;
 		double grad = this.getGradOfBw();
-
-		currentRequestedSpeed = getRequestedUtilization(timeSpan, grad,
-				currentRequestedSpeed, BW_INDEX);
+		double currentRequestedSpeed = getRequestedUtilization(timeSpan, grad,
+				BW_INDEX);
 
 		return currentRequestedSpeed;
 	}
 
+	/**
+	 * Computes the requested utilization at the desired time, depending from
+	 * the current processing progress of this cloudlet.
+	 * 
+	 * @param timeSpan
+	 *            Time span since last resource processing.
+	 * 
+	 * @return the requested utilization of the ram
+	 */
 	public double getRequestedUtilizationOfRam(final double timeSpan) {
-		double currentRequestedSpeed = 0.0d;
-		double grad = this.getGradOfRam();
 
-		currentRequestedSpeed = getRequestedUtilization(timeSpan, grad,
-				currentRequestedSpeed, RAM_INDEX);
+		double grad = this.getGradOfRam();
+		double currentRequestedSpeed = getRequestedUtilization(timeSpan, grad,
+				RAM_INDEX);
 
 		return currentRequestedSpeed;
 	}
 
+	/**
+	 * Computes the requested utilization at the desired time, depending from
+	 * the current processing progress of this cloudlet.
+	 * 
+	 * @param timeSpan
+	 *            Time span since last resource processing.
+	 * 
+	 * @return the requested utilization of the storage I/O
+	 */
 	public double getRequestedUtilizationOfStorageIO(final double timeSpan) {
-		double currentRequestedSpeed = 0.0d;
 		double grad = this.getGradOfStorageIO();
 
-		currentRequestedSpeed = getRequestedUtilization(timeSpan, grad,
-				currentRequestedSpeed, STORAGE_INDEX);
+		double currentRequestedSpeed = getRequestedUtilization(timeSpan, grad,
+				STORAGE_INDEX);
 
 		return currentRequestedSpeed;
 	}
 
+	/**
+	 * Returns the value of the first bound in the instruction frame from the
+	 * underlying array.
+	 * 
+	 * @param instructions
+	 *            the instructions processed
+	 * @param resource
+	 *            the resource index in the array
+	 * @return the resource value from the array input
+	 */
 	private long getFirstBound(long instructions, int resource) {
 
 		for (int i = 0; i < data.length; i++) {
@@ -297,23 +434,50 @@ public class RdaCloudlet extends Cloudlet {
 		return data[data.length - 1][resource];
 	}
 
+	/**
+	 * The actual current utilization value can be set with this method.
+	 * 
+	 * @param value
+	 *            utilization value
+	 */
 	public void setUtilizationOfCpu(double value) {
 		this.mips = value;
 	}
 
+	/**
+	 * The actual current utilization value can be set with this method.
+	 * 
+	 * @param value
+	 *            utilization value
+	 */
 	public void setUtilizationOfBandwidth(double value) {
 		this.bandwidth = value;
 	}
 
+	/**
+	 * The actual current utilization value can be set with this method.
+	 * 
+	 * @param value
+	 *            utilization value
+	 */
 	public void setUtilizationOfStorage(double value) {
 		this.storageIO = value;
 	}
 
+	/**
+	 * The actual current utilization value can be set with this method.
+	 * 
+	 * @param value
+	 *            utilization value
+	 */
 	public void setUtilizationOfRam(double value) {
 		this.ram = value;
 	}
 
 	/**
+	 * The method looks up the array and determines the number of instructions
+	 * to the next bound.
+	 * 
 	 * 
 	 * @return the number of instructions to the next utilization change caused
 	 *         by this cloudlet
@@ -360,23 +524,47 @@ public class RdaCloudlet extends Cloudlet {
 		}
 	}
 
+	/**
+	 * 
+	 * @return the instructions already processed by this cloudlet
+	 */
 	public long getInstructionsFinishedSoFar() {
 		return instructionsFinishedSoFar;
 	}
 
+	/**
+	 * 
+	 * @param instructionsFinishedSoFar
+	 *            the instructions already processed by this cloudlet
+	 */
 	public void setInstructionsFinishedSoFar(long instructionsFinishedSoFar) {
 		this.instructionsFinishedSoFar = instructionsFinishedSoFar;
 	}
 
+	/**
+	 * 
+	 * @param instructionsFinishedSoFar
+	 *            the instructions to add to the already processed instructions
+	 *            of this cloudlet
+	 */
 	public void updateInstructionsFinishedSoFar(long instructionsFinishedSoFar) {
 		this.instructionsFinishedSoFar += instructionsFinishedSoFar;
 	}
 
+	/**
+	 * 
+	 * @return the remaining cloudlet length (in instructions) to be processed
+	 *         by this cloudlet
+	 */
 	public long getRemainingCloudletLength() {
 		return super.getCloudletLength() * Consts.MILLION
 				- instructionsFinishedSoFar;
 	}
 
+	/**
+	 * Stops the recording for this cloudlet Should be called, when it is
+	 * finished.
+	 */
 	public void stopRecording() {
 		if (this.record) {
 			recorder.close();
