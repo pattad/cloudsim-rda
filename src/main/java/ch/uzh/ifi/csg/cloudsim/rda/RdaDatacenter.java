@@ -8,7 +8,6 @@ import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
-import org.cloudbus.cloudsim.VmScheduler;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.core.CloudSimTags;
 import org.cloudbus.cloudsim.core.SimEvent;
@@ -63,7 +62,8 @@ public class RdaDatacenter extends PowerDatacenter {
 			} else {
 				data[2] = CloudSimTags.FALSE;
 			}
-			send(vm.getUserId(), CloudSim.getMinTimeBetweenEvents(), CloudSimTags.VM_CREATE_ACK, data);
+			send(vm.getUserId(), CloudSim.getMinTimeBetweenEvents(),
+					CloudSimTags.VM_CREATE_ACK, data);
 		}
 
 		if (result) {
@@ -76,10 +76,10 @@ public class RdaDatacenter extends PowerDatacenter {
 		}
 
 	}
-	
+
 	/**
-	 * Updates processing of each cloudlet running in this datacenter. It
-	 * is necessary because Hosts and VirtualMachines are simple objects, not
+	 * Updates processing of each cloudlet running in this datacenter. It is
+	 * necessary because Hosts and VirtualMachines are simple objects, not
 	 * entities. So, they don't receive events and updating cloudlets inside
 	 * them must be called from the outside.
 	 * 
@@ -225,7 +225,7 @@ public class RdaDatacenter extends PowerDatacenter {
 	}
 
 	/*
-	 * rounding up to the 9th position behind the comma. 
+	 * rounding up to the 9th position behind the comma.
 	 */
 	private double round(double d) {
 

@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.cloudbus.cloudsim.CloudletScheduler;
-import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.power.PowerVm;
 
 /**
