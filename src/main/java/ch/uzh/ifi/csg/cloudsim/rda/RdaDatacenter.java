@@ -16,7 +16,7 @@ import org.cloudbus.cloudsim.power.PowerDatacenter;
 import org.cloudbus.cloudsim.power.PowerHost;
 
 /**
- * 
+ * This datacenter implementation must be used, when using the RDA module.
  * 
  * @author Patrick A. Taddei
  */
@@ -117,6 +117,11 @@ public class RdaDatacenter extends PowerDatacenter {
 
 	}
 
+	/**
+	 * The generation of the event was slightly adapted from the PowerDatacenter
+	 * The RDA datacenter's event creation is optimized to work with very small
+	 * time intervals and at the same time not over-firing events
+	 */
 	protected void addNextDatacenterEvent(double minTime) {
 		// schedules an event to the next time
 		if (minTime != Double.MAX_VALUE) {

@@ -29,24 +29,30 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
 
 /**
- * A simple example showing how to create a data center with one host and run
- * one cloudlet on it. 
+ * A simple example showing how to create a datacenter with one host and run 2
+ * cloudlets on it.
  * 
- * XXX somehow the ram is more than input, why that ???
+ * It uses the VmSchedulerMaxMinFairShare
  * 
+ * @see VmSchedulerMaxMinFairShare
  */
-public class ExampleFairShare {
+public class FairShareExample {
 	/** The cloudlet list. */
 	private static List<Cloudlet> cloudletList;
 	/** The vmlist. */
 	private static List<Vm> vmlist;
 
+	/** the minimal scheduling interval between events */
 	private static double schedulingInterval = 0.000000001; // nano second
+
+	/** the maximal scheduling interval if scarcity occurs on a host */
 	private static double scarcitySchedulingInterval = 0.01; // milli second
+
+	/** Record output to a CSV file */
 	private static boolean record = true;
 
 	/**
-	 * Creates main() to run this example.
+	 * Main method to run this example as an application.
 	 *
 	 * @param args
 	 *            the args
@@ -65,39 +71,6 @@ public class ExampleFairShare {
 														// and time.
 			boolean trace_flag = false; // trace events
 
-			/*
-			 * Comment Start - Dinesh Bhagwat Initialize the CloudSim library.
-			 * init() invokes initCommonVariable() which in turn calls
-			 * initialize() (all these 3 methods are defined in CloudSim.java).
-			 * initialize() creates two collections - an ArrayList of SimEntity
-			 * Objects (named entities which denote the simulation entities) and
-			 * a LinkedHashMap (named entitiesByName which denote the
-			 * LinkedHashMap of the same simulation entities), with name of
-			 * every SimEntity as the key. initialize() creates two queues - a
-			 * Queue of SimEvents (future) and another Queue of SimEvents
-			 * (deferred). initialize() creates a HashMap of of Predicates (with
-			 * integers as keys) - these predicates are used to select a
-			 * particular event from the deferred queue. initialize() sets the
-			 * simulation clock to 0 and running (a boolean flag) to false. Once
-			 * initialize() returns (note that we are in method
-			 * initCommonVariable() now), a CloudSimShutDown (which is derived
-			 * from SimEntity) instance is created (with numuser as 1, its name
-			 * as CloudSimShutDown, id as -1, and state as RUNNABLE). Then this
-			 * new entity is added to the simulation While being added to the
-			 * simulation, its id changes to 0 (from the earlier -1). The two
-			 * collections - entities and entitiesByName are updated with this
-			 * SimEntity. the shutdownId (whose default value was -1) is 0 Once
-			 * initCommonVariable() returns (note that we are in method init()
-			 * now), a CloudInformationService (which is also derived from
-			 * SimEntity) instance is created (with its name as
-			 * CloudInformatinService, id as -1, and state as RUNNABLE). Then
-			 * this new entity is also added to the simulation. While being
-			 * added to the simulation, the id of the SimEntitiy is changed to 1
-			 * (which is the next id) from its earlier value of -1. The two
-			 * collections - entities and entitiesByName are updated with this
-			 * SimEntity. the cisId(whose default value is -1) is 1 Comment End
-			 * - Dinesh Bhagwat
-			 */
 			CloudSim.init(num_user, calendar, trace_flag, schedulingInterval);
 
 			// Second step: Create Datacenters
@@ -109,10 +82,11 @@ public class ExampleFairShare {
 			DatacenterBroker broker = createBroker();
 			int brokerId = broker.getId();
 
-			// Fourth step: Create one virtual machine
+			// Fourth step: Create list of virtual machines
 			vmlist = new ArrayList<Vm>();
 
-			// VM description
+			// VM description, this resources will be checked, when allocating
+			// it to a host
 			int mips = 200;
 			long size = 10000; // image size (MB)
 			int ram = 512; // vm memory (MB)
@@ -121,50 +95,39 @@ public class ExampleFairShare {
 			String vmm = "Xen"; // VMM name
 
 			// create VM
-			Vm vm = new RdaVm(0, brokerId, mips, pesNumber, ram, bw, size,
-					1, vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
-							pesNumber,scarcitySchedulingInterval), schedulingInterval);
+			Vm vm = new RdaVm(0, brokerId, mips, pesNumber, ram, bw, size, 1,
+					vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
+							pesNumber, scarcitySchedulingInterval),
+					schedulingInterval);
 			// add the VM to the vmList
 			vmlist.add(vm);
-			 vm = new RdaVm(1, brokerId, mips, pesNumber, ram, bw, size,
-					1, vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
-							pesNumber,scarcitySchedulingInterval), schedulingInterval);
+			vm = new RdaVm(1, brokerId, mips, pesNumber, ram, bw, size, 1, vmm,
+					new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber,
+							scarcitySchedulingInterval), schedulingInterval);
 			// add the VM to the vmList
 			vmlist.add(vm);
 
 			// submit vm list to the broker
 			broker.submitVmList(vmlist);
 
-			// Fifth step: Create one Cloudlet
+			// Fifth step: Create one Cloudlet list
 			cloudletList = new ArrayList<Cloudlet>();
 
 			// Cloudlet properties
-			long length = 4000;
 			long fileSize = 300;
 			long outputSize = 300;
 
-			Cloudlet cloudlet = new RdaCloudlet(
-					1,
-					pesNumber,
-					fileSize,
-					outputSize,
-					"src\\main\\resources\\input4.csv",
-					record);
+			Cloudlet cloudlet = new RdaCloudlet(1, pesNumber, fileSize,
+					outputSize, "src\\main\\resources\\input1.csv", record);
 			cloudlet.setUserId(brokerId);
 			cloudlet.setVmId(0);
 			cloudletList.add(cloudlet);
 
-//			cloudlet = new RdaCloudlet(
-//					2,
-//					pesNumber,
-//					fileSize,
-//					outputSize,
-//					"src\\main\\resources\\input2.csv",
-//					record);
-//			cloudlet.setUserId(brokerId);
-//			cloudlet.setVmId(1);
-//			cloudletList.add(cloudlet);
-			
+			cloudlet = new RdaCloudlet(1, pesNumber, fileSize, outputSize,
+					"src\\main\\resources\\input2.csv", record);
+			cloudlet.setUserId(brokerId);
+			cloudlet.setVmId(1);
+			cloudletList.add(cloudlet);
 
 			// submit cloudlet list to the broker
 			broker.submitCloudletList(cloudletList);
@@ -186,7 +149,7 @@ public class ExampleFairShare {
 	}
 
 	/**
-	 * Creates the datacenter.
+	 * Creates the RDA datacenter.
 	 *
 	 * @param name
 	 *            the name
@@ -204,7 +167,7 @@ public class ExampleFairShare {
 		// In this example, it will have only one core.
 		List<Pe> peList = new ArrayList<Pe>();
 
-		int mips = 200;
+		int mips = 1000;
 
 		// 3. Create PEs and add these into a list.
 		peList.add(new Pe(0, new PeProvisionerSimple(mips))); // need to store
@@ -220,10 +183,12 @@ public class ExampleFairShare {
 
 		RamProvisionerSimple ramProvisioner = new RamProvisionerSimple(ram);
 		BwProvisionerSimple bwProvisioner = new BwProvisionerSimple(bw);
-		StorageIOProvisionerSimple storageIO = new StorageIOProvisionerSimple(10000);
-		hostList.add(new RdaHost(hostId, ramProvisioner, bwProvisioner,storageIO,
-				storage, peList, new VmSchedulerMaxMinFairShare(
-						peList, ramProvisioner,bwProvisioner,storageIO),scarcitySchedulingInterval)); // This
+		StorageIOProvisionerSimple storageIO = new StorageIOProvisionerSimple(
+				10000);
+		hostList.add(new RdaHost(hostId, ramProvisioner, bwProvisioner,
+				storageIO, storage, peList, new VmSchedulerMaxMinFairShare(
+						peList, ramProvisioner, bwProvisioner, storageIO),
+				scarcitySchedulingInterval)); // This
 
 		// 5. Create a DatacenterCharacteristics object that stores the
 		// properties of a data center: architecture, OS, list of
@@ -261,9 +226,6 @@ public class ExampleFairShare {
 		return datacenter;
 	}
 
-	// We strongly encourage users to develop their own broker policies, to
-	// submit vms and cloudlets according
-	// to the specific rules of the simulated scenario
 	/**
 	 * Creates the broker.
 	 *

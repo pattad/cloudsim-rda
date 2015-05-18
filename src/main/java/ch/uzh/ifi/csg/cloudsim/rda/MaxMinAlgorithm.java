@@ -42,8 +42,8 @@ public class MaxMinAlgorithm {
 
 		HashMap<String, Double> allocatedResources = new HashMap<String, Double>();
 
-		int customers = reqResources.size();
-		double fairShare = maxCapacity / customers;
+		int customerCnt = reqResources.size();
+		double fairShare = maxCapacity / customerCnt;
 		double remainingCapacity = maxCapacity;
 
 		List<String> toRemove = null;
@@ -63,12 +63,12 @@ public class MaxMinAlgorithm {
 			for (String customer : toRemove) {
 				reqResources.remove(customer);
 			}
-			customers = reqResources.size();
-			fairShare = remainingCapacity / customers;
+			customerCnt = reqResources.size();
+			fairShare = remainingCapacity / customerCnt;
 		}
 
 		// splitting up leftover between the remaining customers
-		fairShare = remainingCapacity / customers;
+		fairShare = remainingCapacity / customerCnt;
 		for (String s : reqResources.keySet()) {
 			allocatedResources.put(s, fairShare);
 		}

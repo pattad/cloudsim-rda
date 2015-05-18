@@ -30,22 +30,27 @@ import ch.uzh.ifi.csg.cloudsim.rda.useraware.RdaHostUserAware;
 import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareDatacenter;
 
 /**
- * A simple example showing how to create a data center with one host and run
- * one cloudlet on it.
+ * A simple example showing how the greediness algorithm can be invoked.
  */
-public class GreedinessExampleUserAware {
+public class GreedinessExample {
+
 	/** The cloudlet list. */
 	private static List<Cloudlet> cloudletList;
 	/** The vmlist. */
 	private static List<Vm> vmlist;
 
-	private static double schedulingInterval = 0.000000001;
+	/** the minimal scheduling interval between events */
+	private static double schedulingInterval = 0.000000001; // nano second
+
+	/** the maximal scheduling interval if scarcity occurs on a host */
 	private static double scarcitySchedulingInterval = 0.01; // milli second
+
+	/** Record output to a CSV file */
+	private static boolean record = true;
+
+	/** path to the python binary on your system */
 	private static String pythonPath = "C:\\Program Files (x86)\\Python34\\python";
 
-	public static boolean record = false;
-
-	
 	/**
 	 * Creates main() to run this example.
 	 *
@@ -66,39 +71,7 @@ public class GreedinessExampleUserAware {
 														// and time.
 			boolean trace_flag = false; // trace events
 
-			/*
-			 * Comment Start - Dinesh Bhagwat Initialize the CloudSim library.
-			 * init() invokes initCommonVariable() which in turn calls
-			 * initialize() (all these 3 methods are defined in CloudSim.java).
-			 * initialize() creates two collections - an ArrayList of SimEntity
-			 * Objects (named entities which denote the simulation entities) and
-			 * a LinkedHashMap (named entitiesByName which denote the
-			 * LinkedHashMap of the same simulation entities), with name of
-			 * every SimEntity as the key. initialize() creates two queues - a
-			 * Queue of SimEvents (future) and another Queue of SimEvents
-			 * (deferred). initialize() creates a HashMap of of Predicates (with
-			 * integers as keys) - these predicates are used to select a
-			 * particular event from the deferred queue. initialize() sets the
-			 * simulation clock to 0 and running (a boolean flag) to false. Once
-			 * initialize() returns (note that we are in method
-			 * initCommonVariable() now), a CloudSimShutDown (which is derived
-			 * from SimEntity) instance is created (with numuser as 1, its name
-			 * as CloudSimShutDown, id as -1, and state as RUNNABLE). Then this
-			 * new entity is added to the simulation While being added to the
-			 * simulation, its id changes to 0 (from the earlier -1). The two
-			 * collections - entities and entitiesByName are updated with this
-			 * SimEntity. the shutdownId (whose default value was -1) is 0 Once
-			 * initCommonVariable() returns (note that we are in method init()
-			 * now), a CloudInformationService (which is also derived from
-			 * SimEntity) instance is created (with its name as
-			 * CloudInformatinService, id as -1, and state as RUNNABLE). Then
-			 * this new entity is also added to the simulation. While being
-			 * added to the simulation, the id of the SimEntitiy is changed to 1
-			 * (which is the next id) from its earlier value of -1. The two
-			 * collections - entities and entitiesByName are updated with this
-			 * SimEntity. the cisId(whose default value is -1) is 1 Comment End
-			 * - Dinesh Bhagwat
-			 */
+			
 			CloudSim.init(num_user, calendar, trace_flag, schedulingInterval);
 
 			// Second step: Create Datacenters
@@ -124,13 +97,14 @@ public class GreedinessExampleUserAware {
 
 			Vm vm = new RdaVm(vmid, brokerId, mips, pesNumber, ram, bw, size,
 					1, vmm, new RdaCloudletSchedulerDynamicWorkload(mips,
-							pesNumber,scarcitySchedulingInterval), schedulingInterval);
+							pesNumber, scarcitySchedulingInterval),
+					schedulingInterval);
 			((RdaVm) vm).setCustomer("user1");
 			vmlist.add(vm);
 
 			vm = new RdaVm(1, brokerId, mips, pesNumber, ram, bw, size, 1, vmm,
-					new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber,scarcitySchedulingInterval),
-					schedulingInterval);
+					new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber,
+							scarcitySchedulingInterval), schedulingInterval);
 			((RdaVm) vm).setCustomer("user2");
 			vmlist.add(vm);
 
@@ -146,24 +120,14 @@ public class GreedinessExampleUserAware {
 			long fileSize = 300;
 			long outputSize = 300;
 
-			Cloudlet cloudlet = new RdaCloudlet(
-					1,
-					pesNumber,
-					fileSize,
-					outputSize,
-					"src\\main\\resources\\input1.csv",
-					record);
+			Cloudlet cloudlet = new RdaCloudlet(1, pesNumber, fileSize,
+					outputSize, "src\\main\\resources\\input1.csv", record);
 			cloudlet.setUserId(brokerId);
 			cloudlet.setVmId(0);
 			cloudletList.add(cloudlet);
 
-			cloudlet = new RdaCloudlet(
-					2,
-					pesNumber,
-					fileSize,
-					outputSize,
-					"src\\main\\resources\\input2.csv",
-					record);
+			cloudlet = new RdaCloudlet(2, pesNumber, fileSize, outputSize,
+					"src\\main\\resources\\input2.csv", record);
 			cloudlet.setUserId(brokerId);
 			cloudlet.setVmId(1);
 			cloudletList.add(cloudlet);
@@ -271,9 +235,6 @@ public class GreedinessExampleUserAware {
 		return datacenter;
 	}
 
-	// We strongly encourage users to develop their own broker policies, to
-	// submit vms and cloudlets according
-	// to the specific rules of the simulated scenario
 	/**
 	 * Creates the broker.
 	 *
