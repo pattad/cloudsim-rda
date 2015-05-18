@@ -238,7 +238,7 @@ public class RdaCloudlet extends Cloudlet {
 
 		} else {
 			double past = this.getUtilizationOfCpu(0.0d);
-			double instructions = (double) nextInstructionChange
+			double instructionsToProcess = (double) nextInstructionChange
 					/ (double) Consts.MILLION;
 
 			// calculating the expected time to be finished with the current
@@ -246,15 +246,15 @@ public class RdaCloudlet extends Cloudlet {
 			// function: grad * x + past
 			// integral function: grad/2 * x2 + past*x
 			//
-			// we know currentInst, thereafter
-			// instructions = grad/2 * x2 + past*x
+			// we know instructionsToProcess, thereafter
+			// instructionsToProcess = grad/2 * x2 + past*x
 			//
 			// resolving after x, with the standard formula for
 			// squared equations
 			// we get the expected time till the end of the interval.
 			// (x = time)
 
-			double discriminant = past * past + 2.0 * grad * instructions;
+			double discriminant = past * past + 2.0 * grad * instructionsToProcess;
 
 			double time = ((-past + Math.sqrt(discriminant)) / grad);
 			return time;
@@ -278,20 +278,20 @@ public class RdaCloudlet extends Cloudlet {
 	 * @param resourceGrad
 	 *            The gradient of the resource to be evaluated.
 	 * @param resourceIndex
-	 *            The resource index.
+	 *            The resource index in the array.
 	 * @return the requested utilization
 	 */
 	private double getRequestedUtilization(final double timeSpan,
 			double resourceGrad, int resourceIndex) {
 
-		double currentRequestedSpeed = 0.0d;
+		double currentRequestedUtilization = 0.0d;
 
 		// we go thru all timeframe starting points
 		for (int i = 0; i < data.length; i++) {
 			if (data[i][INST_INDEX] == instructionsFinishedSoFar) {
 				// we are right on the beginning of an instruction interval
 				// f(timeSpan) = grad*timeSpan + past
-				currentRequestedSpeed = resourceGrad * timeSpan
+				currentRequestedUtilization = resourceGrad * timeSpan
 						+ data[i][resourceIndex];
 				break;
 			} else if (data[i][INST_INDEX] >= instructionsFinishedSoFar) {
@@ -299,7 +299,7 @@ public class RdaCloudlet extends Cloudlet {
 				// finished yet
 				if (resourceGrad != 0) {
 					double expectedTime;
-					double pastRequestedSpeed;
+					double pastRequestedUtilization;
 
 					// calculate the expected point in time, in the interval,
 					// where the cloudlet currently is
@@ -340,24 +340,24 @@ public class RdaCloudlet extends Cloudlet {
 						expectedTime = currentInst / instSpan;
 					}
 
-					double pastSpeedResource = data[i - 1][resourceIndex];
+					double pastUtilizationResource = data[i - 1][resourceIndex];
 
-					// the requestedSpeed without the timeSpan
-					pastRequestedSpeed = resourceGrad * expectedTime
-							+ pastSpeedResource;
+					// the requested utilization without the timeSpan
+					pastRequestedUtilization = resourceGrad * expectedTime
+							+ pastUtilizationResource;
 
-					// the requested Speed with the timeSpan
-					currentRequestedSpeed = resourceGrad * timeSpan
-							+ pastRequestedSpeed;
+					// the requested utilization with the timeSpan
+					currentRequestedUtilization = resourceGrad * timeSpan
+							+ pastRequestedUtilization;
 
 				} else {
 					// there is a constant value
-					currentRequestedSpeed = data[i][resourceIndex];
+					currentRequestedUtilization = data[i][resourceIndex];
 				}
 				break;
 			}
 		}
-		return currentRequestedSpeed;
+		return currentRequestedUtilization;
 	}
 
 	/**

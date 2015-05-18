@@ -44,15 +44,18 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	/** The total mips. */
 	private double totalMips;
 
+	/** the event time interval, when scarcity occurs */
 	public double scarcitySchedulingInterval;
 
 	/**
-	 * Instantiates a new vM scheduler time shared.
+	 * Instantiates a new VM scheduler 
 	 * 
 	 * @param mips
 	 *            the mips
 	 * @param numberOfPes
 	 *            the pes number
+	 * @param scarcitySchedulingInterval
+	 *            the event time interval, when scarcity occurs
 	 */
 	public RdaCloudletSchedulerDynamicWorkload(double mips, int numberOfPes,
 			double scarcitySchedulingInterval) {
@@ -77,17 +80,13 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	 *            storage IO share available
 	 * 
 	 * @return time predicted completion time of the earliest finishing
-	 *         cloudlet, or 0 if there is no next events
+	 *         cloudlet
 	 */
 	public double updateVmProcessing(double currentTime,
 			List<Double> mipsShare, double bwShare, double storageIOShare) {
 		setCurrentMipsShare(mipsShare);
 		double nextEvent = Double.MAX_VALUE;
 
-		// XXX remove this
-		if (String.valueOf(currentTime).startsWith("3")) {
-			System.out.println("XXX");
-		}
 		double timeSpan = getTimeSpan(currentTime);
 
 		List<ResCloudlet> cloudletsToFinish = new ArrayList<ResCloudlet>();
@@ -189,11 +188,11 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 					.getRequestedUtilizationOfRam(timeSpan);
 			cloudlet.setUtilizationOfRam(currentRequestedRam);
 
-			double lastCPU = cloudlet.getUtilizationOfCpu(0.0f);
+			double pastCpu = cloudlet.getUtilizationOfCpu(0.0f);
 
 			double effectiveGradient;
 			if (effectiveDampingFactor != 1.0d) {
-				effectiveGradient = (effectiveProcessingSpeed - lastCPU)
+				effectiveGradient = (effectiveProcessingSpeed - pastCpu)
 						/ timeSpan;
 			} else {
 				effectiveGradient = cloudlet.getGradOfCpu();
@@ -206,9 +205,10 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 			// Log.printLine("current_time: " + currentTime);
 			long processedInstructions;
 			if (effectiveGradient != 0.0) {
-				double a = (effectiveGradient / 2.0 * (timeSpan * timeSpan) + lastCPU
-						* timeSpan);
-				processedInstructions = Math.round(a * (double) Consts.MILLION);
+				double instructions = (effectiveGradient / 2.0
+						* (timeSpan * timeSpan) + pastCpu * timeSpan);
+				processedInstructions = Math.round(instructions
+						* (double) Consts.MILLION);
 			} else {
 				processedInstructions = Math.round(effectiveProcessingSpeed
 						* timeSpan * Consts.MILLION);
@@ -274,6 +274,10 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return timeSpan;
 	}
 
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
 	public double getCurrentRequestedGradCpu() {
 		double gradTotal = 0.0;
 
@@ -285,6 +289,10 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return gradTotal;
 	}
 
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
 	public double getCurrentRequestedGradBw() {
 		double gradTotal = 0.0;
 
@@ -296,6 +304,10 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return gradTotal;
 	}
 
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
 	public double getCurrentRequestedGradStorageIO() {
 		double gradTotal = 0.0;
 
@@ -307,36 +319,15 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return gradTotal;
 	}
 
-	/**
-	 * Receives an cloudlet to be executed in the VM managed by this scheduler.
-	 * 
-	 * @param cl
-	 *            the cl
-	 * @return predicted completion time
-	 * @pre _gl != null
-	 * @post $none
-	 */
 	@Override
 	public double cloudletSubmit(Cloudlet cl) {
 		return cloudletSubmit(cl, 0);
 	}
 
-	/**
-	 * Receives an cloudlet to be executed in the VM managed by this scheduler.
-	 * 
-	 * @param cl
-	 *            the cl
-	 * @param fileTransferTime
-	 *            the file transfer time
-	 * @return predicted completion time
-	 * @pre _gl != null
-	 * @post $none
-	 */
 	@Override
 	public double cloudletSubmit(Cloudlet cl, double fileTransferTime) {
 		ResCloudlet rcl = new ResCloudlet(cl);
 		rcl.setCloudletStatus(Cloudlet.INEXEC);
-		// XXX file transferTime ???
 
 		for (int i = 0; i < cl.getNumberOfPes(); i++) {
 			rcl.setMachineAndPeId(0, i);
@@ -346,14 +337,6 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return getEstimatedFinishTime(rcl, getPreviousTime());
 	}
 
-	/**
-	 * Processes a finished cloudlet.
-	 * 
-	 * @param rcl
-	 *            finished cloudlet
-	 * @pre rgl != $null
-	 * @post $none
-	 */
 	@Override
 	public void cloudletFinish(ResCloudlet rcl) {
 		rcl.setCloudletStatus(Cloudlet.SUCCESS);
@@ -376,6 +359,10 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
 	public double getCurrentRequestedUtilizationOfRam(double currentTime) {
 		double ram = 0;
 		double timeSpan = getTimeSpan(currentTime);
@@ -386,6 +373,10 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return ram;
 	}
 
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
 	public double getCurrentRequestedUtilizationOfBw(double currentTime) {
 		double bw = 0;
 		double timeSpan = getTimeSpan(currentTime);
@@ -400,7 +391,7 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 
 	/**
 	 * 
-	 * @return
+	 * @see RdaCloudletScheduler interface
 	 */
 	public double getCurrentRequestedUtilizationOfStorageIO(double currentTime) {
 		double storageIO = 0;
@@ -414,13 +405,6 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return storageIO;
 	}
 
-	/**
-	 * Get utilization created by all cloudlets.
-	 * 
-	 * @param time
-	 *            the time
-	 * @return total utilization
-	 */
 	@Override
 	public double getTotalUtilizationOfCpu(double currentTime) {
 		double totalUtilization = 0;
@@ -431,11 +415,6 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return totalUtilization;
 	}
 
-	/**
-	 * Gets the current requested mips.
-	 * 
-	 * @return the current mips
-	 */
 	@Override
 	public List<Double> getCurrentRequestedMips() {
 		// this method is called, when allocating a VM on the host to check
@@ -467,30 +446,12 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return currentMips;
 	}
 
-	/**
-	 * Gets the current mips.
-	 * 
-	 * @param rcl
-	 *            the rcl
-	 * @param time
-	 *            the time
-	 * @return the current mips
-	 */
 	@Override
 	public double getTotalCurrentRequestedMipsForCloudlet(ResCloudlet rcl,
 			double time) {
 		throw new UnsupportedOperationException();
 	}
 
-	/**
-	 * Gets the total current mips for the clouddlet.
-	 * 
-	 * @param rcl
-	 *            the rcl
-	 * @param mipsShare
-	 *            the mips share
-	 * @return the total current mips
-	 */
 	@Override
 	public double getTotalCurrentAvailableMipsForCloudlet(ResCloudlet rcl,
 			List<Double> mipsShare) {
@@ -508,15 +469,6 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return totalCurrentMips;
 	}
 
-	/**
-	 * Gets the current mips.
-	 * 
-	 * @param rcl
-	 *            the rcl
-	 * @param time
-	 *            the time
-	 * @return the current mips
-	 */
 	@Override
 	public double getTotalCurrentAllocatedMipsForCloudlet(ResCloudlet rcl,
 			double time) {

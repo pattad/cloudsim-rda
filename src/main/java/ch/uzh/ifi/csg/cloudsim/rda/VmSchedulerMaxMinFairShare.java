@@ -12,31 +12,71 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
 
+/**
+ * This VM scheduler is the standard VM scheduler to be used within the RDA
+ * module.
+ * 
+ * This scheduler uses the Max-Min Fair Share (MMFS) algorithm to allocate the
+ * resource to the different VMs. The MMFS algorithm is the basic way, how
+ * multiple processes on one host are sharing the physical resources.
+ * 
+ * How does it work:
+ * 
+ * 1. Check which resource is the most scarce of the resources cpu, bandwidth
+ * and storage I/O.
+ * 
+ * 2. Downgrade that resource for all VMs
+ * 
+ * 3. Downgrade all the other resources of each VM. According to the Leontief
+ * production function dependencies.
+ * 
+ * 4. If a resource is still overused, the resource is getting downgraded again
+ * with the MMFS.
+ * 
+ * This procedure guarantees that the host resources are not overused.
+ * 
+ * @author Patrick A. Taddei
+ * @see MaxMinAlgorithm
+ */
 public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 		RdaVmScheduler {
 
-	MaxMinAlgorithm maxMin = new MaxMinAlgorithm();
+	private MaxMinAlgorithm maxMin = new MaxMinAlgorithm();
 
-	RamProvisioner ramProvisioner;
-	BwProvisioner bwProvisioner;
-	StorageIOProvisioner sProvisioner;
-	
-	public VmSchedulerMaxMinFairShare(List<? extends Pe> pelist) {
-		super(pelist);
-		throw new UnsupportedOperationException(
-				"This constructor is not supported by this scheduler.");
-	}
+	private RamProvisioner ramProvisioner;
+	private BwProvisioner bwProvisioner;
+	private StorageIOProvisioner sProvisioner;
 
+	/**
+	 * Instantiates a new vm scheduler time shared.
+	 * 
+	 * @param pelist
+	 *            the pelist
+	 * @param ramProvisioner
+	 *            the ram provisioner
+	 * @param bwProvisioner
+	 *            the bandwidth provisioner
+	 * @param sProvisioner
+	 *            the storage I/O provisioner
+	 */
 	public VmSchedulerMaxMinFairShare(List<? extends Pe> pelist,
 			RamProvisioner ramProvisioner, BwProvisioner bwProvisioner,
-			StorageIOProvisioner sProvisioner) {
+			StorageIOProvisioner storageIOProvisioner) {
 		super(pelist);
 		this.ramProvisioner = ramProvisioner;
 		this.bwProvisioner = bwProvisioner;
-		this.sProvisioner = sProvisioner;
+		this.sProvisioner = storageIOProvisioner;
 
 	}
 
+	/**
+	 * Please read class description above for further details.
+	 * 
+	 * @param currentTime
+	 *            the simulation time
+	 * @param vms
+	 *            the VMs to allocate the resources to
+	 */
 	public void allocateResourcesForAllVms(double currentTime, List<Vm> vms) {
 
 		super.getMipsMap().clear();
@@ -52,15 +92,13 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 		HashMap<String, Double> requestedStorageIO = new HashMap<String, Double>();
 
 		for (Vm vm : vms) {
-			double reqRam =  ((RdaVm) vm)
-					.getCurrentRequestedRam(currentTime);
-			double reqBw = ((RdaVm) vm)
-					.getCurrentRequestedBw(currentTime);
-			double reqStorage =  ((RdaVm) vm)
+			double reqRam = ((RdaVm) vm).getCurrentRequestedRam(currentTime);
+			double reqBw = ((RdaVm) vm).getCurrentRequestedBw(currentTime);
+			double reqStorage = ((RdaVm) vm)
 					.getCurrentRequestedStorageIO(currentTime);
 			double reqCpu = ((RdaVm) vm)
 					.getCurrentRequestedTotalMips(currentTime);
-			
+
 			String uid = (String) vm.getUid();
 
 			requestedCpu.put(uid, reqCpu);
@@ -80,8 +118,8 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 
 		// check which resource is the most scarce resource
 
-		double demandCpu = maxMin
-				.getResourceDemand(requestedCpu, maxCpuCapacity);
+		double demandCpu = maxMin.getResourceDemand(requestedCpu,
+				maxCpuCapacity);
 		double demandBw = maxMin.getResourceDemand(requestedBw,
 				bwProvisioner.getBw());
 		double demandStorageIO = maxMin.getResourceDemand(requestedStorageIO,

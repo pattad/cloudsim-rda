@@ -37,8 +37,10 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
  */
 public class RdaHost extends PowerHost {
 
+	/** the min event time interval, when scarcity occurs */
 	public double scarcitySchedulingInterval;
 
+	/** storage I/O provisioner */
 	public StorageIOProvisioner storageIOProvisioner;
 
 	/** The ram provisioner. */
@@ -48,7 +50,7 @@ public class RdaHost extends PowerHost {
 	private BwProvisioner bwProvisioner;
 
 	/**
-	 * Instantiates a new host.
+	 * Instantiates a new host with RDA capabilities.
 	 * 
 	 * @param id
 	 *            the id
@@ -56,6 +58,8 @@ public class RdaHost extends PowerHost {
 	 *            the ram provisioner
 	 * @param bwProvisioner
 	 *            the bw provisioner
+	 * @param storageIOProvisioner
+	 *            the storage I/O provisioner
 	 * @param storage
 	 *            the storage
 	 * @param peList
@@ -127,8 +131,8 @@ public class RdaHost extends PowerHost {
 	@Override
 	public double updateVmsProcessing(double currentTime) {
 
-		((RdaVmScheduler) getVmScheduler())
-				.allocateResourcesForAllVms(currentTime, getVmList());
+		((RdaVmScheduler) getVmScheduler()).allocateResourcesForAllVms(
+				currentTime, getVmList());
 
 		double smallerTime = Double.MAX_VALUE;
 		for (Vm vm : getVmList()) {
@@ -149,6 +153,13 @@ public class RdaHost extends PowerHost {
 		return smallerTime;
 	}
 
+	/**
+	 * This method logs certain host specific measures and adds the history.
+	 * This behavior was taken from the the HostDynamicWorkload class.
+	 * 
+	 * @param currentTime
+	 *            the time of the simulation
+	 */
 	protected void updateHostState(double currentTime) {
 		double hostTotalRequestedMips = 0;
 		setPreviousUtilizationMips(getUtilizationMips());
@@ -204,6 +215,18 @@ public class RdaHost extends PowerHost {
 				hostTotalRequestedMips, (getUtilizationMips() > 0));
 	}
 
+	/**
+	 * Checks, whether a scarcity could arise within the time span to the
+	 * smallerTime. If so, the result will be the time, when the scarcity
+	 * arises, the scarcitySchedulingInterval, when expected time is smaller
+	 * than it.
+	 * 
+	 * @param smallerTime
+	 *            the time, where the next event is expected
+	 * @param currentTime
+	 *            current simulation time
+	 * @return smallerTime
+	 */
 	protected double checkForScarcity(double smallerTime, double currentTime) {
 
 		double totalGradCpu = 0.0;
@@ -313,10 +336,21 @@ public class RdaHost extends PowerHost {
 		return vmsToRemove;
 	}
 
+	/**
+	 * Retrieves the min event time interval, when scarcity occurs.
+	 * 
+	 * @return the min event time interval, when scarcity occurs
+	 */
 	public double getScarcityShedulingInterval() {
 		return this.scarcitySchedulingInterval;
 	}
 
+	/**
+	 * Setts the min event time interval, when scarcity occurs.
+	 * 
+	 * @param scarcitySchedulingInterval
+	 *            the min event time interval, when scarcity occurs
+	 */
 	public void setScarcityShedulingInterval(double scarcitySchedulingInterval) {
 		this.scarcitySchedulingInterval = scarcitySchedulingInterval;
 	}
