@@ -30,9 +30,9 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
 
 /**
  * A simple example showing how to create a datacenter with one host and run 2
- * cloudlets on it.
+ * VMs with each 1 cloudlet on it.
  * 
- * It uses the VmSchedulerMaxMinFairShare
+ * It uses the VmSchedulerMaxMinFairShare VM scheduler policy.
  * 
  * @see VmSchedulerMaxMinFairShare
  */
@@ -123,7 +123,7 @@ public class FairShareExample {
 			cloudlet.setVmId(0);
 			cloudletList.add(cloudlet);
 
-			cloudlet = new RdaCloudlet(1, pesNumber, fileSize, outputSize,
+			cloudlet = new RdaCloudlet(2, pesNumber, fileSize, outputSize,
 					"src\\main\\resources\\input2.csv", record);
 			cloudlet.setUserId(brokerId);
 			cloudlet.setVmId(1);

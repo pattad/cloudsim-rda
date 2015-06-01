@@ -254,7 +254,8 @@ public class RdaCloudlet extends Cloudlet {
 			// we get the expected time till the end of the interval.
 			// (x = time)
 
-			double discriminant = past * past + 2.0 * grad * instructionsToProcess;
+			double discriminant = past * past + 2.0 * grad
+					* instructionsToProcess;
 
 			double time = ((-past + Math.sqrt(discriminant)) / grad);
 			return time;
@@ -534,6 +535,15 @@ public class RdaCloudlet extends Cloudlet {
 	@Override
 	public double getUtilizationOfBw(final double time) {
 		return this.bandwidth;
+	}
+
+	/**
+	 * Returns the utilization of storage I/O.
+	 * 
+	 * @return the utilization of storage I/O
+	 */
+	public double getUtilizationOfStorage() {
+		return this.storageIO;
 	}
 
 	@Override
