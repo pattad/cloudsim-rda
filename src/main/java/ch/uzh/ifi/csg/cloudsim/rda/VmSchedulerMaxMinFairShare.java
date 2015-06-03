@@ -30,9 +30,6 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
  * 3. Downgrade all the other resources of each VM. According to the Leontief
  * production function dependencies.
  * 
- * 4. If a resource is still overused, the resource is getting downgraded again
- * with the MMFS.
- * 
  * This procedure guarantees that the host resources are not overused.
  * 
  * @author Patrick A. Taddei
@@ -117,7 +114,6 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 		Map<String, Double> allocatedStorageIO = null;
 
 		// check which resource is the most scarce resource
-
 		double demandCpu = maxMin.getResourceDemand(requestedCpu,
 				maxCpuCapacity);
 		double demandBw = maxMin.getResourceDemand(requestedBw,
@@ -125,7 +121,6 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 		double demandStorageIO = maxMin.getResourceDemand(requestedStorageIO,
 				sProvisioner.getStorageIO());
 
-		// XXX maybe think of an even more dynamic algorithm...
 
 		// if the demand for CPU has the highest percentage
 		if (demandCpu >= demandBw && demandCpu >= demandStorageIO) {
@@ -142,15 +137,6 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 					requestedBw.put(uid, bw / dampingFactor);
 					double storageIO = requestedStorageIO.get(uid);
 					requestedStorageIO.put(uid, storageIO / dampingFactor);
-				}
-				if (maxMin.isResourceScarce(requestedBw, bwProvisioner.getBw())) {
-					allocatedBw = maxMin.evaluate(requestedBw,
-							bwProvisioner.getBw());
-				}
-				if (maxMin.isResourceScarce(requestedStorageIO,
-						sProvisioner.getStorageIO())) {
-					allocatedStorageIO = maxMin.evaluate(requestedStorageIO,
-							sProvisioner.getStorageIO());
 				}
 			}
 		}
@@ -171,15 +157,6 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 					double storageIO = requestedStorageIO.get(uid);
 					requestedStorageIO.put(uid, storageIO / dampingFactor);
 				}
-				if (maxMin.isResourceScarce(requestedCpu, maxCpuCapacity)) {
-					allocatedCpu = maxMin
-							.evaluate(requestedCpu, maxCpuCapacity);
-				}
-				if (maxMin.isResourceScarce(requestedStorageIO,
-						sProvisioner.getStorageIO())) {
-					allocatedStorageIO = maxMin.evaluate(requestedStorageIO,
-							sProvisioner.getStorageIO());
-				}
 			}
 		}
 		// if the demand for storage has the highest percentage
@@ -196,17 +173,9 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 						dampingFactor = 1;
 					}
 					double cpu = requestedCpu.get(uid);
-					requestedBw.put(uid, cpu / dampingFactor);
+					requestedCpu.put(uid, cpu / dampingFactor);
 					double bw = requestedBw.get(uid);
 					requestedBw.put(uid, bw / dampingFactor);
-				}
-				if (maxMin.isResourceScarce(requestedCpu, maxCpuCapacity)) {
-					allocatedCpu = maxMin
-							.evaluate(requestedCpu, maxCpuCapacity);
-				}
-				if (maxMin.isResourceScarce(requestedBw, bwProvisioner.getBw())) {
-					allocatedBw = maxMin.evaluate(requestedBw,
-							bwProvisioner.getBw());
 				}
 			}
 		}
