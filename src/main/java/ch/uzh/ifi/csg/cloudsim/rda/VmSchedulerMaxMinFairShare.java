@@ -8,6 +8,7 @@ import java.util.Map;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmSchedulerTimeShared;
+
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
@@ -88,6 +89,8 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 		HashMap<String, Double> requestedBw = new HashMap<String, Double>();
 		HashMap<String, Double> requestedStorageIO = new HashMap<String, Double>();
 
+		double totReqRam = 0.0;
+
 		for (Vm vm : vms) {
 			double reqRam = ((RdaVm) vm).getCurrentRequestedRam(currentTime);
 			double reqBw = ((RdaVm) vm).getCurrentRequestedBw(currentTime);
@@ -102,10 +105,15 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 			requestedRam.put(uid, reqRam);
 			requestedBw.put(uid, reqBw);
 			requestedStorageIO.put(uid, reqStorage);
+
+			totReqRam += reqRam;
+
 		}
 
-		// ramProvisioner.getRam() XXX what's with ram, if over-demand, throw
-		// exception or what?
+		if (totReqRam > ramProvisioner.getRam()) {
+			throw new RuntimeException(
+					"Requested RAM is more than available RAM. ");
+		}
 
 		float maxCpuCapacity = (float) super.getPeCapacity();
 
@@ -120,7 +128,6 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 				bwProvisioner.getBw());
 		double demandStorageIO = maxMin.getResourceDemand(requestedStorageIO,
 				sProvisioner.getStorageIO());
-
 
 		// if the demand for CPU has the highest percentage
 		if (demandCpu >= demandBw && demandCpu >= demandStorageIO) {
