@@ -66,6 +66,8 @@ public class RdaHost extends PowerHost {
 	 *            the pe list
 	 * @param vmScheduler
 	 *            the VM scheduler
+	 * @param scarcitySchedulingInterval
+	 *            The scheduling interval, if a resource is scarce.
 	 */
 	public RdaHost(int id, RamProvisioner ramProvisioner,
 			BwProvisioner bwProvisioner,

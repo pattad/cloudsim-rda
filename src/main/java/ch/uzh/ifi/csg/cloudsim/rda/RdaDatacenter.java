@@ -23,12 +23,12 @@ import org.cloudbus.cloudsim.power.PowerHost;
 public class RdaDatacenter extends PowerDatacenter {
 
 	/**
-	 * Instantiates a new datacenter.
+	 * Instantiates a new RDA datacenter.
 	 * 
 	 * @param name
-	 *            the name
+	 *            the name of the datacenter
 	 * @param characteristics
-	 *            the res config
+	 *            an object of DatacenterCharacteristics
 	 * @param vmAllocationPolicy
 	 *            the vm provisioner
 	 * @param storageList
@@ -36,7 +36,16 @@ public class RdaDatacenter extends PowerDatacenter {
 	 * @param schedulingInterval
 	 *            the scheduling interval
 	 * @throws Exception
-	 *             the exception
+	 *             This happens when one of the following scenarios occur:
+	 *             <ul>
+	 *             <li>creating this entity before initializing CloudSim package
+	 *             <li>this entity name is <tt>null</tt> or empty
+	 *             <li>this entity has <tt>zero</tt> number of PEs (Processing
+	 *             Elements). <br>
+	 *             No PEs mean the Cloudlets can't be processed. A CloudResource
+	 *             must contain one or more Machines. A Machine must contain one
+	 *             or more PEs.
+	 *             </ul>
 	 */
 	public RdaDatacenter(String name,
 			DatacenterCharacteristics characteristics,

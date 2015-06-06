@@ -13,8 +13,14 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
 
-public class RdaHostUserAware extends RdaHost implements
-		UserAwareHost {
+/**
+ * This is an implementation of the UserAwareHost interface. This host must be
+ * used, when setting up a scheduling policy with a user aware context.
+ * 
+ * @author Patrick A. Taddei
+ * @see UserAwareHost
+ */
+public class RdaHostUserAware extends RdaHost implements UserAwareHost {
 
 	/**
 	 * Instantiates a new host.
@@ -31,6 +37,8 @@ public class RdaHostUserAware extends RdaHost implements
 	 *            the pe list
 	 * @param vmScheduler
 	 *            the VM scheduler
+	 * @param scarcitySchedulingInterval
+	 *            The scheduling interval, if a resource is scarce.
 	 */
 	public RdaHostUserAware(int id, RamProvisioner ramProvisioner,
 			BwProvisioner bwProvisioner, StorageIOProvisioner sProvisioner,
@@ -40,13 +48,19 @@ public class RdaHostUserAware extends RdaHost implements
 				vmScheduler, scarcitySchedulingInterval);
 	}
 
+	/**
+	 * @see UserAwareHost
+	 */
 	public Map<String, Float> getUserPriorities(double currentTime) {
 
-		return ((RdaUserAwareVmScheduler) getVmScheduler())
-				.getUserPriorities(currentTime, getVmList());
+		return ((RdaUserAwareVmScheduler) getVmScheduler()).getUserPriorities(
+				currentTime, getVmList());
 
 	}
 
+	/**
+	 * @see UserAwareHost
+	 */
 	public double updateVmsProcessing(double currentTime,
 			Map<String, Float> priorities) {
 		((RdaUserAwareVmScheduler) getVmScheduler())

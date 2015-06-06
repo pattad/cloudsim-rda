@@ -14,11 +14,42 @@ import org.cloudbus.cloudsim.power.PowerHost;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaDatacenter;
 
 /**
+ * This datacenter supports a user aware VM scheduling policy. Before calling
+ * the method updateVmsProcessing() on the hosts, this datacenter calls
+ * getUserPriorities() on all hosts. This gathers all priorities of the users,
+ * so that they can be taken into account when updateing the resources for the
+ * VMs, running on the different hosts.
  * 
  * @author Patrick A. Taddei
  */
 public class UserAwareDatacenter extends RdaDatacenter {
 
+	/**
+	 * 
+	 * Instantiates a new user aware datacenter.
+	 * 
+	 * @param name
+	 *            the name of the datacenter
+	 * @param characteristics
+	 *            an object of DatacenterCharacteristics
+	 * @param vmAllocationPolicy
+	 *            the vm provisioner
+	 * @param storageList
+	 *            the storage list
+	 * @param schedulingInterval
+	 *            the scheduling interval
+	 * @throws Exception
+	 *             This happens when one of the following scenarios occur:
+	 *             <ul>
+	 *             <li>creating this entity before initializing CloudSim package
+	 *             <li>this entity name is <tt>null</tt> or empty
+	 *             <li>this entity has <tt>zero</tt> number of PEs (Processing
+	 *             Elements). <br>
+	 *             No PEs mean the Cloudlets can't be processed. A CloudResource
+	 *             must contain one or more Machines. A Machine must contain one
+	 *             or more PEs.
+	 *             </ul>
+	 */
 	public UserAwareDatacenter(String name,
 			DatacenterCharacteristics characteristics,
 			VmAllocationPolicy vmAllocationPolicy, List<Storage> storageList,
