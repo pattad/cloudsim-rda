@@ -139,7 +139,7 @@ public class RdaHost extends PowerHost {
 			double time = ((RdaVm) vm).updateVmProcessing(currentTime,
 					getVmScheduler().getAllocatedMipsForVm(vm),
 					((RdaVm) vm).getCurrentAllocatedBwFine(),
-					((RdaVm) vm).getCurrentAllocatedStorageIO()); // XXX ram???
+					((RdaVm) vm).getCurrentAllocatedStorageIO());
 
 			if (time > 0.0 && time < smallerTime) {
 				smallerTime = time;
