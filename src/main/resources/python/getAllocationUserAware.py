@@ -1,6 +1,8 @@
 from metrics import getTargetAllocation
 from metrics import getGreediness
 from metrics import get_allocation
+from metrics import get_allocation_for_leontief
+
 from VM import VM
 import numpy as np
 import random
@@ -10,13 +12,26 @@ while True:
 	text = input('')
 	text = text.split(' ')
 
+	# sample input:
+	# 1000 2048.0 1000.0 10000.0 user1 0.0 230.0 20.0 22.0 0.0 user2 0.0 230.0 20.0 22.0 0.0 
+	
 	supply = [float(text[0]),float(text[1]),float(text[2]),float(text[3])]
 
-	U1 = VM([float(text[6]),float(text[7]),float(text[8]),float(text[9])],text[4])
-	U1.greed_user = float(text[5])
-	U2 = VM([float(text[12]),float(text[13]),float(text[14]),float(text[15])],text[10])
-	U2.greed_user = float(text[11])
+	offset = 4
+	U1 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
+	U1.greed_user = float(text[offset+1])
+	
+	offset = 10
+	U2 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
+	U2.greed_user = float(text[offset+1])
+	
 	VMs = [U1,U2]
+			
+	if len(text) > 17: 
+		offset = 16
+		U3 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
+		U3.greed_user = float(text[offset+1])
+		VMs = [U1,U2,U3]
 
 # define a set of VMs
 #U1 = VM([6,5,6,5],'a')
@@ -30,7 +45,7 @@ while True:
 #supply = [16,16,16,16]
 
 # calculate a new allocation for the 4th (last) resource
-	out = get_allocation(VMs,supply)
+	out = get_allocation_for_leontief(VMs,supply)
 
 	for i in out:
 		print(i)
