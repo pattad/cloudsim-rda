@@ -17,7 +17,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.RdaDatacenter;
  * This datacenter supports a user aware VM scheduling policy. Before calling
  * the method updateVmsProcessing() on the hosts, this datacenter calls
  * getUserPriorities() on all hosts. This gathers all priorities of the users,
- * so that they can be taken into account when updateing the resources for the
+ * so that they can be taken into account when updating the resources for the
  * VMs, running on the different hosts.
  * 
  * @author Patrick A. Taddei
