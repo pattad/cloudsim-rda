@@ -26,6 +26,11 @@
     	<artifactId>cloudsim</artifactId>
     	<version>3.1-SNAPSHOT</version>
     </dependency>
+    <dependency>
+    	<groupId>org.apache.commons</groupId>
+    	<artifactId>commons-math3</artifactId>
+    	<version>3.3</version>
+    </dependency>
   </dependencies>
   <description>This module enhances the cloud simulator project cloudsim (see http://www.cloudbus.org/cloudsim) with resource dependency aware tasks/workloads.</description>
 </project>

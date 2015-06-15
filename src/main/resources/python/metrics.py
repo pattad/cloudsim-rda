@@ -326,7 +326,7 @@ def check_input( VMs, supply ):
 	# Verify first parameter
 	
 	# Check if first parameter is list
-	if not isinstance( VMs, list ):
+	if not isinstance( VMs, (list,tuple) ):
 		raise ValueError("get_allocation's first parameter be list of VMs")
 	number_resources = len(VMs[0].request_vector)
 	
@@ -363,13 +363,12 @@ def check_input( VMs, supply ):
 ###			raise ValueError("get_allocation's third parameter must contain only integers")
 ###	if not isinstance(which_resource, (int,list)):
 ###		raise ValueError("get_allocation's third parameter must contain only integers")
-
-	supply = np.array(supply)
-	demands =   np.array([VMs[0].request_vector])
-	allocates = np.array([VMs[0].receive_vector])
+	supply = np.array(supply)*1.0
+	demands =   np.array([VMs[0].request_vector])*1.0
+	allocates = np.array([VMs[0].receive_vector])*1.0
 	for i in range(len(VMs)-1):	# concatenate the endowments vector
-		temp  = np.array([VMs[i+1].request_vector])
-		temp2 = np.array([VMs[i+1].receive_vector])
+		temp  = np.array([VMs[i+1].request_vector])*1.0
+		temp2 = np.array([VMs[i+1].receive_vector])*1.0
 		demands =   np.concatenate((demands, temp), axis=0)
 		allocates = np.concatenate((allocates, temp2), axis=0)
 	return {'supply': np.array(supply), 'demands': demands, 'allocates': allocates}
@@ -400,18 +399,19 @@ def get_allocation( VMs, supply ):
 #		print '######################################'
 #		print
 		resource_to_reallocate = np.argmax(ratio)			
+
+		# this variable contains the indices with resources where there is more demand than supply.
+		# the [0] at the end is necessary because np.argwhere returns a two dimensional array
 		scarce_resources = np.transpose(np.argwhere(ratio > 1))[0]
-		
-#		print "resource to reallocate %d" %resource_to_reallocate	
-#		print "scarce resources %s" %str(scarce_resources)
-		
+
+#		remove all demands of not yet allocated resources.
 		demands_mod = np.delete(demands, scarce_resources, 1)
 		
 		supply_mod = np.delete(supply, scarce_resources)
 		if len(supply_mod)>0:
 			greediness = getGreediness(np.array(supply_mod),demands_mod)
 		else:
-			greediness = np.zeros(number_VMs)
+			greediness = np.zeros(len(VMs))
 			
 		for i in range(len(VMs)):
 			VMs[i].greed_self = greediness[i] + VMs[i].greed_user
@@ -426,14 +426,14 @@ def get_allocation( VMs, supply ):
 
 	greediness = getGreediness(np.array(supply),demands)
 	for i in range(len(VMs)):
-		VMs[i].greed_self = greediness[i] + VMs[i].greed_user	
+		VMs[i].greed_self = greediness[i] + VMs[i].greed_user
 	return VMs
 	
 	
 	
 	
-def get_allocation_for_leontief( VMs_in, supply):
-	VMs = list(VMs_in)
+def get_allocation_for_leontief( VMs, supply):
+#	VMs = list(VMs_in)
 	initialize = check_input( VMs, supply )		
 	supply  = initialize['supply']
 	demands = initialize['demands']
@@ -446,20 +446,30 @@ def get_allocation_for_leontief( VMs_in, supply):
 	# demands_DRF contains demands_relative scale such that the biggest relative demand for each VM is 1
 	demands_DRF = np.empty(demands.shape)
 	for i in range(demands.shape[0]):
-		demands_DRF[i,:] = 	demands_relative[i,:]/np.max(demands_relative[i,:])
+		for j in range(demands.shape[1]):
+			if demands_relative[i,j] == 0:
+				demands_DRF[i,j] = 0
+			else:
+				demands_DRF[i,j] = demands_relative[i,j]/np.max(demands_relative[i,:])
+#		demands_DRF[i,:] = 	demands_relative[i,:]/np.max(demands_relative[i,:])
 
 	# demands_DRF_norm contains demands_relative such that the sum of relative demands add up to 1 of each VM
 	demands_DRF_norm = np.empty(demands.shape)	
 	for i in range(demands.shape[0]):
-		demands_DRF_norm[i,:] = 	demands_relative[i,:]/np.sum(demands_relative[i,:])
-	
+		for j in range(demands.shape[1]):
+			if demands_relative[i,j] == 0:
+				demands_DRF_norm[i,j] = 0
+			else:
+				demands_DRF_norm[i,j] = demands_relative[i,j]/np.sum(demands_relative[i,:])
+#		demands_DRF_norm[i,:] = 	demands_relative[i,:]/np.sum(demands_relative[i,:])
+		
 	# this allocation matrix is altered in the loop to arrive at the final allocation
 	# initially no VM gets any resource
 	allocation = np.zeros(demands.shape)
 	x=0
 	y=0
 	increasing = True
-	target_radius = 0.0001
+	target_radius = 0.000000001
 	everyone_happy = False
 
 	approximator_default = 0.05
@@ -467,18 +477,15 @@ def get_allocation_for_leontief( VMs_in, supply):
 	
 	approximator =  approximator_default# the fraction of a VM's demand that will be added or removed per loop (change frequently)
 	
-	
 	while True:
 		x+=1
-		if math.fabs(approximator) < 0.000001:
-			
+		if math.fabs(approximator) < target_radius:
+		
 			approximator = approximator_default
-#			print ("\t\treset")
 			y += 1
+		
 			if y == 100:
 				sys.exit()
-
-		greediness = getGreediness( np.ones(allocation.shape[1]), allocation )
 		
 		if 	(
 				(
@@ -499,17 +506,12 @@ def get_allocation_for_leontief( VMs_in, supply):
 
 		if approximator < 0:
 			allocate_to_user = np.argmax(greediness)
+#			print ("dec "),
 		else:
+#			print ("inc "),
 			allocate_to_user = np.argmin(greediness)	
 			for i in range(len(greediness)):
-			
-#				print "+++"
-#				print allocation[allocate_to_user,0]
-#				print demands[allocate_to_user,0] / supply[0]				
-#				print "+++"
-
-			
-				if allocation[allocate_to_user,0] == demands[allocate_to_user,0] / supply[0]:
+				if (allocation[allocate_to_user] == demands_relative[allocate_to_user,:]).all():
 					greediness[allocate_to_user] = float("inf")
 					allocate_to_user = np.argmin(greediness)
 				else:
@@ -517,58 +519,40 @@ def get_allocation_for_leontief( VMs_in, supply):
 
 		allocation[allocate_to_user,:] += approximator * demands_DRF_norm[allocate_to_user,:]
 
-#		if approximator > 0:
-#			print "%d inc %d by %f"%(x, allocate_to_user,approximator)
-#		else:
-#			print "%d dec %d by %f"%(x, allocate_to_user,approximator)
-		
-		
-		
-		
-		
-		if allocation[allocate_to_user,0] > demands[allocate_to_user,0] / supply[0]:
-			
-#			print allocation[allocate_to_user,:]
-#			print "reducing"
-			allocation[allocate_to_user,:] = demands[allocate_to_user] / supply
-#			print "reducing"
-#			print allocation[allocate_to_user,:]
-#			print demands[allocate_to_user] / supply
-			
-			
+		if (allocation[allocate_to_user] >= demands_relative[allocate_to_user,:]).all():
+
+			allocation[allocate_to_user,:] = demands_relative[allocate_to_user,:]
 
 		greediness = getGreediness( np.ones(allocation.shape[1]), allocation )
-#		print "removing"
+
 		for i in reversed(range(len(greediness))):
-			if allocation[i,0] == demands[i,0] / supply[0]:
+			if (allocation[i] == demands_relative[i,:]).all():
 				greediness = np.delete(greediness,i)
-#				print (" %d"%i),
-				
-#			if i == 19:
-#				print
-#				print allocation[i,:]
-#				print demands[i] / supply
-#				print ((allocation[i,:] == demands[i] / supply))
-				
-#		print "\tlength %d"%len(greediness)
+		
 		if	(
-				len(greediness) == 0
+				(
+					len(greediness) == 0
+				and
+					np.max( np.sum( allocation, axis=0)) 	<= 	1
+				)
 			or
 				(
+					len(greediness) > 0
+				and
 					np.max(greediness)-np.min(greediness) 	< 	target_radius
 				and
 					np.max( np.sum( allocation, axis=0)) 	> 	1 - target_radius
 				and
-					np.max( np.sum( allocation, axis=0)) 	< 	1 + target_radius					
+					np.max( np.sum( allocation, axis=0)) 	<= 	1
 				)
 			):
 				break
 		
-		if approximator < 0:
-			inc = -0.1
-		else:
-			inc = 0.1
 #		if False:
+#			if approximator < 0:
+#				inc = -0.1
+#			else:
+#				inc = 0.1
 #			plt.plot([allocate_to_user], [inc], 'go',markersize=20)
 #			plt.axhline(linewidth=2, y = (np.max( np.sum( allocation, axis=0 ))-0.5), color='y')
 #			p.axis([-0.1,(len(VMs)+0.1), -0.51,0.6])
@@ -576,14 +560,10 @@ def get_allocation_for_leontief( VMs_in, supply):
 #			ax.set_autoscale_on(False)
 #			plt.axhline()
 #			plt.axhline(y=0.5, color='r')
-#			print greediness
 #			plt.plot(greediness, 'ro')
 #			ax.set_title(str(np.max( np.sum( allocation, axis=0))))
 #			plt.show()
 
-		
-		
-		
 	greed = getGreediness( np.ones(allocation.shape[1]), allocation )
 	allocation_denorm = np.zeros(allocation.shape)
 

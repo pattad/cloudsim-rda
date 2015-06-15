@@ -270,6 +270,9 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	}
 
 	private double getTimeSpan(double currentTime) {
+		if(getPreviousTime() == 0.0d){
+			return 0.0d;
+		}
 		double timeSpan = currentTime - getPreviousTime();
 		return timeSpan;
 	}

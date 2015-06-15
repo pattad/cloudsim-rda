@@ -69,7 +69,7 @@ public class RdaCloudlet extends Cloudlet {
 	// the INSTRUCTIONS column contains the cumulated processed instructions
 	// average between CPU bounds is taken as length to get a linear behavior
 	// between 2 bounds.
-	private final long[][] data;
+	private final double[][] data;
 
 	/* index in input data array */
 	/* INST_INDEX is the cumulated instruction counter index */
@@ -107,37 +107,68 @@ public class RdaCloudlet extends Cloudlet {
 		super(cloudletId, 0, pesNumber, cloudletFileSize, cloudletOutputSize,
 				null, null, null, record, new LinkedList<String>());
 
-		ArrayList<String[]> entries = this.readFile(new File(inputPath), ',');
+		ArrayList<double[]> inputData = this.readFile(new File(inputPath), ',');
+		data = initialize(inputData, record);
+	}
 
-		data = new long[entries.size()][5];
+	/**
+	 * Instantiates the Cloudlet.
+	 * 
+	 * @param cloudletId
+	 *            the unique ID of this Cloudlet
+	 * @param cloudletFileSize
+	 *            the file size (in byte) of this cloudlet <tt>BEFORE</tt>
+	 *            submitting to a PowerDatacenter
+	 * @param cloudletOutputSize
+	 *            the file size (in byte) of this cloudlet <tt>AFTER</tt> finish
+	 *            executing by a PowerDatacenter
+	 * @param inputData
+	 *            The input utilization data of the cloudlet.
+	 * @param record
+	 *            True, if the output should be written into a CSV file. (File
+	 *            name is: yyyyMMddhhmmss.csv)
+	 * @throws FileNotFoundException
+	 * @throws UnsupportedEncodingException
+	 */
+	public RdaCloudlet(int cloudletId, int pesNumber, long cloudletFileSize,
+			long cloudletOutputSize, ArrayList<double[]> inputData,
+			boolean record) throws FileNotFoundException,
+			UnsupportedEncodingException {
+		super(cloudletId, 0, pesNumber, cloudletFileSize, cloudletOutputSize,
+				null, null, null, record, new LinkedList<String>());
+
+		data = initialize(inputData, record);
+	}
+
+	private double[][] initialize(ArrayList<double[]> inputData, boolean record)
+			throws FileNotFoundException, UnsupportedEncodingException {
+		double[][] result = new double[inputData.size()][5];
 
 		int i = 0;
-		long instructions = 0;
+		double instructions = 0;
 
-		int lastMips = 0;
-		for (String[] entry : entries) {
-			int mips = Integer.valueOf(entry[INST_INDEX]);
+		double lastMips = 0;
+		for (double[] entry : inputData) {
+			double mips = entry[INST_INDEX];
 			if (i == 0) {
-				data[i][INST_INDEX] = 0;
+				result[i][INST_INDEX] = 0;
 			} else {
 				// average instructions in the timeframe
-				instructions += (lastMips + mips) / 2;
-				data[i][INST_INDEX] = instructions * Consts.MILLION;
+				instructions += (lastMips + mips) / 2.0;
+				result[i][INST_INDEX] = Math.round(instructions * Consts.MILLION);
 			}
-			data[i][CPU_INDEX] = Integer.valueOf(entry[0]);
-			data[i][RAM_INDEX] = Integer.valueOf(entry[1]);
-			data[i][BW_INDEX] = Integer.valueOf(entry[2]);
-			data[i][STORAGE_INDEX] = Integer.valueOf(entry[3]);
+			result[i][CPU_INDEX] = entry[0];
+			result[i][RAM_INDEX] = entry[1];
+			result[i][BW_INDEX] = entry[2];
+			result[i][STORAGE_INDEX] = entry[3];
 
 			lastMips = mips;
 			i++;
 		}
-		Log.printLine("Resource utilization data added from file: " + inputPath
-				+ ", entries: " + entries.size());
 
-		super.setCloudletLength(instructions);
+		super.setCloudletLength((long)instructions);
 
-		this.mips = data[0][CPU_INDEX]; // initial mips
+		this.mips = result[0][CPU_INDEX]; // initial mips
 
 		this.record = record;
 
@@ -147,8 +178,10 @@ public class RdaCloudlet extends Cloudlet {
 
 			recorder = new PrintWriter(df.format(new Date()) + "_"
 					+ super.getCloudletId() + ".csv", "UTF-8");
-			recorder.println("time,cpu,memory,bandwidth,storageIO");
+			recorder.println("time,cpu,memory,bandwidth,storageIO,delay");
 		}
+
+		return result;
 	}
 
 	@Override
@@ -161,7 +194,7 @@ public class RdaCloudlet extends Cloudlet {
 		return mips;
 	}
 
-	private long getFirstBoundOfCpu() {
+	private double getFirstBoundOfCpu() {
 		return getFirstBound(this.instructionsFinishedSoFar, CPU_INDEX);
 	}
 
@@ -224,7 +257,7 @@ public class RdaCloudlet extends Cloudlet {
 
 		double grad = this.getGradOfCpu();
 
-		long nextInstructionChange = this.getNextUtilizationChange();
+		double nextInstructionChange = this.getNextUtilizationChange();
 
 		if (grad == 0.0d) {
 			// if the gradient is 0, we can just use the standard formula for
@@ -444,7 +477,7 @@ public class RdaCloudlet extends Cloudlet {
 	 *            the resource index in the array
 	 * @return the resource value from the array input
 	 */
-	private long getFirstBound(long instructions, int resource) {
+	private double getFirstBound(long instructions, int resource) {
 
 		for (int i = 0; i < data.length; i++) {
 			if (data[i][INST_INDEX] == instructions) {
@@ -511,7 +544,8 @@ public class RdaCloudlet extends Cloudlet {
 		for (int i = 0; i < data.length; i++) {
 			if (data[i][INST_INDEX] == instructionsFinishedSoFar) {
 				if (data.length - 1 > i) {
-					dist = data[i + 1][INST_INDEX] - instructionsFinishedSoFar;
+					dist = (long) data[i + 1][INST_INDEX]
+							- instructionsFinishedSoFar;
 					break;
 				} else {
 					// instructionsFinishedSoFar is right on the last measuring
@@ -519,7 +553,7 @@ public class RdaCloudlet extends Cloudlet {
 					break;
 				}
 			} else if (data[i][INST_INDEX] > instructionsFinishedSoFar) {
-				dist = data[i][INST_INDEX] - instructionsFinishedSoFar;
+				dist = (long) data[i][INST_INDEX] - instructionsFinishedSoFar;
 				break;
 			}
 		}
@@ -550,9 +584,30 @@ public class RdaCloudlet extends Cloudlet {
 	public void setCloudletFinishedSoFar(final long length) {
 		super.setCloudletFinishedSoFar(length);
 		if (record) {
-			recorder.println(CloudSim.clock() + "," + this.mips + ","
+
+			double delay = 0.0;
+			for (int i = 0; i < data.length; i++) {
+				if (data[i][INST_INDEX] == this.instructionsFinishedSoFar) {
+					if (i != 0) {
+						// right on a instruction change
+						delay = CloudSim.clock() - super.getExecStartTime()
+								- CloudSim.getMinTimeBetweenEvents()
+								- (double) i;
+					}
+					break;
+
+				}
+			}
+
+			String trace = CloudSim.clock() + "," + this.mips + ","
 					+ this.getUtilizationOfRam(0.0) + "," + this.bandwidth
-					+ "," + this.storageIO);
+					+ "," + this.storageIO;
+
+			if (delay != 0.0) {
+				trace += "," + delay;
+			}
+			recorder.println(trace);
+
 		}
 	}
 
@@ -604,13 +659,23 @@ public class RdaCloudlet extends Cloudlet {
 	}
 
 	/* reads the CSV file */
-	private ArrayList<String[]> readFile(File file, char delimeter) {
-		ArrayList<String[]> entries = null;
+	private ArrayList<double[]> readFile(File file, char delimeter) {
+		ArrayList<double[]> entries = new ArrayList<double[]>();
 		CsvReader reader = null;
 		try {
 			Log.printLine("reading csv file: " + file.getAbsolutePath());
 			reader = new CsvReader(new FileReader(file), delimeter);
-			entries = reader.readAll();
+			ArrayList<String[]> result = reader.readAll();
+
+			for (String[] line : result) {
+				double[] entry = new double[4];
+				entry[0] = Double.valueOf(line[0]);
+				entry[1] = Double.valueOf(line[1]);
+				entry[2] = Double.valueOf(line[2]);
+				entry[3] = Double.valueOf(line[3]);
+
+				entries.add(entry);
+			}
 		} catch (Exception e) {
 			Log.printLine("There was an error while reading the CSV file: "
 					+ e.getMessage());

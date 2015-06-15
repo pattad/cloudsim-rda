@@ -218,6 +218,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 				+ sProvisioner.getStorageIO();
 
 		try {
+			Log.printLine(supply + " " + requestedResources);
 			out2.write(supply + " " + requestedResources);
 			out2.flush();
 			out2.newLine();
