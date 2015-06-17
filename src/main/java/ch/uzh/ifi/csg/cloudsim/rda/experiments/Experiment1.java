@@ -35,24 +35,31 @@ public class Experiment1 extends ExperimentalSuite {
 	@Override
 	public ArrayList<Cloudlet> createCloudlets(int brokerId)
 			throws FileNotFoundException, UnsupportedEncodingException {
-		
+
 		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>();
 
-		StochasticDataGenerator randomData = new StochasticDataGenerator(120);
-	
+		StochasticDataGenerator randomData = new StochasticDataGenerator(240);
+
 		// Cloudlet properties
 		long fileSize = 300;
 		long outputSize = 300;
 		int pesNumber = 1;
 
-		RdaCloudlet cloudlet = new RdaCloudlet(0, pesNumber, fileSize, outputSize,
-				randomData.generateWebServerData(235.6, 10.85), record);
+		RdaCloudlet cloudlet = new RdaCloudlet(0, pesNumber, fileSize,
+				outputSize,
+				randomData.generateWebServerDataSinusCurved(235.6, 10.85,0.5), record);
 		cloudlet.setUserId(brokerId);
 		cloudlet.setVmId(0);
 
 		cloudletList.add(cloudlet);
 		
-		
+		cloudlet = new RdaCloudlet(1, pesNumber, fileSize,
+				outputSize,
+				randomData.generateWebServerDataSinusCurved(750, 10.85,0.5), record);
+		cloudlet.setUserId(brokerId);
+		cloudlet.setVmId(0);
+
+		cloudletList.add(cloudlet);
 		return cloudletList;
 	}
 }
