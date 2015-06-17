@@ -325,14 +325,20 @@ public class RdaHost extends PowerHost {
 
 			// get total mips for the current VM
 			List<Double> mips = ((RdaVm) vm).getCurrentAllocatedMips();
-			double total = 0.0d;
-			for (Double m : mips) {
-				total += m;
-			}
-
-			// if there is no mips allocated, remove it.
-			if (total == 0) {
+		
+			if (mips == null) {
 				vmsToRemove.add(vm);
+			} else {
+
+				double total = 0.0d;
+				for (Double m : mips) {
+					total += m;
+				}
+
+				// if there is no mips allocated, remove it.
+				if (total == 0) {
+					vmsToRemove.add(vm);
+				}
 			}
 		}
 		return vmsToRemove;

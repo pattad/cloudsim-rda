@@ -96,6 +96,14 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 	public Map<String, Float> getUserPriorities(double currentTime, List<Vm> vms) {
 
 		String requestedResources = "";
+		int vmCnt = vms.size();
+		
+		Map<String, Float> userPriorities = new HashMap<String, Float>();
+
+		if (vmCnt == 0) {
+			return userPriorities;
+		}
+		
 		for (Vm vm : vms) {
 			double reqRam = ((RdaVm) vm).getCurrentRequestedRam(currentTime);
 			double reqBw = ((RdaVm) vm).getCurrentRequestedBw(currentTime);
@@ -106,23 +114,19 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 
 			requestedResources += ((RdaVm) vm).getCustomer() + " " + reqCpu
 					+ " " + reqRam + " " + reqBw + " " + reqStorage + " ";
-
 		}
 
 		String supply = (int) super.getPeCapacity() + " "
 				+ ramProvisioner.getRam() + " " + bwProvisioner.getBw() + " "
 				+ sProvisioner.getStorageIO();
-
-		Map<String, Float> userPriorities = new HashMap<String, Float>();
-
 		try {
+			Log.printLine(supply + " " + requestedResources);
 			out.write(supply + " " + requestedResources);
 			out.flush();
 			out.newLine();
 			out.flush();
 
 			int i = 0;
-			int vmCnt = 2;
 			String line = in.readLine();
 			while (line != null) {
 				if (i == vmCnt) {
@@ -188,6 +192,12 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 		sProvisioner.deallocateStorageIOForAllVms();
 
 		String requestedResources = "";
+		int vmCnt = vms.size();
+		
+		if (vmCnt == 0) {
+			return;
+		}
+		
 		for (Vm vm : vms) {
 			double reqRam = ((RdaVm) vm).getCurrentRequestedRam(currentTime);
 			double reqBw = ((RdaVm) vm).getCurrentRequestedBw(currentTime);
@@ -210,7 +220,6 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			requestedResources += owner + " " + userPriorities.get(owner) + " "
 					+ reqCpu + " " + reqRam + " " + reqBw + " " + reqStorage
 					+ " ";
-
 		}
 
 		String supply = (int) super.getPeCapacity() + " "
@@ -225,7 +234,6 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			out2.flush();
 
 			int i = 0;
-			int vmCnt = 2;
 			String line = in2.readLine();
 			while (line != null) {
 				System.out.println(line);

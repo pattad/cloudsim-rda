@@ -19,15 +19,23 @@ while True:
 	offset = 4
 	
 	U1 = VM([float(text[offset+1]),float(text[offset+2]),float(text[offset+3]),float(text[offset+4])],text[offset])
-	offset = 9
-	U2 = VM([float(text[offset+1]),float(text[offset+2]),float(text[offset+3]),float(text[offset+4])],text[offset])
-	VMs = [U1,U2]
+	VMs = [U1]
+			
+	if len(text) > 10: 
+		offset = 9
+		U2 = VM([float(text[offset+1]),float(text[offset+2]),float(text[offset+3]),float(text[offset+4])],text[offset])
+		VMs = [U1,U2]
 	
 	if len(text) > 15: 
 		offset = 14
 		U3 = VM([float(text[offset+1]),float(text[offset+2]),float(text[offset+3]),float(text[offset+4])],text[offset])
 		VMs = [U1,U2,U3]
-	
+
+	if len(text) > 20: 
+		offset = 19
+		U4 = VM([float(text[offset+1]),float(text[offset+2]),float(text[offset+3]),float(text[offset+4])],text[offset])
+		VMs = [U1,U2,U3,U4]
+		
 # define a set of VMs
 #U1 = VM([6,5,6,5],'a')
 #U2 = VM([6,3,7,3],'b')

@@ -20,18 +20,25 @@ while True:
 	offset = 4
 	U1 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
 	U1.greed_user = float(text[offset+1])
+	VMs = [U1]
 	
-	offset = 10
-	U2 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
-	U2.greed_user = float(text[offset+1])
-	
-	VMs = [U1,U2]
+	if len(text) > 11: 
+		offset = 10
+		U2 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
+		U2.greed_user = float(text[offset+1])
+		VMs = [U1,U2]
 			
 	if len(text) > 17: 
 		offset = 16
 		U3 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
 		U3.greed_user = float(text[offset+1])
 		VMs = [U1,U2,U3]
+	
+	if len(text) > 25: 
+		offset = 24
+		U4 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
+		U4.greed_user = float(text[offset+1])
+		VMs = [U1,U2,U3,U4]
 
 # define a set of VMs
 #U1 = VM([6,5,6,5],'a')

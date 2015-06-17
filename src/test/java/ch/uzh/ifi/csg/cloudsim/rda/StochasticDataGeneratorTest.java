@@ -28,7 +28,7 @@ public class StochasticDataGeneratorTest {
 		StochasticDataGenerator result = new StochasticDataGenerator();
 		assertNotNull(result);
 		
-		assertNotNull(result.generateWebServerData());
+		assertNotNull(result.generateWebServerData(235.5,10.8));
 		
 	}
 
