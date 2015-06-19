@@ -41,7 +41,7 @@ public class Experiment1 extends ExperimentalSuite {
 
 		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>();
 
-		StochasticDataGenerator randomData = new StochasticDataGenerator(60);
+		StochasticDataGenerator randomData = new StochasticDataGenerator(240);
 
 		// Cloudlet properties
 		long fileSize = 350;
@@ -51,67 +51,67 @@ public class Experiment1 extends ExperimentalSuite {
 		int cloudletId = 0;
 		
 		RdaCloudlet cloudlet = new RdaCloudlet(cloudletId++, pesNumber,
-				fileSize, outputSize, randomData.generateWebServerDataStepped(
-						350, 10.85, 0, 10), record);
+				fileSize, outputSize, randomData.generateData(
+						350,100,40,250,10, 0.5, 10,0.5), record);
 		cloudlet.setUserId(brokerId);
 		cloudlet.setVmId(vmId++);
 		cloudletList.add(cloudlet);
 
-		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-				outputSize, randomData.generateWebServerDataStepped(350,
-						10.85, 0, 10), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(vmId++);
-		cloudletList.add(cloudlet);
-
-		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-				outputSize, randomData.generateWebServerDataStepped(350,
-						10.85, 0, 10), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(vmId++);
-		cloudletList.add(cloudlet);
-
-		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-				outputSize, randomData.generateWebServerDataStepped(350,
-						10.85, 0, 10), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(vmId++);
-		cloudletList.add(cloudlet);
-
-		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-				outputSize, randomData.generateWebServerDataStepped(350,
-						10.85, 0, 10), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(vmId++);
-		cloudletList.add(cloudlet);
-
-		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-				outputSize, randomData.generateWebServerDataStepped(350,
-						10.85, 0, 10), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(vmId++);
-		cloudletList.add(cloudlet);
-
-		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-				outputSize, randomData.generateWebServerDataStepped(350,
-						10.85, 0, 10), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(vmId++);
-		cloudletList.add(cloudlet);
-
-		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-				outputSize, randomData.generateWebServerDataStepped(350,
-						10.85, 0, 10), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(vmId++);
-		cloudletList.add(cloudlet);
-
-		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-				outputSize, randomData.generateWebServerDataStepped(350,
-						10.85, 0, 10), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(vmId++);
-		cloudletList.add(cloudlet);
+//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
+//				outputSize, randomData.generateWebServerDataStepped(350,
+//						10.85, 0, 10), record);
+//		cloudlet.setUserId(brokerId);
+//		cloudlet.setVmId(vmId++);
+//		cloudletList.add(cloudlet);
+//
+//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
+//				outputSize, randomData.generateWebServerDataStepped(350,
+//						10.85, 0, 10), record);
+//		cloudlet.setUserId(brokerId);
+//		cloudlet.setVmId(vmId++);
+//		cloudletList.add(cloudlet);
+//
+//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
+//				outputSize, randomData.generateWebServerDataStepped(350,
+//						10.85, 0, 10), record);
+//		cloudlet.setUserId(brokerId);
+//		cloudlet.setVmId(vmId++);
+//		cloudletList.add(cloudlet);
+//
+//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
+//				outputSize, randomData.generateWebServerDataStepped(350,
+//						10.85, 0, 10), record);
+//		cloudlet.setUserId(brokerId);
+//		cloudlet.setVmId(vmId++);
+//		cloudletList.add(cloudlet);
+//
+//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
+//				outputSize, randomData.generateWebServerDataStepped(350,
+//						10.85, 0, 10), record);
+//		cloudlet.setUserId(brokerId);
+//		cloudlet.setVmId(vmId++);
+//		cloudletList.add(cloudlet);
+//
+//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
+//				outputSize, randomData.generateWebServerDataStepped(350,
+//						10.85, 0, 10), record);
+//		cloudlet.setUserId(brokerId);
+//		cloudlet.setVmId(vmId++);
+//		cloudletList.add(cloudlet);
+//
+//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
+//				outputSize, randomData.generateWebServerDataStepped(350,
+//						10.85, 0, 10), record);
+//		cloudlet.setUserId(brokerId);
+//		cloudlet.setVmId(vmId++);
+//		cloudletList.add(cloudlet);
+//
+//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
+//				outputSize, randomData.generateWebServerDataStepped(350,
+//						10.85, 0, 10), record);
+//		cloudlet.setUserId(brokerId);
+//		cloudlet.setVmId(vmId++);
+//		cloudletList.add(cloudlet);
 
 		return cloudletList;
 	}
