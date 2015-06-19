@@ -150,7 +150,7 @@ public class ExperimentalSuite {
 	public RdaVm createVm(int vmId, int brokerId) {
 		// VM description, this resources will be checked, when allocating
 		// it to a host
-		int mips = 200;
+		int mips = 300;
 		long size = 10000; // image size (MB)
 		int ram = 512; // vm memory (MB)
 		long bw = 1000;

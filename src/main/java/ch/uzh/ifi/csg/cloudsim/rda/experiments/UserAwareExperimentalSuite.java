@@ -51,7 +51,7 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 
 		UserAwareExperimentalSuite suite = new UserAwareExperimentalSuite();
 		// VMs and Hosts to create
-		suite.simulate(2, 5);
+		suite.simulate(9,3);
 	}
 
 	@Override
@@ -90,16 +90,16 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 
 		int i = 0;
 		vmlist.add(createVm(i++, brokerId, "user_0"));
-		// vmlist.add(createVm(i++, brokerId, "user_1"));
-		// vmlist.add(createVm(i++, brokerId, "user_2"));
-		//
-		// vmlist.add(createVm(i++, brokerId, "user_0"));
-		// vmlist.add(createVm(i++, brokerId, "user_1"));
-		// vmlist.add(createVm(i++, brokerId, "user_2"));
-		//
-		// vmlist.add(createVm(i++, brokerId, "user_0"));
-		// vmlist.add(createVm(i++, brokerId, "user_1"));
-		// vmlist.add(createVm(i++, brokerId, "user_2"));
+		vmlist.add(createVm(i++, brokerId, "user_1"));
+		vmlist.add(createVm(i++, brokerId, "user_2"));
+
+		vmlist.add(createVm(i++, brokerId, "user_0"));
+		vmlist.add(createVm(i++, brokerId, "user_1"));
+		vmlist.add(createVm(i++, brokerId, "user_2"));
+
+		vmlist.add(createVm(i++, brokerId, "user_0"));
+		vmlist.add(createVm(i++, brokerId, "user_1"));
+		vmlist.add(createVm(i++, brokerId, "user_2"));
 		return vmlist;
 	}
 

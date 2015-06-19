@@ -34,8 +34,8 @@ while True:
 		U3.greed_user = float(text[offset+1])
 		VMs = [U1,U2,U3]
 	
-	if len(text) > 25: 
-		offset = 24
+	if len(text) > 23: 
+		offset = 22
 		U4 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
 		U4.greed_user = float(text[offset+1])
 		VMs = [U1,U2,U3,U4]
