@@ -236,7 +236,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			int i = 0;
 			String line = in2.readLine();
 			while (line != null) {
-				System.out.println(line);
+				Log.printLine(line);
 				if (i == vmCnt) {
 					break;
 				}

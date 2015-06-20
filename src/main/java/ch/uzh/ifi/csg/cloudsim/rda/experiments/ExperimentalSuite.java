@@ -1,10 +1,13 @@
 package ch.uzh.ifi.csg.cloudsim.rda.experiments;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -44,7 +47,10 @@ public class ExperimentalSuite {
 	public static double scarcitySchedulingInterval = 0.01; // milli second
 
 	/** Record output to a CSV file */
-	public static boolean record = true;
+	private boolean record = true;
+
+	/** Trace log */
+	private boolean trace = false;
 
 	/**
 	 * Main method to run this example as an application.
@@ -56,7 +62,7 @@ public class ExperimentalSuite {
 
 		ExperimentalSuite suite = new ExperimentalSuite();
 		// VMs and Hosts to create
-		suite.simulate(2, 5);
+		suite.simulate(2, 5, 3);
 	}
 
 	/**
@@ -64,12 +70,24 @@ public class ExperimentalSuite {
 	 * @param vmCnt
 	 * @param hostCnt
 	 */
-	public void simulate(int vmCnt, int hostCnt) {
+	public void simulate(int vmCnt, int hostCnt, int userCnt) {
 
 		List<Cloudlet> cloudletList;
 		List<Vm> vmlist;
 
 		try {
+			if (trace) {
+				try {
+					SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmss");
+
+					Log.setOutput(new FileOutputStream("trace_"
+							+ df.format(new Date()) + ".log"));
+
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+
 			int num_user = 1; // number of cloud users
 			boolean trace_flag = false; // trace events
 
@@ -80,12 +98,12 @@ public class ExperimentalSuite {
 			DatacenterBroker broker = createBroker();
 			int brokerId = broker.getId();
 
-			vmlist = createVms(vmCnt, brokerId);
+			vmlist = createVms(vmCnt, brokerId, userCnt);
 
 			// submit vm list to the broker
 			broker.submitVmList(vmlist);
 
-			cloudletList = createCloudlets(brokerId);
+			cloudletList = createCloudlets(brokerId, vmCnt);
 
 			// submit cloudlet list to the broker
 			broker.submitCloudletList(cloudletList);
@@ -105,12 +123,12 @@ public class ExperimentalSuite {
 		}
 	}
 
-	public List<Vm> createVms(int vmCnt, int brokerId) {
+	public List<Vm> createVms(int vmCnt, int brokerId, int userCnt) {
 		List<Vm> vmlist;
 		vmlist = new ArrayList<Vm>();
 
 		for (int i = 0; i < vmCnt; i++) {
-			vmlist.add(createVm(i, brokerId));
+			vmlist.add(createVm(i, brokerId, "user_" + i % userCnt));
 		}
 		return vmlist;
 	}
@@ -122,7 +140,7 @@ public class ExperimentalSuite {
 	 * @throws FileNotFoundException
 	 * @throws UnsupportedEncodingException
 	 */
-	public ArrayList<Cloudlet> createCloudlets(int brokerId)
+	public ArrayList<Cloudlet> createCloudlets(int brokerId, int vmCnt)
 			throws FileNotFoundException, UnsupportedEncodingException {
 		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>();
 
@@ -132,12 +150,18 @@ public class ExperimentalSuite {
 		long outputSize = 300;
 		int pesNumber = 1;
 
-		Cloudlet cloudlet = new RdaCloudlet(0, pesNumber, fileSize, outputSize,
-				randomData.generateWebServerData(235.6, 10.85), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(0);
+		int vmId = 0;
+		int cloudletId = 0;
 
-		cloudletList.add(cloudlet);
+		while (vmId < vmCnt) {
+			RdaCloudlet cloudlet = new RdaCloudlet(cloudletId++, pesNumber,
+					fileSize, outputSize, randomData.generateData(350, 100, 40,
+							250, 10, 0.5, 10, 0.5), record);
+			cloudlet.setUserId(brokerId);
+			cloudlet.setVmId(vmId++);
+			cloudletList.add(cloudlet);
+		}
+
 		return cloudletList;
 	}
 
@@ -145,22 +169,25 @@ public class ExperimentalSuite {
 	 * 
 	 * @param vmId
 	 * @param brokerId
+	 * @param userName
 	 * @return
 	 */
-	public RdaVm createVm(int vmId, int brokerId) {
+	public RdaVm createVm(int vmId, int brokerId, String userName) {
 		// VM description, this resources will be checked, when allocating
 		// it to a host
-		int mips = 300;
+		int mips = 200;
 		long size = 10000; // image size (MB)
 		int ram = 512; // vm memory (MB)
 		long bw = 1000;
 		int pesNumber = 1; // number of cpus
 		String vmm = "Xen"; // VMM name
-
 		// create VM
-		return new RdaVm(vmId, brokerId, mips, pesNumber, ram, bw, size, 1,
+		RdaVm vm = new RdaVm(vmId, brokerId, mips, pesNumber, ram, bw, size, 1,
 				vmm, new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber,
 						scarcitySchedulingInterval), schedulingInterval);
+
+		((RdaVm) vm).setCustomer(userName); // specify the user/owner of the VM
+		return vm;
 	}
 
 	/**
@@ -284,5 +311,21 @@ public class ExperimentalSuite {
 			// Log.printLine(cloudlet.getCloudletHistory());
 
 		}
+	}
+
+	public void setRecord(boolean record) {
+		this.record = record;
+	}
+
+	public void setTrace(boolean trace) {
+		this.trace = trace;
+	}
+
+	public boolean isRecord() {
+		return record;
+	}
+
+	public boolean isTrace() {
+		return trace;
 	}
 }

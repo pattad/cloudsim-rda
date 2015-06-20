@@ -162,17 +162,17 @@ public class StochasticDataGenerator {
 					"MIPS is smaller than 0 in this data generation approach. Please try to adapt the input parameters.(value: "
 							+ mips + ")");
 		}
-		if (ram <= 0) {
+		if (ram < 0) {
 			throw new RuntimeException(
 					"Ram is smaller than 0 in this data generation approach. Please try to adapt the input parameters.(value: "
 							+ ram + ")");
 		}
-		if (bw <= 0) {
+		if (bw < 0) {
 			throw new RuntimeException(
 					"Bandwidth is smaller than 0 in this data generation approach. Please try to adapt the input parameters.(value: "
 							+ bw + ")");
 		}
-		if (storageIO <= 0) {
+		if (storageIO < 0) {
 			throw new RuntimeException(
 					"storageIO is smaller than 0 in this data generation approach. Please try to adapt the input parameters. (value: "
 							+ storageIO + ")");

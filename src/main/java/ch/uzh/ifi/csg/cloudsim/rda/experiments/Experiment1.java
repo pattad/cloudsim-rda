@@ -5,7 +5,6 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 
 import org.cloudbus.cloudsim.Cloudlet;
-import org.cloudbus.cloudsim.Log;
 
 import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudlet;
 import ch.uzh.ifi.csg.cloudsim.rda.data.StochasticDataGenerator;
@@ -17,9 +16,6 @@ import ch.uzh.ifi.csg.cloudsim.rda.data.StochasticDataGenerator;
  */
 public class Experiment1 extends ExperimentalSuite {
 
-	/** Record output to a CSV file */
-	private static boolean record = true;
-
 	/**
 	 * Main method to run this experiment
 	 *
@@ -28,91 +24,35 @@ public class Experiment1 extends ExperimentalSuite {
 	 */
 	public static void main(String[] args) {
 
-		Log.setDisabled(false);
-		
 		Experiment1 suite = new Experiment1();
 		// VMs and Hosts to create
-		suite.simulate(9, 3);
+		suite.simulate(9, 3, 3);
 	}
 
 	@Override
-	public ArrayList<Cloudlet> createCloudlets(int brokerId)
+	public ArrayList<Cloudlet> createCloudlets(int brokerId, int vmCnt)
 			throws FileNotFoundException, UnsupportedEncodingException {
-
 		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>();
 
-		StochasticDataGenerator randomData = new StochasticDataGenerator(240);
-
+		StochasticDataGenerator randomData = new StochasticDataGenerator(120);
 		// Cloudlet properties
-		long fileSize = 350;
-		long outputSize = 350;
+		long fileSize = 300;
+		long outputSize = 300;
 		int pesNumber = 1;
+
 		int vmId = 0;
 		int cloudletId = 0;
-		
-		RdaCloudlet cloudlet = new RdaCloudlet(cloudletId++, pesNumber,
-				fileSize, outputSize, randomData.generateData(
-						350,100,40,250,10, 0.5, 10,0.5), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(vmId++);
-		cloudletList.add(cloudlet);
 
-//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-//				outputSize, randomData.generateWebServerDataStepped(350,
-//						10.85, 0, 10), record);
-//		cloudlet.setUserId(brokerId);
-//		cloudlet.setVmId(vmId++);
-//		cloudletList.add(cloudlet);
-//
-//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-//				outputSize, randomData.generateWebServerDataStepped(350,
-//						10.85, 0, 10), record);
-//		cloudlet.setUserId(brokerId);
-//		cloudlet.setVmId(vmId++);
-//		cloudletList.add(cloudlet);
-//
-//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-//				outputSize, randomData.generateWebServerDataStepped(350,
-//						10.85, 0, 10), record);
-//		cloudlet.setUserId(brokerId);
-//		cloudlet.setVmId(vmId++);
-//		cloudletList.add(cloudlet);
-//
-//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-//				outputSize, randomData.generateWebServerDataStepped(350,
-//						10.85, 0, 10), record);
-//		cloudlet.setUserId(brokerId);
-//		cloudlet.setVmId(vmId++);
-//		cloudletList.add(cloudlet);
-//
-//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-//				outputSize, randomData.generateWebServerDataStepped(350,
-//						10.85, 0, 10), record);
-//		cloudlet.setUserId(brokerId);
-//		cloudlet.setVmId(vmId++);
-//		cloudletList.add(cloudlet);
-//
-//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-//				outputSize, randomData.generateWebServerDataStepped(350,
-//						10.85, 0, 10), record);
-//		cloudlet.setUserId(brokerId);
-//		cloudlet.setVmId(vmId++);
-//		cloudletList.add(cloudlet);
-//
-//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-//				outputSize, randomData.generateWebServerDataStepped(350,
-//						10.85, 0, 10), record);
-//		cloudlet.setUserId(brokerId);
-//		cloudlet.setVmId(vmId++);
-//		cloudletList.add(cloudlet);
-//
-//		cloudlet = new RdaCloudlet(cloudletId++, pesNumber, fileSize,
-//				outputSize, randomData.generateWebServerDataStepped(350,
-//						10.85, 0, 10), record);
-//		cloudlet.setUserId(brokerId);
-//		cloudlet.setVmId(vmId++);
-//		cloudletList.add(cloudlet);
+		while (vmId < vmCnt) {
+			RdaCloudlet cloudlet = new RdaCloudlet(cloudletId++, pesNumber,
+					fileSize, outputSize, randomData.generateData(350, 100, 40,
+							250, 10, 0.5, 10, 0.5), this.isRecord());
+			cloudlet.setUserId(brokerId);
+			cloudlet.setVmId(vmId++);
+			cloudletList.add(cloudlet);
+		}
 
 		return cloudletList;
 	}
+
 }

@@ -1,8 +1,12 @@
 package ch.uzh.ifi.csg.cloudsim.rda.experiments;
 
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,16 +14,14 @@ import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Host;
+import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
-import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.power.PowerVmAllocationPolicySimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
 import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudlet;
-import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudletSchedulerDynamicWorkload;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaHost;
-import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
 import ch.uzh.ifi.csg.cloudsim.rda.data.StochasticDataGenerator;
 import ch.uzh.ifi.csg.cloudsim.rda.greediness.VmSchedulerGreedinessAllocationAlgorithm;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisionerSimple;
@@ -35,9 +37,6 @@ import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareDatacenter;
  */
 public class UserAwareExperimentalSuite extends ExperimentalSuite {
 
-	/** Record output to a CSV file */
-	private static boolean record = true;
-
 	/** path to the python binary on your system */
 	private static String pythonPath = "C:\\Program Files (x86)\\Python34\\python";
 
@@ -51,82 +50,34 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 
 		UserAwareExperimentalSuite suite = new UserAwareExperimentalSuite();
 		// VMs and Hosts to create
-		suite.simulate(9,3);
+		suite.simulate(2, 3, 3);
+
 	}
 
 	@Override
-	public ArrayList<Cloudlet> createCloudlets(int brokerId)
+	public ArrayList<Cloudlet> createCloudlets(int brokerId, int vmCnt)
 			throws FileNotFoundException, UnsupportedEncodingException {
-
 		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>();
 
 		StochasticDataGenerator randomData = new StochasticDataGenerator(120);
-
 		// Cloudlet properties
 		long fileSize = 300;
 		long outputSize = 300;
 		int pesNumber = 1;
 
-		RdaCloudlet cloudlet = new RdaCloudlet(0, pesNumber, fileSize,
-				outputSize, randomData.generateWebServerData(235.6, 10.85),
-				record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(0);
-		cloudletList.add(cloudlet);
+		int vmId = 0;
+		int cloudletId = 0;
 
-		cloudlet = new RdaCloudlet(1, pesNumber, fileSize, outputSize,
-				randomData.generateWebServerData(235.6, 10.85), record);
-		cloudlet.setUserId(brokerId);
-		cloudlet.setVmId(0);
-		cloudletList.add(cloudlet);
+		while (vmId < vmCnt) {
+			RdaCloudlet cloudlet = new RdaCloudlet(cloudletId++, pesNumber,
+					fileSize, outputSize, randomData.generateData(350, 100, 40,
+							250, 10, 0.5, 10, 0.5), this.isRecord());
+			cloudlet.setUserId(brokerId);
+			cloudlet.setVmId(vmId++);
+			cloudletList.add(cloudlet);
+		}
 
 		return cloudletList;
-	}
-
-	@Override
-	public List<Vm> createVms(int vmCnt, int brokerId) {
-		List<Vm> vmlist;
-		vmlist = new ArrayList<Vm>();
-
-		int i = 0;
-		vmlist.add(createVm(i++, brokerId, "user_0"));
-		vmlist.add(createVm(i++, brokerId, "user_1"));
-		vmlist.add(createVm(i++, brokerId, "user_2"));
-
-		vmlist.add(createVm(i++, brokerId, "user_0"));
-		vmlist.add(createVm(i++, brokerId, "user_1"));
-		vmlist.add(createVm(i++, brokerId, "user_2"));
-
-		vmlist.add(createVm(i++, brokerId, "user_0"));
-		vmlist.add(createVm(i++, brokerId, "user_1"));
-		vmlist.add(createVm(i++, brokerId, "user_2"));
-		return vmlist;
-	}
-
-	/**
-	 * 
-	 * @param vmId
-	 * @param brokerId
-	 * @param userName
-	 * @return
-	 */
-	public RdaVm createVm(int vmId, int brokerId, String userName) {
-		// VM description, this resources will be checked, when allocating
-		// it to a host
-		int mips = 200;
-		long size = 10000; // image size (MB)
-		int ram = 512; // vm memory (MB)
-		long bw = 1000;
-		int pesNumber = 1; // number of cpus
-		String vmm = "Xen"; // VMM name
-		// create VM
-		RdaVm vm = new RdaVm(vmId, brokerId, mips, pesNumber, ram, bw, size, 1,
-				vmm, new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber,
-						scarcitySchedulingInterval), schedulingInterval);
-
-		((RdaVm) vm).setCustomer(userName); // specify the user/owner of the VM
-
-		return vm;
 	}
 
 	@Override
