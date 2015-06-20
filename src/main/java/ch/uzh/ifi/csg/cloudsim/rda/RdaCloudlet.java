@@ -97,7 +97,7 @@ public class RdaCloudlet extends Cloudlet {
 	 *            The path to the CSV file.
 	 * @param record
 	 *            True, if the output should be written into a CSV file. (File
-	 *            name is: yyyyMMddhhmmss.csv)
+	 *            name is: yyyyMMddhhmmssSSS.csv)
 	 * @throws FileNotFoundException
 	 * @throws UnsupportedEncodingException
 	 */
@@ -126,7 +126,7 @@ public class RdaCloudlet extends Cloudlet {
 	 *            The input utilization data of the cloudlet.
 	 * @param record
 	 *            True, if the output should be written into a CSV file. (File
-	 *            name is: yyyyMMddhhmmss.csv)
+	 *            name is: yyyyMMddhhmmssSSS.csv)
 	 * @throws FileNotFoundException
 	 * @throws UnsupportedEncodingException
 	 */
@@ -174,7 +174,7 @@ public class RdaCloudlet extends Cloudlet {
 
 		if (this.record) {
 
-			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmss");
+			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmssSSS");
 
 			recorder = new PrintWriter(df.format(new Date()) + "_"
 					+ super.getCloudletId() + ".csv", "UTF-8");

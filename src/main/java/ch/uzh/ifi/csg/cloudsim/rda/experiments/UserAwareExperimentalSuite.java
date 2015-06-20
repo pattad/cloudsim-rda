@@ -1,28 +1,18 @@
 package ch.uzh.ifi.csg.cloudsim.rda.experiments;
 
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.Datacenter;
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Host;
-import org.cloudbus.cloudsim.Log;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.power.PowerVmAllocationPolicySimple;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
-import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudlet;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaHost;
-import ch.uzh.ifi.csg.cloudsim.rda.data.StochasticDataGenerator;
 import ch.uzh.ifi.csg.cloudsim.rda.greediness.VmSchedulerGreedinessAllocationAlgorithm;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
@@ -38,7 +28,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareDatacenter;
 public class UserAwareExperimentalSuite extends ExperimentalSuite {
 
 	/** path to the python binary on your system */
-	private static String pythonPath = "C:\\Program Files (x86)\\Python34\\python";
+	private String pythonPath = "C:\\Program Files (x86)\\Python34\\python";
 
 	/**
 	 * Main method to run this experiment
@@ -52,32 +42,6 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 		// VMs and Hosts to create
 		suite.simulate(2, 3, 3);
 
-	}
-
-	@Override
-	public ArrayList<Cloudlet> createCloudlets(int brokerId, int vmCnt)
-			throws FileNotFoundException, UnsupportedEncodingException {
-		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>();
-
-		StochasticDataGenerator randomData = new StochasticDataGenerator(120);
-		// Cloudlet properties
-		long fileSize = 300;
-		long outputSize = 300;
-		int pesNumber = 1;
-
-		int vmId = 0;
-		int cloudletId = 0;
-
-		while (vmId < vmCnt) {
-			RdaCloudlet cloudlet = new RdaCloudlet(cloudletId++, pesNumber,
-					fileSize, outputSize, randomData.generateData(350, 100, 40,
-							250, 10, 0.5, 10, 0.5), this.isRecord());
-			cloudlet.setUserId(brokerId);
-			cloudlet.setVmId(vmId++);
-			cloudletList.add(cloudlet);
-		}
-
-		return cloudletList;
 	}
 
 	@Override
@@ -140,5 +104,13 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 						ramProvisioner, bwProvisioner, storageIOProvisioner,
 						pythonPath), scarcitySchedulingInterval);
 
+	}
+
+	public String getPythonPath() {
+		return pythonPath;
+	}
+
+	public void setPythonPath(String pythonPath) {
+		this.pythonPath = pythonPath;
 	}
 }

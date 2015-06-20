@@ -30,7 +30,6 @@ import ch.uzh.ifi.csg.cloudsim.rda.RdaDatacenter;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaHost;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
 import ch.uzh.ifi.csg.cloudsim.rda.VmSchedulerMaxMinFairShare;
-import ch.uzh.ifi.csg.cloudsim.rda.data.StochasticDataGenerator;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
@@ -52,6 +51,9 @@ public class ExperimentalSuite {
 	/** Trace log */
 	private boolean trace = false;
 
+	/** The input data for the cloudlets */
+	private ArrayList<ArrayList<double[]>> inputData;
+	
 	/**
 	 * Main method to run this example as an application.
 	 *
@@ -74,11 +76,10 @@ public class ExperimentalSuite {
 
 		List<Cloudlet> cloudletList;
 		List<Vm> vmlist;
-
 		try {
 			if (trace) {
 				try {
-					SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmss");
+					SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmssSSS");
 
 					Log.setOutput(new FileOutputStream("trace_"
 							+ df.format(new Date()) + ".log"));
@@ -144,7 +145,6 @@ public class ExperimentalSuite {
 			throws FileNotFoundException, UnsupportedEncodingException {
 		ArrayList<Cloudlet> cloudletList = new ArrayList<Cloudlet>();
 
-		StochasticDataGenerator randomData = new StochasticDataGenerator(120);
 		// Cloudlet properties
 		long fileSize = 300;
 		long outputSize = 300;
@@ -154,12 +154,15 @@ public class ExperimentalSuite {
 		int cloudletId = 0;
 
 		while (vmId < vmCnt) {
-			RdaCloudlet cloudlet = new RdaCloudlet(cloudletId++, pesNumber,
-					fileSize, outputSize, randomData.generateData(350, 100, 40,
-							250, 10, 0.5, 10, 0.5), record);
+			
+			RdaCloudlet cloudlet = new RdaCloudlet(cloudletId, pesNumber,
+					fileSize, outputSize, this.inputData.get(cloudletId), record);
 			cloudlet.setUserId(brokerId);
-			cloudlet.setVmId(vmId++);
+			cloudlet.setVmId(vmId);
 			cloudletList.add(cloudlet);
+			
+			cloudletId++;
+			vmId++;
 		}
 
 		return cloudletList;
@@ -307,7 +310,7 @@ public class ExperimentalSuite {
 						+ dft.format(cloudlet.getExecStartTime()) + indent
 						+ indent + dft.format(cloudlet.getFinishTime()));
 			}
-
+			
 			// Log.printLine(cloudlet.getCloudletHistory());
 
 		}
@@ -327,5 +330,13 @@ public class ExperimentalSuite {
 
 	public boolean isTrace() {
 		return trace;
+	}
+
+	public ArrayList<ArrayList<double[]>> getInputData() {
+		return inputData;
+	}
+
+	public void setInputData(ArrayList<ArrayList<double[]>> inputData) {
+		this.inputData = inputData;
 	}
 }
