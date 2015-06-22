@@ -8,15 +8,18 @@ public class ExperimentRunner {
 
 	public static void main(String[] args) {
 
-		int vmCnt = 1;
+		int vmCnt = 9;
 		int hostCnt = 3;
 		int userCnt = 3;
 		
 		// generating input data that can be used for the experiments
 		ArrayList<ArrayList<double[]>> inputData = new ArrayList<ArrayList<double[]>>();
-		StochasticDataGenerator randomData = new StochasticDataGenerator(120);		
+		StochasticDataGenerator randomData = new StochasticDataGenerator(60);		
 		for (int i = 0; i < vmCnt; i++) {
-			inputData.add(randomData.generateData(350, 100, 40, 250, 10, 0.5, 10, 0.5));
+			
+			ArrayList<double[]> workloadData = randomData.generateData(350, 100, 40, 250, 10, 0.5, 10, 0.5,75);
+			inputData.add(workloadData);			
+			
 		}
 
 		// MMFS policy

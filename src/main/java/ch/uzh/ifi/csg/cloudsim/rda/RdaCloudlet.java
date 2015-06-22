@@ -105,7 +105,7 @@ public class RdaCloudlet extends Cloudlet {
 			long cloudletOutputSize, String inputPath, boolean record)
 			throws FileNotFoundException, UnsupportedEncodingException {
 		super(cloudletId, 0, pesNumber, cloudletFileSize, cloudletOutputSize,
-				null, null, null, record, new LinkedList<String>());
+				null, null, null, false, new LinkedList<String>());
 
 		ArrayList<double[]> inputData = this.readFile(new File(inputPath), ',');
 		data = initialize(inputData, record);

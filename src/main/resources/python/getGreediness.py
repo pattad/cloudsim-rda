@@ -1,7 +1,7 @@
 from metrics import getTargetAllocation
 from metrics import getGreediness
 from metrics import get_allocation
-from metrics import get_only_greediness
+from metrics import get_only_greediness_FOR_requests
 from VM import VM
 import numpy as np
 import random
@@ -48,7 +48,7 @@ while True:
 #supply = [16,16,16,16]
 
 # calculate a new allocation for the 4th (last) resource
-	out = get_only_greediness(VMs,supply)
+	out = get_only_greediness_FOR_requests(VMs,supply)
 
 	for i in out:
 		print(i)

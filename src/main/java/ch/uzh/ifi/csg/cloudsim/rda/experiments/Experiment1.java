@@ -26,7 +26,7 @@ public class Experiment1 extends ExperimentalSuite {
 
 		Experiment1 suite = new Experiment1();
 		// VMs and Hosts to create
-		suite.simulate(9, 3, 3);
+		suite.simulate(1, 3, 3);
 	}
 
 	@Override
@@ -44,9 +44,15 @@ public class Experiment1 extends ExperimentalSuite {
 		int cloudletId = 0;
 
 		while (vmId < vmCnt) {
+
+			// ArrayList<double[]> workloadData = randomData.generateData(350,
+			// 100, 40,
+			// 250, 10, 0.5, 10, 0.5, 75);
+			ArrayList<double[]> workloadData = randomData.generateWaveingData(
+					224, 36, 72, 3, 11, 1.5);
+
 			RdaCloudlet cloudlet = new RdaCloudlet(cloudletId++, pesNumber,
-					fileSize, outputSize, randomData.generateData(350, 100, 40,
-							250, 10, 0.5, 10, 0.5), this.isRecord());
+					fileSize, outputSize, workloadData, this.isRecord());
 			cloudlet.setUserId(brokerId);
 			cloudlet.setVmId(vmId++);
 			cloudletList.add(cloudlet);
@@ -54,5 +60,4 @@ public class Experiment1 extends ExperimentalSuite {
 
 		return cloudletList;
 	}
-
 }

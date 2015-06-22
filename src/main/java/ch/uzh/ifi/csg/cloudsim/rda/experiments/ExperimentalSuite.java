@@ -2,12 +2,14 @@ package ch.uzh.ifi.csg.cloudsim.rda.experiments;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -53,7 +55,7 @@ public class ExperimentalSuite {
 
 	/** The input data for the cloudlets */
 	private ArrayList<ArrayList<double[]>> inputData;
-	
+
 	/**
 	 * Main method to run this example as an application.
 	 *
@@ -79,7 +81,8 @@ public class ExperimentalSuite {
 		try {
 			if (trace) {
 				try {
-					SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmssSSS");
+					SimpleDateFormat df = new SimpleDateFormat(
+							"yyyyMMddhhmmssSSS");
 
 					Log.setOutput(new FileOutputStream("trace_"
 							+ df.format(new Date()) + ".log"));
@@ -116,7 +119,9 @@ public class ExperimentalSuite {
 
 			// Final step: Print results when simulation is over
 			List<Cloudlet> newList = broker.getCloudletReceivedList();
-			printCloudletList(newList);
+			List<Vm> vms = broker.getVmList();
+
+			printCloudletList(newList, vms);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -154,13 +159,14 @@ public class ExperimentalSuite {
 		int cloudletId = 0;
 
 		while (vmId < vmCnt) {
-			
+
 			RdaCloudlet cloudlet = new RdaCloudlet(cloudletId, pesNumber,
-					fileSize, outputSize, this.inputData.get(cloudletId), record);
+					fileSize, outputSize, this.inputData.get(cloudletId),
+					record);
 			cloudlet.setUserId(brokerId);
 			cloudlet.setVmId(vmId);
 			cloudletList.add(cloudlet);
-			
+
 			cloudletId++;
 			vmId++;
 		}
@@ -282,37 +288,72 @@ public class ExperimentalSuite {
 	 * @param list
 	 *            list of Cloudlets
 	 */
-	private void printCloudletList(List<Cloudlet> list) {
-		int size = list.size();
+	private void printCloudletList(List<Cloudlet> cloudlets, List<Vm> vms) {
+		int size = cloudlets.size();
 		Cloudlet cloudlet;
 
+		StringBuilder result = new StringBuilder();
+
 		String indent = "    ";
-		Log.printLine();
-		Log.printLine("========== OUTPUT ==========");
-		Log.printLine("Cloudlet ID" + indent + "STATUS" + indent
+		HashMap<String, Double> totalTime = new HashMap<String, Double>();
+
+		result.append("\n ========== RESULT ========== \n");
+		result.append("Cloudlet ID" + indent + "STATUS" + indent
 				+ "Data center ID" + indent + "VM ID" + indent + "Time"
-				+ indent + indent + indent + indent + "Start Time" + indent
-				+ "Finish Time");
+				+ indent + "Start Time" + indent + "Finish Time" + indent
+				+ "VM customer \n");
 
 		DecimalFormat dft = new DecimalFormat("###.##");
 		for (int i = 0; i < size; i++) {
-			cloudlet = list.get(i);
-			Log.print(indent + cloudlet.getCloudletId() + indent + indent);
+			cloudlet = cloudlets.get(i);
+			result.append(indent + cloudlet.getCloudletId() + indent + indent);
 
 			if (cloudlet.getCloudletStatus() == Cloudlet.SUCCESS) {
-				Log.print("SUCCESS");
+				result.append("SUCCESS");
 
-				Log.printLine(indent + indent + cloudlet.getResourceId()
-						+ indent + indent + indent + cloudlet.getVmId()
-						+ indent + indent
+				RdaVm currentVm = null;
+				for (Vm vm : vms) {
+					if (vm.getId() == cloudlet.getVmId())
+						currentVm = (RdaVm) vm;
+				}
+				String customer = currentVm.getCustomer();
+
+				if (totalTime.get(customer) == null) {
+					totalTime.put(customer, cloudlet.getActualCPUTime());
+				} else {
+					totalTime.put(customer, cloudlet.getActualCPUTime()
+							+ totalTime.get(customer));
+				}
+
+				result.append(indent + indent + cloudlet.getResourceId()
+						+ indent + indent + indent + indent
+						+ cloudlet.getVmId() + indent + indent
 						+ Math.round(cloudlet.getActualCPUTime() * 1000000)
 						/ 1000000.0 + indent + indent
 						+ dft.format(cloudlet.getExecStartTime()) + indent
-						+ indent + dft.format(cloudlet.getFinishTime()));
+						+ indent + dft.format(cloudlet.getFinishTime())
+						+ indent + indent + indent + customer);
 			}
-			
+
+			result.append("\n");
 			// Log.printLine(cloudlet.getCloudletHistory());
 
+		}
+
+		result.append("\nBy customers \n");
+		double timeTotal = 0;
+		for (String cust : totalTime.keySet()) {
+			result.append(cust + " time: " + totalTime.get(cust) + "\n");
+			timeTotal += totalTime.get(cust);
+		}
+		result.append("Time total: " + timeTotal + "\n");
+
+		System.out.print(result);
+		
+		try {
+			Log.getOutput().write(result.toString().getBytes());
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 

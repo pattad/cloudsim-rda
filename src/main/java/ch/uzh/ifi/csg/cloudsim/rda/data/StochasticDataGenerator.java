@@ -93,11 +93,10 @@ public class StochasticDataGenerator {
 	 */
 	public ArrayList<double[]> generateData(double minCpu, double minBw,
 			double minStorage, double medianRam, double standardDiv,
-			double verticalStretch, int periodLength, double dependencyFactor) {
+			double verticalStretch, int periodLength, double dependencyFactor,
+			double expMean) {
 
 		ArrayList<double[]> result = new ArrayList<double[]>();
-
-		double verticalMean = 75;
 
 		// individual deviations from median
 		double deviationCpu = 0d;
@@ -111,9 +110,9 @@ public class StochasticDataGenerator {
 		for (int i = 0; i <= sampleLength; i++) {
 
 			if (i % periodLength == 0) {
-				deviationCpu = ((rd.nextExponential(verticalMean))) / 100.0;
-				deviationBw = ((rd.nextExponential(verticalMean))) / 100.0;
-				deviationStorage = ((rd.nextExponential(verticalMean))) / 100.0;
+				deviationCpu = ((rd.nextExponential(expMean))) / 100.0;
+				deviationBw = ((rd.nextExponential(expMean))) / 100.0;
+				deviationStorage = ((rd.nextExponential(expMean))) / 100.0;
 				ramDirection = r.nextInt(3);
 			}
 
@@ -199,16 +198,50 @@ public class StochasticDataGenerator {
 		return result;
 	}
 
-	public ArrayList<double[]> generateDatabaseServerData(double median,
-			double standardDiv) {
+	public ArrayList<double[]> generateWaveingData(double medianMips,
+			double standardDivMips, double medianRam, double standardDivRam,
+			double bwFactor, double storageFactor) {
 
 		ArrayList<double[]> result = new ArrayList<double[]>();
 
+		double mipsA = Math.round(rd.nextGaussian(medianMips, standardDivMips));
+		double ramA = Math.round(rd.nextGaussian(medianRam, standardDivRam));
+
+		double mipsB = Math.round(rd.nextGaussian(medianMips, standardDivMips));
+		double ramB = Math.round(rd.nextGaussian(medianRam, standardDivRam));
+
+		double periodLength = 10;
+
 		for (int i = 0; i <= sampleLength; i++) {
-			double mips = Math.round(rd.nextGaussian(median, standardDiv));
-			double ram = 260;
-			double bw = mips / 3.0;
-			double storageIO = 0.0;
+
+			double mips;
+			double ram;
+
+			if (i % periodLength == 0) {
+				mipsA = mipsB;
+				ramA = ramB;
+
+				mipsB = Math
+						.round(rd.nextGaussian(medianMips, standardDivMips));
+				ramB = Math.round(rd.nextGaussian(medianRam, standardDivRam));
+
+				mips = mipsA;
+				ram = ramA;
+			} else {
+				mips = mipsA + ((mipsB - mipsA) / periodLength)
+						* (i % periodLength);
+				ram = ramA + ((ramB - ramA) / periodLength)
+						* (i % periodLength);
+			}
+
+			double bw = mips / bwFactor;
+			double storageIO = mips / storageFactor;
+
+			// correlation is about 0.92, when randomizing this way
+			double stDivFactor = 33;
+			mips = rd.nextGaussian(mips, mips / stDivFactor);
+			bw = rd.nextGaussian(bw, bw / stDivFactor);
+			storageIO = rd.nextGaussian(storageIO, storageIO / stDivFactor);
 
 			checkValidity(mips, ram, bw, storageIO);
 

@@ -106,6 +106,23 @@ def getGreedinessWScarcity( endowments, demands ):
 	# Therefore each resource request is not only weighted by the normalization factor (depending on the overall amounts of resources) but also by the amount of requests divided by the supply, as calculated here
 	return greediness( init['endowments'], demands, init['norm_w_scarcity'], init['resources'] )
 
+def getDRF( endowments, demands ):
+
+	init = initialize( endowments, demands )
+
+	# Multiply the resquest of each resource with the normalization vector. The vector's length is equal to the number of columns of the demand matrix and a vector entry is multiplied with each entry in the respective column
+	# subsequently each row is added up (np.sum)
+	
+	ret = np.zeros(demands.shape[0])
+	
+	for i in range(demands.shape[0]):
+		ret[i] = np.max( (demands[i,:]*1.0)/endowments )
+	return ret
+
+
+
+
+
 def greediness( endowments, demands, factor, resources ):
 	if endowments.shape[0] == 1:
 		temp = endowments*1.0/demands.shape[0]	# # If endowments is a vector, it depicts the total supply of resource. Therefore the endowment of a consumer to a resource is an nth (demands.shape[0] is the number of consumers) of the supply
@@ -385,6 +402,19 @@ def get_only_greediness( VMs, supply ):
 		VMs[i].greed_self = greediness[i]		
 	return VMs
 
+def get_only_greediness_FOR_requests( VMs, supply ):
+
+	initialize = check_input( VMs, supply )
+	supply  = initialize['supply']
+	demands = initialize['demands']
+	allocates = initialize['allocates']
+
+	greediness = getGreediness(np.array(supply),demands)
+	for i in range(len(VMs)):
+		VMs[i].greed_self = greediness[i]		
+	return VMs
+
+
 
 	
 def get_allocation( VMs, supply ):
@@ -437,6 +467,14 @@ def get_allocation_for_leontief( VMs, supply):
 	initialize = check_input( VMs, supply )		
 	supply  = initialize['supply']
 	demands = initialize['demands']
+	
+	# if there is no scarcity
+	if (np.sum( demands, axis=0) <= supply).all():
+		for vm in VMs:
+			vm.receive_vector = np.array(vm.request_vector)
+		get_only_greediness( VMs, supply.tolist() )
+#		print ("\t"),
+		return VMs
 
 	# demands_relative contains VM requests relative to the overall supply
 	demands_relative = np.empty(demands.shape)	
@@ -470,6 +508,7 @@ def get_allocation_for_leontief( VMs, supply):
 	y=0
 	increasing = True
 	target_radius = 0.000000001
+#	target_radius = 0.01
 	everyone_happy = False
 
 	approximator_default = 0.05
@@ -484,7 +523,7 @@ def get_allocation_for_leontief( VMs, supply):
 			approximator = approximator_default
 			y += 1
 		
-			if y == 100:
+			if y == 50:
 				sys.exit()
 		
 		if 	(
@@ -516,13 +555,15 @@ def get_allocation_for_leontief( VMs, supply):
 					allocate_to_user = np.argmin(greediness)
 				else:
 					break
-
+#		print (approximator),
+#		print (" "),
+#		print (allocate_to_user)
 		allocation[allocate_to_user,:] += approximator * demands_DRF_norm[allocate_to_user,:]
 
 		if (allocation[allocate_to_user] >= demands_relative[allocate_to_user,:]).all():
 
 			allocation[allocate_to_user,:] = demands_relative[allocate_to_user,:]
-
+			
 		greediness = getGreediness( np.ones(allocation.shape[1]), allocation )
 
 		for i in reversed(range(len(greediness))):
