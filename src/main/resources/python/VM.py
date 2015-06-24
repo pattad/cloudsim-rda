@@ -29,5 +29,4 @@ class VM:
 		for j in self.request_vector:
 			neu2.append("%.8f"%j)
 
-		return '\nVM %s, greed: %.3f\n'%(self.name,self.greed_self) + "gets  " + str(neu) + "\nwants " + str(neu2)
-		
+		return '\nVM %s, greed: %.3f + %.3f = %.3f\n'%(self.name,self.greed_self,self.greed_user,(self.greed_self + self.greed_user)) + "gets  " + str(neu) + "\nwants " + str(neu2)

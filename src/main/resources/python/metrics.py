@@ -9,7 +9,7 @@ import sys
 
 from VM import VM
 
-normalizer = 10.
+normalizer = 40.
 
 def gez(a):
 	if a > 0:
@@ -468,6 +468,11 @@ def get_allocation_for_leontief( VMs, supply):
 	supply  = initialize['supply']
 	demands = initialize['demands']
 	
+	greed_users = np.zeros(len(VMs))
+	for i in range(len(VMs)):
+		greed_users[i] = VMs[i].greed_user
+	
+	
 	# if there is no scarcity
 	if (np.sum( demands, axis=0) <= supply).all():
 		for vm in VMs:
@@ -516,14 +521,18 @@ def get_allocation_for_leontief( VMs, supply):
 	
 	approximator =  approximator_default# the fraction of a VM's demand that will be added or removed per loop (change frequently)
 	
+	greediness = getGreediness( np.ones(allocation.shape[1]), allocation )
+	greediness += greed_users
+	
+
 	while True:
 		x+=1
-		if math.fabs(approximator) < target_radius:
+		if math.fabs(approximator) < target_radius*0.1:
 		
 			approximator = approximator_default
 			y += 1
 		
-			if y == 50:
+			if y == 25:
 				sys.exit()
 		
 		if 	(
@@ -540,11 +549,17 @@ def get_allocation_for_leontief( VMs, supply):
 				)
 			):
 			approximator *=- factor
-
-		greediness = getGreediness( np.ones(allocation.shape[1]), allocation )
-
+		
 		if approximator < 0:
 			allocate_to_user = np.argmax(greediness)
+
+			for i in range(len(greediness)):
+				if (allocation[allocate_to_user] == 0).all():
+					greediness[allocate_to_user] = float("-inf")
+					allocate_to_user = np.argmax(greediness)
+				else:
+					break
+						
 #			print ("dec "),
 		else:
 #			print ("inc "),
@@ -557,37 +572,75 @@ def get_allocation_for_leontief( VMs, supply):
 					break
 #		print (approximator),
 #		print (" "),
-#		print (allocate_to_user)
+#		print (allocate_to_user),
+#		print allocation[allocate_to_user,:]
+
 		allocation[allocate_to_user,:] += approximator * demands_DRF_norm[allocate_to_user,:]
 
-		if (allocation[allocate_to_user] >= demands_relative[allocate_to_user,:]).all():
+		if (allocation[allocate_to_user,:] < 0).any():
+			allocation[allocate_to_user,:] = np.zeros(allocation.shape[1])
 
+		if (allocation[allocate_to_user] >= demands_relative[allocate_to_user,:]).all():
 			allocation[allocate_to_user,:] = demands_relative[allocate_to_user,:]
 			
 		greediness = getGreediness( np.ones(allocation.shape[1]), allocation )
+		greediness += greed_users
 
-		for i in reversed(range(len(greediness))):
-			if (allocation[i] == demands_relative[i,:]).all():
-				greediness = np.delete(greediness,i)
+		greed_min = float("inf")
+		greed_max = float("-inf")
 		
-		if	(
+#		happy = np.zeros(len(greediness))
+#		gotze = np.zeros(len(greediness))
+		
+		for i in range(len(greediness)):
+			if (allocation[i] == demands_relative[i,:]).all():	#VM is happy
+				greed_max = max(greediness[i],greed_max)
+#				happy[i] = 1
+			else:
+				if (allocation[i] == 0).all():	# VM does not get anything
+					greed_min = min(greediness[i],greed_min)
+#					gotze[i] = 1
+				else:
+					greed_max = max(greediness[i],greed_max)
+					greed_min = min(greediness[i],greed_min)
+
+		if	(# in this case, everybody is happy # can not occur anymore, because the case that there are sufficient resources is checked before the loop is started
 				(
-					len(greediness) == 0
-				and
-					np.max( np.sum( allocation, axis=0)) 	<= 	1
-				)
-			or
-				(
-					len(greediness) > 0
-				and
-					np.max(greediness)-np.min(greediness) 	< 	target_radius
-				and
-					np.max( np.sum( allocation, axis=0)) 	> 	1 - target_radius
+					greed_min == float("-inf")
 				and
 					np.max( np.sum( allocation, axis=0)) 	<= 	1
 				)
 			):
+			print ("everybody happy")
+			sys.exit()
+
+		if		(
+					greed_max - greed_min 	< 	target_radius
+				and
+					np.max( np.sum( allocation, axis=0)) 	> 	1 - target_radius
+				and
+					np.max( np.sum( allocation, axis=0)) 	<= 	1
+				):
 				break
+
+
+#		print		
+		
+#		if greed_max - greed_min 	>= 	target_radius:
+#			print ("greedniess not close\t"),
+#		if np.max( np.sum( allocation, axis=0)) 	< 	1 - target_radius:
+#			print ("not enough allocated"),
+#		if np.max( np.sum( allocation, axis=0)) 	> 	1:
+#			print ("too much allocated"),
+#		print
+#		print np.max( np.sum( allocation, axis=0))
+#		print greed_min
+#		print greed_max
+#		print greediness
+#		print happy
+#		print gotze
+
+
 		
 #		if False:
 #			if approximator < 0:

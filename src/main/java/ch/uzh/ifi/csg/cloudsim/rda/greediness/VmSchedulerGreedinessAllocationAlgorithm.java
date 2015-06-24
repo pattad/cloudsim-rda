@@ -97,20 +97,30 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 
 		String requestedResources = "";
 		int vmCnt = vms.size();
-		
+
 		Map<String, Float> userPriorities = new HashMap<String, Float>();
 
 		if (vmCnt == 0) {
 			return userPriorities;
 		}
-		
+
 		for (Vm vm : vms) {
-			double reqRam = ((RdaVm) vm).getCurrentRequestedRam(currentTime);
-			double reqBw = ((RdaVm) vm).getCurrentRequestedBw(currentTime);
-			double reqStorage = ((RdaVm) vm)
-					.getCurrentRequestedStorageIO(currentTime);
-			double reqCpu = ((RdaVm) vm)
-					.getCurrentRequestedTotalMips(currentTime);
+			double reqRam = ((RdaVm) vm).getCurrentAllocatedRamFine();
+			double reqBw = ((RdaVm) vm).getCurrentAllocatedBwFine();
+			double reqStorage = ((RdaVm) vm).getCurrentAllocatedStorageIO();
+			List<Double> reqCpuList = ((RdaVm) vm).getCurrentAllocatedMips();
+			double reqCpu = 0.0d;
+
+			if (reqCpuList != null) {
+				for (Double pe : reqCpuList) {
+					reqCpu += pe.doubleValue();
+				}
+			} 
+
+			reqCpu = roundUpToZero(reqCpu);
+			reqRam = roundUpToZero(reqRam);
+			reqBw = roundUpToZero(reqBw);
+			reqStorage = roundUpToZero(reqStorage);
 
 			requestedResources += ((RdaVm) vm).getCustomer() + " " + reqCpu
 					+ " " + reqRam + " " + reqBw + " " + reqStorage + " ";
@@ -159,6 +169,13 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 		return userPriorities;
 	}
 
+	public double roundUpToZero(double value) {
+		if (value < 0.0) {
+			value = 0.0;
+		}
+		return value;
+	}
+
 	/*
 	 * rounding up to the 8th position behind the comma. If there is some minor
 	 * number behind the 8th position the result will be rounded up. e.g.
@@ -193,11 +210,11 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 
 		String requestedResources = "";
 		int vmCnt = vms.size();
-		
+
 		if (vmCnt == 0) {
 			return;
 		}
-		
+
 		for (Vm vm : vms) {
 			double reqRam = ((RdaVm) vm).getCurrentRequestedRam(currentTime);
 			double reqBw = ((RdaVm) vm).getCurrentRequestedBw(currentTime);
@@ -215,6 +232,11 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			reqStorage = round(reqStorage);
 			reqBw = round(reqBw);
 			reqRam = round(reqRam);
+
+			reqCpu = roundUpToZero(reqCpu);
+			reqRam = roundUpToZero(reqRam);
+			reqBw = roundUpToZero(reqBw);
+			reqStorage = roundUpToZero(reqStorage);
 
 			String owner = ((RdaVm) vm).getCustomer();
 			requestedResources += owner + " " + userPriorities.get(owner) + " "

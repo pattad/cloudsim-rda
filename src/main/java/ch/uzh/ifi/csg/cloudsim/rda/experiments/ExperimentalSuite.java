@@ -45,7 +45,7 @@ public class ExperimentalSuite {
 	public static double schedulingInterval = 0.000000001; // nano second
 
 	/** the maximal scheduling interval if scarcity occurs on a host */
-	public static double scarcitySchedulingInterval = 0.01; // milli second
+	public static double scarcitySchedulingInterval = 0.1;
 
 	/** Record output to a CSV file */
 	private boolean record = true;
@@ -184,7 +184,7 @@ public class ExperimentalSuite {
 	public RdaVm createVm(int vmId, int brokerId, String userName) {
 		// VM description, this resources will be checked, when allocating
 		// it to a host
-		int mips = 200;
+		int mips = 300;
 		long size = 10000; // image size (MB)
 		int ram = 512; // vm memory (MB)
 		long bw = 1000;
@@ -297,11 +297,13 @@ public class ExperimentalSuite {
 		String indent = "    ";
 		HashMap<String, Double> totalTime = new HashMap<String, Double>();
 
-		result.append("\n ========== RESULT ========== \n");
+		result.append(System.getProperty("line.separator")
+				+ " ========== RESULT ========== "
+				+ System.getProperty("line.separator"));
 		result.append("Cloudlet ID" + indent + "STATUS" + indent
 				+ "Data center ID" + indent + "VM ID" + indent + "Time"
 				+ indent + "Start Time" + indent + "Finish Time" + indent
-				+ "VM customer \n");
+				+ "VM customer " + System.getProperty("line.separator"));
 
 		DecimalFormat dft = new DecimalFormat("###.##");
 		for (int i = 0; i < size; i++) {
@@ -335,21 +337,24 @@ public class ExperimentalSuite {
 						+ indent + indent + indent + customer);
 			}
 
-			result.append("\n");
+			result.append(System.getProperty("line.separator"));
 			// Log.printLine(cloudlet.getCloudletHistory());
 
 		}
 
-		result.append("\nBy customers \n");
+		result.append(System.getProperty("line.separator") + "By customers "
+				+ System.getProperty("line.separator"));
 		double timeTotal = 0;
 		for (String cust : totalTime.keySet()) {
-			result.append(cust + " time: " + totalTime.get(cust) + "\n");
+			result.append(cust + " time: " + totalTime.get(cust)
+					+ System.getProperty("line.separator"));
 			timeTotal += totalTime.get(cust);
 		}
-		result.append("Time total: " + timeTotal + "\n");
+		result.append("Time total: " + timeTotal
+				+ System.getProperty("line.separator"));
 
 		System.out.print(result);
-		
+
 		try {
 			Log.getOutput().write(result.toString().getBytes());
 		} catch (IOException e) {
