@@ -115,7 +115,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 				for (Double pe : reqCpuList) {
 					reqCpu += pe.doubleValue();
 				}
-			} 
+			}
 
 			reqCpu = roundUpToZero(reqCpu);
 			reqRam = roundUpToZero(reqRam);
@@ -146,7 +146,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 					Log.printLine(line);
 					line = line.substring(3);
 					String userName = line.substring(0, line.indexOf(","));
-					line = line.substring(line.indexOf(":") + 1);
+					line = line.substring(line.indexOf("=") + 1);
 					float greediness = Float.valueOf(line);
 
 					if (userPriorities.containsKey(userName)) {
@@ -256,6 +256,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			out2.flush();
 
 			int i = 0;
+			double totalAllocatedMips = 0d;
 			String line = in2.readLine();
 			while (line != null) {
 				Log.printLine(line);
@@ -285,6 +286,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 					int peCnt = vm.getNumberOfPes();
 					for (int n = 0; n < peCnt; n++) {
 						mipsMapCapped.add(mips / peCnt);
+						totalAllocatedMips += (mips / peCnt);
 					}
 
 					getMipsMap().put(vm.getUid(), mipsMapCapped);
@@ -303,6 +305,13 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 				line = in2.readLine();
 
 			}
+			
+			// 0.001 is the safety margin
+			if (totalAllocatedMips > super.getPeCapacity() + 0.001) {
+				throw new RuntimeException(
+						"Too much MIPS assignment by python script. Allocation is higher than supply.");
+			}
+
 		} catch (IOException e) {
 			Log.printLine("Error while allocating resources: " + e.getMessage());
 		}

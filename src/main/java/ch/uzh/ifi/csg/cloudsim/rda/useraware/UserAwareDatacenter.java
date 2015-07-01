@@ -89,6 +89,7 @@ public class UserAwareDatacenter extends RdaDatacenter {
 			}
 		}
 
+		
 		return minTime;
 	}
 }

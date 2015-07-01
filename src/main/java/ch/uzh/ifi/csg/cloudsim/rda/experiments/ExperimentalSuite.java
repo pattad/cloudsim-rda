@@ -45,7 +45,7 @@ public class ExperimentalSuite {
 	public static double schedulingInterval = 0.000000001; // nano second
 
 	/** the maximal scheduling interval if scarcity occurs on a host */
-	public static double scarcitySchedulingInterval = 0.1;
+	public static double scarcitySchedulingInterval = 0.01;
 
 	/** Record output to a CSV file */
 	private boolean record = true;
@@ -84,8 +84,8 @@ public class ExperimentalSuite {
 					SimpleDateFormat df = new SimpleDateFormat(
 							"yyyyMMddhhmmssSSS");
 
-					Log.setOutput(new FileOutputStream("trace_"
-							+ df.format(new Date()) + ".log"));
+					Log.setOutput(new FileOutputStream(
+							 df.format(new Date()) + "_trace.log"));
 
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
@@ -121,7 +121,7 @@ public class ExperimentalSuite {
 			List<Cloudlet> newList = broker.getCloudletReceivedList();
 			List<Vm> vms = broker.getVmList();
 
-			printCloudletList(newList, vms);
+			printCloudletList(newList, vms, userCnt);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -288,7 +288,8 @@ public class ExperimentalSuite {
 	 * @param list
 	 *            list of Cloudlets
 	 */
-	private void printCloudletList(List<Cloudlet> cloudlets, List<Vm> vms) {
+	private void printCloudletList(List<Cloudlet> cloudlets, List<Vm> vms,
+			int userCnt) {
 		int size = cloudlets.size();
 		Cloudlet cloudlet;
 
@@ -353,6 +354,48 @@ public class ExperimentalSuite {
 		result.append("Time total: " + timeTotal
 				+ System.getProperty("line.separator"));
 
+		double[][] userTotals = new double[userCnt][3];
+
+		if (this.getInputData() != null) {
+			int i = 0;
+			for (ArrayList<double[]> workload : this.getInputData()) {
+				double totalCpu = 0.0d;
+				double totalBw = 0.0d;
+				double totalStorageIO = 0.0d;
+				for (double[] line : workload) {
+					totalCpu += line[0];
+					totalBw += line[2];
+					totalStorageIO += line[3];
+				}
+				result.append("Cloudlet: " + i + ", mips: " + totalCpu
+						+ ", bw: " + totalBw + ", storageIO: " + totalStorageIO
+						+ System.getProperty("line.separator"));
+				userTotals[i % userCnt][0] = userTotals[i % userCnt][0]
+						+ totalCpu;
+				userTotals[i % userCnt][1] = userTotals[i % userCnt][1]
+						+ totalBw;
+				userTotals[i % userCnt][2] = userTotals[i % userCnt][2]
+						+ totalStorageIO;
+				i++;
+			}
+		}
+
+		int i = 0;
+		double totalCpu = 0.0d;
+		double totalBw = 0.0d;
+		double totalStorageIO = 0.0d;
+		for (double[] entry : userTotals) {
+			result.append("user " + i + " mips: " + entry[0] + ", bw: "
+					+ entry[1] + ", storageIO: " + entry[2]
+					+ System.getProperty("line.separator"));
+			totalCpu += entry[0];
+			totalBw += entry[1];
+			totalStorageIO += entry[2];
+			i++;
+		}
+		result.append("total mips: " + totalCpu + ", bw: " + totalBw
+				+ ", storageIO: " + totalStorageIO
+				+ System.getProperty("line.separator"));
 		System.out.print(result);
 
 		try {
@@ -360,6 +403,7 @@ public class ExperimentalSuite {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+
 	}
 
 	public void setRecord(boolean record) {

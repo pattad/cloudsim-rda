@@ -1,5 +1,9 @@
 package ch.uzh.ifi.csg.cloudsim.rda;
 
+import java.io.PrintWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +25,14 @@ import org.cloudbus.cloudsim.power.PowerHost;
  * @author Patrick A. Taddei
  */
 public class RdaDatacenter extends PowerDatacenter {
+
+	SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmssSSS");
+
+	private PrintWriter resourceTrace;
+
+	private double pastResourceConsumptionTraceTime = 0.0d;
+
+	private double accumulatedUnfairness = 0.0d;
 
 	/**
 	 * Instantiates a new RDA datacenter.
@@ -53,6 +65,20 @@ public class RdaDatacenter extends PowerDatacenter {
 			double schedulingInterval) throws Exception {
 		super(name, characteristics, vmAllocationPolicy, storageList,
 				schedulingInterval);
+
+		resourceTrace = new PrintWriter(df.format(new Date()) + "_"
+				+ "_resourceShare.csv", "UTF-8");
+	}
+
+	@Override
+	public void shutdownEntity() {
+		String outputString = "Accumulated unfairness: "
+				+ Math.round(accumulatedUnfairness * 100) / 100.0;
+
+		Log.print(System.getProperty("line.separator") + outputString);
+		System.out.println(outputString);
+
+		resourceTrace.close();
 	}
 
 	@Override
@@ -112,6 +138,8 @@ public class RdaDatacenter extends PowerDatacenter {
 
 			minTime = processHosts(currentTime, minTime);
 
+			logResourceShareByUser(currentTime);
+
 			setPower(getPower() + timeframePower);
 
 			checkCloudletCompletion();
@@ -124,6 +152,79 @@ public class RdaDatacenter extends PowerDatacenter {
 			setLastProcessTime(currentTime);
 		}
 
+	}
+
+	private void logResourceShareByUser(double currentTime) {
+
+		if (currentTime - pastResourceConsumptionTraceTime >= 1.0d) {
+			HashMap<String, Double> reqMips = new HashMap<String, Double>();
+			HashMap<String, Double> allocatedMips = new HashMap<String, Double>();
+			double totalMipsSupply = 0.0d;
+
+			for (PowerHost host : this.<PowerHost> getHostList()) {
+
+				totalMipsSupply += host.getTotalMips();
+
+				for (Vm vm : host.getVmList()) {
+					double req = ((RdaVm) vm)
+							.getCurrentRequestedTotalMips(currentTime);
+					String customer = ((RdaVm) vm).getCustomer();
+					Double val = reqMips.get(customer);
+					if (val != null) {
+						reqMips.put(customer, val + req);
+					} else {
+						reqMips.put(customer, req);
+					}
+					double totalAllocated = 0.0d;
+					List<Double> allocated = ((RdaVm) vm)
+							.getCurrentAllocatedMips();
+					for (Double pe : allocated) {
+						totalAllocated += pe;
+					}
+					val = allocatedMips.get(customer);
+					if (val != null) {
+						allocatedMips.put(customer, val + totalAllocated);
+					} else {
+						allocatedMips.put(customer, totalAllocated);
+					}
+
+				}
+			}
+
+			HashMap<String, Double> fairShare = new MaxMinAlgorithm().evaluate(
+					reqMips, totalMipsSupply);
+
+			String unfair = "";
+			String line = "";
+			for (String customer : reqMips.keySet()) {
+				double req = reqMips.get(customer);
+				double allocated = allocatedMips.get(customer);
+				if (req > allocated && allocated < fairShare.get(customer)) {
+					// considered as unfair
+					double fair = fairShare.get(customer);
+
+					double dev;
+					if (fair < req) {
+						dev = Math
+								.round(((fair - allocated) * 100 / fair) * 100) / 100.0;
+					} else {
+						dev = Math
+								.round(((fair - allocated) * 100 / req) * 100) / 100.0;
+					}
+
+					accumulatedUnfairness += dev;
+					unfair += dev + ",";
+				} else {
+					unfair += ",";
+				}
+				line += req + "," + allocated + ",";
+			}
+
+			line += unfair;
+			resourceTrace.println(line);
+
+			pastResourceConsumptionTraceTime = currentTime;
+		}
 	}
 
 	/**

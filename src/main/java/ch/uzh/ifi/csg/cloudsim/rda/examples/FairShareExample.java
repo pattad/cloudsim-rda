@@ -101,9 +101,11 @@ public class FairShareExample {
 					schedulingInterval);
 			// add the VM to the vmList
 			vmlist.add(vm);
+			((RdaVm)vm).setCustomer("user_0");
 			vm = new RdaVm(1, brokerId, mips, pesNumber, ram, bw, size, 1, vmm,
 					new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber,
 							scarcitySchedulingInterval), schedulingInterval);
+			((RdaVm)vm).setCustomer("user_1");
 			// add the VM to the vmList
 			vmlist.add(vm);
 

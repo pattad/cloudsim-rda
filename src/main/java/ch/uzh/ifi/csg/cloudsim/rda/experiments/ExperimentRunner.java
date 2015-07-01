@@ -29,6 +29,7 @@ public class ExperimentRunner {
 					100, 40, 250, 10, 0.5, 10, 0.5, 75);
 			inputData.add(workloadData);
 			PrintWriter trace = null;
+
 			try {
 				trace = new PrintWriter(df.format(new Date()) + "_" + i
 						+ "_workload.csv", "UTF-8");
@@ -38,7 +39,6 @@ public class ExperimentRunner {
 					trace.println(line[0] + "," + line[1] + "," + line[2] + ","
 							+ line[3]);
 				}
-
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
 			} catch (UnsupportedEncodingException e) {
@@ -57,13 +57,13 @@ public class ExperimentRunner {
 		// VMs and Hosts and users to create
 		suite.simulate(vmCnt, hostCnt, userCnt);
 
-//		// greediness policy
-//		UserAwareExperimentalSuite userAwareSuite = new UserAwareExperimentalSuite();
-//		userAwareSuite.setInputData(inputData);
-//		userAwareSuite.setTrace(true);
-//
-//		// VMs and Hosts and users to create
-//		userAwareSuite.simulate(vmCnt, hostCnt, userCnt);
+		// greediness policy
+		UserAwareExperimentalSuite userAwareSuite = new UserAwareExperimentalSuite();
+		userAwareSuite.setInputData(inputData);
+		userAwareSuite.setTrace(true);
+
+		// VMs and Hosts and users to create
+		userAwareSuite.simulate(vmCnt, hostCnt, userCnt);
 	}
 
 }

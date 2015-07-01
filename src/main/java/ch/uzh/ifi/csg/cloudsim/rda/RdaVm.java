@@ -176,7 +176,7 @@ public class RdaVm extends PowerVm {
 	public void setCurrentAllocatedRam(double currentAllocatedRam) {
 		this.currentAllocatedRam = currentAllocatedRam;
 	}
-
+		
 	@Override
 	public long getCurrentAllocatedBw() {
 		return Math.round(currentAllocatedBw);

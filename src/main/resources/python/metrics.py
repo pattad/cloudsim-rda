@@ -9,29 +9,23 @@ import sys
 
 from VM import VM
 
-normalizer = 40.
+normalizer = 10.
 
 def gez(a):
 	if a > 0:
 		return a*1.
 	return 0.
 
-
-
 def lez(a):
 	if a < 0:
 		return a*1.
 	return 0.
 
-
-
 def duc(a):
 	if a>-1:
 		return a*1.
 	return -1.
-
-
-
+	
 def notZero(a):
 	if a!=0:
 		return a*1.
@@ -118,10 +112,6 @@ def getDRF( endowments, demands ):
 	for i in range(demands.shape[0]):
 		ret[i] = np.max( (demands[i,:]*1.0)/endowments )
 	return ret
-
-
-
-
 
 def greediness( endowments, demands, factor, resources ):
 	if endowments.shape[0] == 1:
@@ -414,9 +404,6 @@ def get_only_greediness_FOR_requests( VMs, supply ):
 		VMs[i].greed_self = greediness[i]		
 	return VMs
 
-
-
-	
 def get_allocation( VMs, supply ):
 
 	initialize = check_input( VMs, supply )		
@@ -458,9 +445,8 @@ def get_allocation( VMs, supply ):
 	for i in range(len(VMs)):
 		VMs[i].greed_self = greediness[i] + VMs[i].greed_user
 	return VMs
-	
-	
-	
+
+
 	
 def get_allocation_for_leontief( VMs, supply):
 #	VMs = list(VMs_in)
@@ -505,10 +491,62 @@ def get_allocation_for_leontief( VMs, supply):
 			else:
 				demands_DRF_norm[i,j] = demands_relative[i,j]/np.sum(demands_relative[i,:])
 #		demands_DRF_norm[i,:] = 	demands_relative[i,:]/np.sum(demands_relative[i,:])
+	
+	
+	
+	
+	starvation_limits = np.zeros(demands.shape)
+
+	equalshare = 1.0/demands.shape[0]
+
+	for i in range(demands.shape[0]):
+		if np.max(demands_DRF_norm[i,:]) > 0:
+
+			if VMs[i].greed_user <= 0:
+				starvation_factor = equalshare
+			else:
+			
+#				print "equal share\t %f"%equalshare
+#				print "greed\t\t %f"%VMs[i].greed_user
+
+				starvation_factor = (equalshare - (VMs[i].greed_user/normalizer) - 1)/2+(
+					math.sqrt(				
+						(
+							math.pow((VMs[i].greed_user/normalizer),2)
+							+
+							math.pow(equalshare,2)
+							+
+							1
+						)/4
+						+
+						((VMs[i].greed_user/normalizer) + equalshare - (VMs[i].greed_user/normalizer)*equalshare )/2
+					)
+				)
+				
+#			print "starv limit:\t %f"%starvation_factor
+#			print		
+			starvation_limits[i,:] = starvation_factor * demands_DRF_norm[i,:]/( np.max(demands_DRF_norm[i,:]) * demands.shape[0] )
+			if (starvation_limits[i,:] >= demands_relative[i,:]).all():
+				starvation_limits[i,:] = demands_relative[i,:]
+		else:
+			starvation_limits[i,:] = np.zeros(demands.shape[1])
+		VMs[i].starve_vector = starvation_limits[i,:]
 		
+#	return VMs	
+		
+		
+		
+		
+		
+		
+		
+#	print "starvation"
+#	print starvation_limits
+#	print
+	
 	# this allocation matrix is altered in the loop to arrive at the final allocation
 	# initially no VM gets any resource
-	allocation = np.zeros(demands.shape)
+	allocation = np.array(starvation_limits)#np.zeros(demands.shape)
 	x=0
 	y=0
 	increasing = True
@@ -532,7 +570,8 @@ def get_allocation_for_leontief( VMs, supply):
 			approximator = approximator_default
 			y += 1
 		
-			if y == 25:
+			if y == 10:
+				print("terminated")
 				sys.exit()
 		
 		if 	(
@@ -551,16 +590,20 @@ def get_allocation_for_leontief( VMs, supply):
 			approximator *=- factor
 		
 		if approximator < 0:
+#			print ("dec "),
+#			print greediness
+#			print allocation
+#			print starvation_limits
 			allocate_to_user = np.argmax(greediness)
 
 			for i in range(len(greediness)):
-				if (allocation[allocate_to_user] == 0).all():
+#				print (allocate_to_user),
+				if (allocation[allocate_to_user,:] == starvation_limits[allocate_to_user,:]).all():
 					greediness[allocate_to_user] = float("-inf")
 					allocate_to_user = np.argmax(greediness)
 				else:
 					break
-						
-#			print ("dec "),
+					
 		else:
 #			print ("inc "),
 			allocate_to_user = np.argmin(greediness)	
@@ -570,60 +613,94 @@ def get_allocation_for_leontief( VMs, supply):
 					allocate_to_user = np.argmin(greediness)
 				else:
 					break
-#		print (approximator),
-#		print (" "),
+#		print
 #		print (allocate_to_user),
+#		print ("\t"),
+#		print (approximator)
+#		print ("starv\t"),
+#		print starvation_limits[allocate_to_user,:]
+#		print ("before\t"),
 #		print allocation[allocate_to_user,:]
 
 		allocation[allocate_to_user,:] += approximator * demands_DRF_norm[allocate_to_user,:]
-
-		if (allocation[allocate_to_user,:] < 0).any():
-			allocation[allocate_to_user,:] = np.zeros(allocation.shape[1])
+#		print ("middle\t"),
+#		print allocation[allocate_to_user,:]
+#		
+#		print (allocation[allocate_to_user,:] <= starvation_limits[allocate_to_user,:]),
+#		print (allocation[allocate_to_user,:] <= starvation_limits[allocate_to_user,:]).all()
+#				
+		if (allocation[allocate_to_user,:] <= starvation_limits[allocate_to_user,:]).all():
+			allocation[allocate_to_user,:] = starvation_limits[allocate_to_user,:]
+#			print ("reset to"),
+#			print starvation_limits[allocate_to_user,:]
 
 		if (allocation[allocate_to_user] >= demands_relative[allocate_to_user,:]).all():
 			allocation[allocate_to_user,:] = demands_relative[allocate_to_user,:]
-			
-		greediness = getGreediness( np.ones(allocation.shape[1]), allocation )
-		greediness += greed_users
 
+#		print ("end\t"),
+#		print allocation[allocate_to_user,:]
+#		print
+
+
+		greediness = getGreediness( np.ones(allocation.shape[1]), allocation )
+
+#		print greediness
+#		print greed_users
+#		print "greed total"
+		greediness += greed_users
+#		print greediness
 		greed_min = float("inf")
 		greed_max = float("-inf")
 		
-#		happy = np.zeros(len(greediness))
-#		gotze = np.zeros(len(greediness))
+		happy = np.zeros(len(greediness))
+		gotze = np.zeros(len(greediness))
+		
+		
+		# wenn starvation groesser als demand ist, bekommt jemand nur seine starvation kommt aber trotzdem nach greed max
+		
 		
 		for i in range(len(greediness)):
-			if (allocation[i] == demands_relative[i,:]).all():	#VM is happy
+			if (allocation[i,:] < demands_relative[i,:]).any():
+#				print "min %d"%i
+				greed_min = min(greediness[i],greed_min)
+#				gotze[i] = 1
+			if (allocation[i,:] > starvation_limits[i,:]).any():
+#				print "max %d"%i
 				greed_max = max(greediness[i],greed_max)
 #				happy[i] = 1
-			else:
-				if (allocation[i] == 0).all():	# VM does not get anything
-					greed_min = min(greediness[i],greed_min)
-#					gotze[i] = 1
-				else:
-					greed_max = max(greediness[i],greed_max)
-					greed_min = min(greediness[i],greed_min)
+#			print allocation[i]
+#			print starvation_limits[i]
+#			print
 
-		if	(# in this case, everybody is happy # can not occur anymore, because the case that there are sufficient resources is checked before the loop is started
-				(
-					greed_min == float("-inf")
-				and
-					np.max( np.sum( allocation, axis=0)) 	<= 	1
-				)
-			):
-			print ("everybody happy")
-			sys.exit()
+#		print "Max allocated: %.4f\t greed range: %.4f (from %.4f to %.4f)"%(np.max( np.sum( allocation, axis=0)), (greed_max - greed_min), greed_min, greed_max )
 
 		if		(
-					greed_max - greed_min 	< 	target_radius
-				and
-					np.max( np.sum( allocation, axis=0)) 	> 	1 - target_radius
-				and
-					np.max( np.sum( allocation, axis=0)) 	<= 	1
+					(
+						greed_max == float("-inf")
+					)
+				or
+					(
+						greed_max - greed_min 	< 	target_radius
+					and
+						np.max( np.sum( allocation, axis=0)) 	> 	1 - target_radius
+					and
+						np.max( np.sum( allocation, axis=0)) 	<= 	1
+					)
+				or
+					(	
+							greed_min == float("inf")
+						and
+							np.max( np.sum( allocation, axis=0)) 	<= 	1
+					)
 				):
 				break
-
-
+#		print
+#		print ("happy"),
+#		print happy
+#		print ("zero "),
+#		print gotze				
+#		print
+#	print allocation
 #		print		
 		
 #		if greed_max - greed_min 	>= 	target_radius:
@@ -666,6 +743,8 @@ def get_allocation_for_leontief( VMs, supply):
 	
 	for i in range(demands_DRF_norm.shape[0]):
 		VMs[i].receive_vector = allocation_denorm[i,:]
-		VMs[i].greed_self = greed[i]		
-	
+		VMs[i].greed_self = greed[i]
+		for j in range(demands_DRF_norm.shape[1]):
+			VMs[i].starve_vector[j] *= supply[j]
+			
 	return VMs
