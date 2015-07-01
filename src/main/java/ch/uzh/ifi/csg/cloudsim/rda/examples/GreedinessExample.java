@@ -49,7 +49,7 @@ public class GreedinessExample {
 	private static boolean record = true;
 
 	/** path to the python binary on your system */
-	private static String pythonPath = "C:\\Program Files (x86)\\Python34\\python";
+	private static String pythonPath = "python src\\main\\resources\\python\\";
 
 	/**
 	 * Creates main() to run this example.

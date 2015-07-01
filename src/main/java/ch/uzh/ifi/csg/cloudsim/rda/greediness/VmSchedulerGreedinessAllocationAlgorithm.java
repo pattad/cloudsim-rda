@@ -64,10 +64,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 		this.bwProvisioner = bwProvisioner;
 		this.sProvisioner = sProvisioner;
 		try {
-			p = Runtime
-					.getRuntime()
-					.exec(pythonPath
-							+ " src\\main\\resources\\python\\getGreediness.py");
+			p = Runtime.getRuntime().exec(pythonPath + "getGreediness.py");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -75,10 +72,8 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 		out = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
 
 		try {
-			p2 = Runtime
-					.getRuntime()
-					.exec(pythonPath
-							+ " src\\main\\resources\\python\\getAllocationUserAware.py");
+			p2 = Runtime.getRuntime().exec(
+					pythonPath + "getAllocationUserAware.py");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -239,9 +234,13 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			reqStorage = roundUpToZero(reqStorage);
 
 			String owner = ((RdaVm) vm).getCustomer();
-			requestedResources += owner + " " + userPriorities.get(owner) + " "
-					+ reqCpu + " " + reqRam + " " + reqBw + " " + reqStorage
-					+ " ";
+
+			Float greediness = userPriorities.get(owner);
+			if (greediness == null) {
+				greediness = 0.0f;
+			}
+			requestedResources += owner + " " + greediness + " " + reqCpu + " "
+					+ reqRam + " " + reqBw + " " + reqStorage + " ";
 		}
 
 		String supply = (int) super.getPeCapacity() + " "
@@ -305,7 +304,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 				line = in2.readLine();
 
 			}
-			
+
 			// 0.001 is the safety margin
 			if (totalAllocatedMips > super.getPeCapacity() + 0.001) {
 				throw new RuntimeException(

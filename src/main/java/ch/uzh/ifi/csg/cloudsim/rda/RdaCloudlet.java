@@ -155,7 +155,8 @@ public class RdaCloudlet extends Cloudlet {
 			} else {
 				// average instructions in the timeframe
 				instructions += (lastMips + mips) / 2.0;
-				result[i][INST_INDEX] = Math.round(instructions * Consts.MILLION);
+				result[i][INST_INDEX] = Math.round(instructions
+						* Consts.MILLION);
 			}
 			result[i][CPU_INDEX] = entry[0];
 			result[i][RAM_INDEX] = entry[1];
@@ -166,7 +167,7 @@ public class RdaCloudlet extends Cloudlet {
 			i++;
 		}
 
-		super.setCloudletLength((long)instructions);
+		super.setCloudletLength((long) instructions);
 
 		this.mips = result[0][CPU_INDEX]; // initial mips
 
@@ -176,8 +177,9 @@ public class RdaCloudlet extends Cloudlet {
 
 			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmssSSS");
 
-			recorder = new PrintWriter(df.format(new Date()) + "_"
-					+ super.getCloudletId() + ".csv", "UTF-8");
+			recorder = new PrintWriter(new File(df.format(new Date()) + "_"
+					+ super.getCloudletId() + ".csv").getAbsoluteFile(),
+					"UTF-8");
 			recorder.println("time,cpu,memory,bandwidth,storageIO,delay");
 		}
 

@@ -27,9 +27,16 @@ import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareDatacenter;
  */
 public class UserAwareExperimentalSuite extends ExperimentalSuite {
 
-	/** path to the python binary on your system */
-	private String pythonPath = "C:\\Program Files (x86)\\Python34\\python";
 
+	private String pythonPath = "python bin/";
+	
+	
+	public UserAwareExperimentalSuite(String pythonPath) {
+		super();
+		this.pythonPath = pythonPath;
+	}
+
+	
 	/**
 	 * Main method to run this experiment
 	 *
@@ -38,7 +45,7 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 	 */
 	public static void main(String[] args) {
 
-		UserAwareExperimentalSuite suite = new UserAwareExperimentalSuite();
+		UserAwareExperimentalSuite suite = new UserAwareExperimentalSuite("python bin/");
 		// VMs and Hosts to create
 		suite.simulate(2, 3, 3);
 
@@ -102,15 +109,7 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 				storageIOProvisioner, storage, peList,
 				new VmSchedulerGreedinessAllocationAlgorithm(peList,
 						ramProvisioner, bwProvisioner, storageIOProvisioner,
-						pythonPath), scarcitySchedulingInterval);
+						this.pythonPath), scarcitySchedulingInterval);
 
-	}
-
-	public String getPythonPath() {
-		return pythonPath;
-	}
-
-	public void setPythonPath(String pythonPath) {
-		this.pythonPath = pythonPath;
 	}
 }

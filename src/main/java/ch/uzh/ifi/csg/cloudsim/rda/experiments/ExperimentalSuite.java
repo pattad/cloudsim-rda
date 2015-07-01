@@ -1,5 +1,6 @@
 package ch.uzh.ifi.csg.cloudsim.rda.experiments;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -84,8 +85,9 @@ public class ExperimentalSuite {
 					SimpleDateFormat df = new SimpleDateFormat(
 							"yyyyMMddhhmmssSSS");
 
-					Log.setOutput(new FileOutputStream(
-							 df.format(new Date()) + "_trace.log"));
+					Log.setOutput(new FileOutputStream(new File(df
+							.format(new Date()) + "_trace.log")
+							.getAbsoluteFile()));
 
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();

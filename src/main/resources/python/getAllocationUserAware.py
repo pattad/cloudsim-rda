@@ -9,7 +9,7 @@ import random
 import sys
 
 while True:
-	text = input('')
+	text = input('') # if using python 2.x change this to raw_input('')
 	text = text.split(' ')
 
 	# sample input:

@@ -1,5 +1,6 @@
 package ch.uzh.ifi.csg.cloudsim.rda;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -66,8 +67,8 @@ public class RdaDatacenter extends PowerDatacenter {
 		super(name, characteristics, vmAllocationPolicy, storageList,
 				schedulingInterval);
 
-		resourceTrace = new PrintWriter(df.format(new Date()) + "_"
-				+ "_resourceShare.csv", "UTF-8");
+		resourceTrace = new PrintWriter(new File(df.format(new Date())
+				+ "_resourceShare.csv").getAbsoluteFile(), "UTF-8");
 	}
 
 	@Override
