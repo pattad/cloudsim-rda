@@ -7,7 +7,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import ch.uzh.ifi.csg.cloudsim.rda.data.StochasticDataGenerator;
+import ch.uzh.ifi.csg.cloudsim.rda.experiments.StochasticDataGenerator;
 
 /**
  * The class <code>StochasticDataGeneratorTest</code> contains tests for the

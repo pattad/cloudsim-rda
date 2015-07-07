@@ -8,14 +8,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import ch.uzh.ifi.csg.cloudsim.rda.data.StochasticDataGenerator;
-
 public class ExperimentRunner {
 
 	private static SimpleDateFormat df = new SimpleDateFormat(
 			"yyyyMMddhhmmssSSS");
 
-	private static String pythonPath = "python bin/";
+	private static String pythonPath = "python bin";
 
 	public static void main(String[] args) {
 

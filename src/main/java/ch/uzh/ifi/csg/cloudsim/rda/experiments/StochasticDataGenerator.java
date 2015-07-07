@@ -1,4 +1,4 @@
-package ch.uzh.ifi.csg.cloudsim.rda.data;
+package ch.uzh.ifi.csg.cloudsim.rda.experiments;
 
 import java.util.ArrayList;
 import java.util.Random;

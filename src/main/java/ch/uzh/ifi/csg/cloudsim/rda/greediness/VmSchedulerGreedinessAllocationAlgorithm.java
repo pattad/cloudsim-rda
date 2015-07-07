@@ -64,7 +64,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 		this.bwProvisioner = bwProvisioner;
 		this.sProvisioner = sProvisioner;
 		try {
-			p = Runtime.getRuntime().exec(pythonPath + "getGreediness.py");
+			p = Runtime.getRuntime().exec(pythonPath + "/getGreediness.py");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -73,7 +73,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 
 		try {
 			p2 = Runtime.getRuntime().exec(
-					pythonPath + "getAllocationUserAware.py");
+					pythonPath + "/getAllocationUserAware.py");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

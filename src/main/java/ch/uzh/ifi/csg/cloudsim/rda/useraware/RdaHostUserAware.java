@@ -69,6 +69,13 @@ public class RdaHostUserAware extends RdaHost implements UserAwareHost {
 
 		double smallerTime = Double.MAX_VALUE;
 		for (Vm vm : getVmList()) {
+
+			if (priorities.containsKey(((RdaVm) vm).getCustomer())) {
+				// set the current priority of the VM according to the user's
+				// priority
+				((RdaVm) vm).setCurrentPriority(priorities.get(((RdaVm) vm)
+						.getCustomer()));
+			}
 			double time = ((RdaVm) vm).updateVmProcessing(currentTime,
 					getVmScheduler().getAllocatedMipsForVm(vm),
 					((RdaVm) vm).getCurrentAllocatedBwFine(),

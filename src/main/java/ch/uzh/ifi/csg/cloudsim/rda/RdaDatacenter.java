@@ -160,16 +160,26 @@ public class RdaDatacenter extends PowerDatacenter {
 		if (currentTime - pastResourceConsumptionTraceTime >= 1.0d) {
 			HashMap<String, Double> reqMips = new HashMap<String, Double>();
 			HashMap<String, Double> allocatedMips = new HashMap<String, Double>();
+			HashMap<String, Float> userPriorities = new HashMap<String, Float>();
+
 			double totalMipsSupply = 0.0d;
 
 			for (PowerHost host : this.<PowerHost> getHostList()) {
 
-				totalMipsSupply += host.getTotalMips();
+				// only add to total, if host has some VMs running on it
+				if (host.getVmList().size() > 0) {
+					totalMipsSupply += host.getTotalMips();
+				}
 
 				for (Vm vm : host.getVmList()) {
 					double req = ((RdaVm) vm)
 							.getCurrentRequestedTotalMips(currentTime);
 					String customer = ((RdaVm) vm).getCustomer();
+
+					// store current priority of the user
+					userPriorities.put(customer,
+							((RdaVm) vm).getCurrentPriority());
+
 					Double val = reqMips.get(customer);
 					if (val != null) {
 						reqMips.put(customer, val + req);
@@ -219,6 +229,10 @@ public class RdaDatacenter extends PowerDatacenter {
 					unfair += ",";
 				}
 				line += req + "," + allocated + ",";
+
+				if (userPriorities.get(customer) != null) {
+					line += userPriorities.get(customer) + ",";
+				}
 			}
 
 			line += unfair;

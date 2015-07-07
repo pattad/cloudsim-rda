@@ -25,6 +25,8 @@ public class RdaVm extends PowerVm {
 	private double currentAllocatedBw;
 
 	private String customer;
+	
+	private float currentPriority;
 
 	public RdaVm(int id, int userId, double mips, int pesNumber, int ram,
 			long bw, long size, int priority, String vmm,
@@ -176,7 +178,7 @@ public class RdaVm extends PowerVm {
 	public void setCurrentAllocatedRam(double currentAllocatedRam) {
 		this.currentAllocatedRam = currentAllocatedRam;
 	}
-		
+
 	@Override
 	public long getCurrentAllocatedBw() {
 		return Math.round(currentAllocatedBw);
@@ -201,4 +203,13 @@ public class RdaVm extends PowerVm {
 	public void setCustomer(String customer) {
 		this.customer = customer;
 	}
+
+	public float getCurrentPriority() {
+		return currentPriority;
+	}
+
+	public void setCurrentPriority(float currentPriority) {
+		this.currentPriority = currentPriority;
+	}
+
 }

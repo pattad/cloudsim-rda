@@ -9,6 +9,8 @@ import sys
 
 from VM import VM
 
+starve_design_parameter = 0.3
+
 normalizer = 10.
 
 def gez(a):
@@ -449,66 +451,57 @@ def get_allocation( VMs, supply ):
 
 	
 def get_allocation_for_leontief( VMs, supply):
-#	VMs = list(VMs_in)
+	output = False
+	depletion_order = list()
+
 	initialize = check_input( VMs, supply )		
 	supply  = initialize['supply']
 	demands = initialize['demands']
+	nr_VMs = len(VMs)
+	nr_res = len(supply)
 	
-	greed_users = np.zeros(len(VMs))
-	for i in range(len(VMs)):
+	greed_users = np.zeros(nr_VMs)
+	for i in range(nr_VMs):
 		greed_users[i] = VMs[i].greed_user
-	
 	
 	# if there is no scarcity
 	if (np.sum( demands, axis=0) <= supply).all():
 		for vm in VMs:
 			vm.receive_vector = np.array(vm.request_vector)
 		get_only_greediness( VMs, supply.tolist() )
-#		print ("\t"),
 		return VMs
 
 	# demands_relative contains VM requests relative to the overall supply
 	demands_relative = np.empty(demands.shape)	
-	for i in range(demands.shape[1]):
+	for i in range(nr_res):
 		demands_relative[:,i] = 	demands[:,i]/supply[i]
 	
 	# demands_DRF contains demands_relative scale such that the biggest relative demand for each VM is 1
 	demands_DRF = np.empty(demands.shape)
-	for i in range(demands.shape[0]):
-		for j in range(demands.shape[1]):
+	for i in range(nr_VMs):
+		for j in range(nr_res):
 			if demands_relative[i,j] == 0:
 				demands_DRF[i,j] = 0
 			else:
 				demands_DRF[i,j] = demands_relative[i,j]/np.max(demands_relative[i,:])
-#		demands_DRF[i,:] = 	demands_relative[i,:]/np.max(demands_relative[i,:])
 
 	# demands_DRF_norm contains demands_relative such that the sum of relative demands add up to 1 of each VM
 	demands_DRF_norm = np.empty(demands.shape)	
-	for i in range(demands.shape[0]):
-		for j in range(demands.shape[1]):
+	for i in range(nr_VMs):
+		for j in range(nr_res):
 			if demands_relative[i,j] == 0:
 				demands_DRF_norm[i,j] = 0
 			else:
 				demands_DRF_norm[i,j] = demands_relative[i,j]/np.sum(demands_relative[i,:])
-#		demands_DRF_norm[i,:] = 	demands_relative[i,:]/np.sum(demands_relative[i,:])
-	
-	
-	
 	
 	starvation_limits = np.zeros(demands.shape)
+	equalshare = 1.0/nr_VMs
 
-	equalshare = 1.0/demands.shape[0]
-
-	for i in range(demands.shape[0]):
+	for i in range(nr_VMs):
 		if np.max(demands_DRF_norm[i,:]) > 0:
-
 			if VMs[i].greed_user <= 0:
 				starvation_factor = equalshare
 			else:
-			
-#				print "equal share\t %f"%equalshare
-#				print "greed\t\t %f"%VMs[i].greed_user
-
 				starvation_factor = (equalshare - (VMs[i].greed_user/normalizer) - 1)/2+(
 					math.sqrt(				
 						(
@@ -522,203 +515,249 @@ def get_allocation_for_leontief( VMs, supply):
 						((VMs[i].greed_user/normalizer) + equalshare - (VMs[i].greed_user/normalizer)*equalshare )/2
 					)
 				)
-				
-#			print "starv limit:\t %f"%starvation_factor
-#			print		
-			starvation_limits[i,:] = starvation_factor * demands_DRF_norm[i,:]/( np.max(demands_DRF_norm[i,:]) * demands.shape[0] )
+			starvation_limits[i,:] = starvation_factor * demands_DRF_norm[i,:]/( np.max(demands_DRF_norm[i,:]) * nr_VMs )
 			if (starvation_limits[i,:] >= demands_relative[i,:]).all():
 				starvation_limits[i,:] = demands_relative[i,:]
 		else:
-			starvation_limits[i,:] = np.zeros(demands.shape[1])
-		VMs[i].starve_vector = starvation_limits[i,:]
-		
-#	return VMs	
-		
-		
-		
-		
-		
-		
-		
-#	print "starvation"
-#	print starvation_limits
-#	print
-	
+			starvation_limits[i,:] = np.zeros(demands.shape[1])			
+		starvation_limits[i,:] *= starve_design_parameter	
+		VMs[i].starve_vector = np.array(starvation_limits[i,:])
+
 	# this allocation matrix is altered in the loop to arrive at the final allocation
-	# initially no VM gets any resource
-	allocation = np.array(starvation_limits)#np.zeros(demands.shape)
+	# initially every VMs gets its starvation limit
+	allocation = np.array(starvation_limits)#np.zeros(demands.shape)	
+#	allocation_bu = np.array(starvation_limits)
+	
 	x=0
 	y=0
 	increasing = True
 	target_radius = 0.000000001
-#	target_radius = 0.01
-	everyone_happy = False
-
 	approximator_default = 0.05
 	factor = 0.9
-	
-	approximator =  approximator_default# the fraction of a VM's demand that will be added or removed per loop (change frequently)
-	
-	greediness = getGreediness( np.ones(allocation.shape[1]), allocation )
+	approximator =  approximator_default# the fraction of a VM's demand that will be added or removed per loop (change frequently)	
+	greediness = getGreediness( np.ones(nr_res), allocation )
 	greediness += greed_users
-	
+	depleted = np.zeros(nr_res, dtype=bool)
 
 	while True:
-		x+=1
-		if math.fabs(approximator) < target_radius*0.1:
-		
-			approximator = approximator_default
-			y += 1
-		
-			if y == 10:
-				print("terminated")
-				sys.exit()
-		
-		if 	(
-				(
-					approximator < 0
-				and
-					np.max( np.sum( allocation, axis=0 )) < 1
-				)
-			or
-				(
-					approximator > 0
-				and
-					np.max( np.sum( allocation, axis=0 )) > 1
-				)
-			):
-			approximator *=- factor
-		
-		if approximator < 0:
-#			print ("dec "),
-#			print greediness
-#			print allocation
-#			print starvation_limits
-			allocate_to_user = np.argmax(greediness)
-
-			for i in range(len(greediness)):
-#				print (allocate_to_user),
-				if (allocation[allocate_to_user,:] == starvation_limits[allocate_to_user,:]).all():
-					greediness[allocate_to_user] = float("-inf")
-					allocate_to_user = np.argmax(greediness)
-				else:
-					break
-					
-		else:
-#			print ("inc "),
-			allocate_to_user = np.argmin(greediness)	
-			for i in range(len(greediness)):
-				if (allocation[allocate_to_user] == demands_relative[allocate_to_user,:]).all():
-					greediness[allocate_to_user] = float("inf")
-					allocate_to_user = np.argmin(greediness)
-				else:
-					break
-#		print
-#		print (allocate_to_user),
-#		print ("\t"),
-#		print (approximator)
-#		print ("starv\t"),
-#		print starvation_limits[allocate_to_user,:]
-#		print ("before\t"),
-#		print allocation[allocate_to_user,:]
-
-		allocation[allocate_to_user,:] += approximator * demands_DRF_norm[allocate_to_user,:]
-#		print ("middle\t"),
-#		print allocation[allocate_to_user,:]
-#		
-#		print (allocation[allocate_to_user,:] <= starvation_limits[allocate_to_user,:]),
-#		print (allocation[allocate_to_user,:] <= starvation_limits[allocate_to_user,:]).all()
-#				
-		if (allocation[allocate_to_user,:] <= starvation_limits[allocate_to_user,:]).all():
-			allocation[allocate_to_user,:] = starvation_limits[allocate_to_user,:]
-#			print ("reset to"),
-#			print starvation_limits[allocate_to_user,:]
-
-		if (allocation[allocate_to_user] >= demands_relative[allocate_to_user,:]).all():
-			allocation[allocate_to_user,:] = demands_relative[allocate_to_user,:]
-
-#		print ("end\t"),
-#		print allocation[allocate_to_user,:]
-#		print
-
-
-		greediness = getGreediness( np.ones(allocation.shape[1]), allocation )
-
-#		print greediness
-#		print greed_users
-#		print "greed total"
-		greediness += greed_users
-#		print greediness
-		greed_min = float("inf")
-		greed_max = float("-inf")
-		
-		happy = np.zeros(len(greediness))
-		gotze = np.zeros(len(greediness))
-		
-		
-		# wenn starvation groesser als demand ist, bekommt jemand nur seine starvation kommt aber trotzdem nach greed max
-		
-		
-		for i in range(len(greediness)):
-			if (allocation[i,:] < demands_relative[i,:]).any():
-#				print "min %d"%i
-				greed_min = min(greediness[i],greed_min)
-#				gotze[i] = 1
-			if (allocation[i,:] > starvation_limits[i,:]).any():
-#				print "max %d"%i
-				greed_max = max(greediness[i],greed_max)
-#				happy[i] = 1
-#			print allocation[i]
-#			print starvation_limits[i]
-#			print
-
-#		print "Max allocated: %.4f\t greed range: %.4f (from %.4f to %.4f)"%(np.max( np.sum( allocation, axis=0)), (greed_max - greed_min), greed_min, greed_max )
-
-		if		(
+		while True:
+			if math.fabs(approximator) < target_radius*0.1:
+				approximator = approximator_default
+				y += 1
+				if y == 10:
+					print("terminated due to too many iterations")
+					sys.exit()		
+			if 	(
 					(
-						greed_max == float("-inf")
+						approximator < 0
+					and
+						np.max( np.sum( allocation, axis=0 ) * np.invert(depleted)) < 1
 					)
 				or
 					(
-						greed_max - greed_min 	< 	target_radius
+						approximator > 0
 					and
-						np.max( np.sum( allocation, axis=0)) 	> 	1 - target_radius
-					and
-						np.max( np.sum( allocation, axis=0)) 	<= 	1
-					)
-				or
-					(	
-							greed_min == float("inf")
-						and
-							np.max( np.sum( allocation, axis=0)) 	<= 	1
+						np.max( np.sum( allocation, axis=0 ) * np.invert(depleted)) > 1
 					)
 				):
-				break
-#		print
-#		print ("happy"),
-#		print happy
-#		print ("zero "),
-#		print gotze				
-#		print
+				approximator *=- factor
+		
+			if approximator < 0:
+				if output:
+					print ("dec "),
+				allocate_to_user = np.argmax(greediness)
+
+				for i in range(nr_VMs):
+					if (allocation[allocate_to_user,:] == starvation_limits[allocate_to_user,:]).all():
+						greediness[allocate_to_user] = float("-inf")
+						allocate_to_user = np.argmax(greediness)
+					else:
+						break
+					
+			else:
+				if output:
+					print ("inc "),
+				allocate_to_user = np.argmin(greediness)	
+				for i in range(nr_VMs):
+					if (allocation[allocate_to_user] == demands_relative[allocate_to_user,:]).all():
+						greediness[allocate_to_user] = float("inf")
+						allocate_to_user = np.argmin(greediness)
+					else:
+						break
+			if output:
+				print (allocate_to_user),
+				print ("\t"),
+				print (approximator)
+
+			allocation[allocate_to_user,:] += approximator * demands_DRF_norm[allocate_to_user,:]
+
+			if (allocation[allocate_to_user,:] <= starvation_limits[allocate_to_user,:]).all():
+				allocation[allocate_to_user,:] = starvation_limits[allocate_to_user,:]
+
+			if (allocation[allocate_to_user] >= demands_relative[allocate_to_user,:]).all():
+				allocation[allocate_to_user,:] = demands_relative[allocate_to_user,:]
+
+			greediness = getGreediness( np.ones(nr_res), allocation )
+
+			greediness += greed_users
+			greed_min = float("inf")
+			greed_max = float("-inf")
+		
+			for i in range(nr_VMs):
+
+				if (allocation[i,:] < demands_relative[i,:]).any():
+					greed_min = min(greediness[i],greed_min)
+
+				if (allocation[i,:] > starvation_limits[i,:]).any():
+					greed_max = max(greediness[i],greed_max)
+
+			if output and False:
+				print ("Max allocated: %.4f\t greed range: %.4f (from %.4f to %.4f)"%(np.max( np.sum( allocation, axis=0)), (greed_max - greed_min), greed_min, greed_max ))
+				print("allocation")	
+				print(allocation)
+				print("________________")
+				print(np.sum( allocation, axis=0))
+				print("________________")
+				print(np.sum( allocation, axis=0) * np.invert(depleted))
+				print(depleted)
+				if greed_max == float("-inf"):
+					print("break1")
+				if 	(
+								greed_max - greed_min 	< 	target_radius
+							and
+								np.max( np.sum( allocation, axis=0) * np.invert(depleted)) 	> 	1 - target_radius
+							and
+								np.max( np.sum( allocation, axis=0) * np.invert(depleted)) 	<= 	1
+					):
+					print("break2")
+				if(	
+									greed_min == float("inf")
+								and
+									np.max( np.sum( allocation, axis=0) * np.invert(depleted)) 	<= 	1
+							):
+					print("break3")
+
+			if		(
+						(
+							greed_max == float("-inf")
+						)
+					or
+						(
+							greed_max - greed_min 	< 	target_radius
+						and
+							np.max( np.sum( allocation, axis=0) * np.invert(depleted)) 	> 	1 - target_radius
+						and
+							np.max( np.sum( allocation, axis=0) * np.invert(depleted)) 	<= 	1
+						)
+					or
+						(	
+								greed_min == float("inf")
+							and
+								np.max( np.sum( allocation, axis=0) * np.invert(depleted)) 	<= 	1
+						)
+					):
+					break
+		
+		amount_allocated = np.sum( allocation, axis=0 )
+		escape = True
+
+#		if (allocation < allocation_bu).any():
+#			print "allocations got smaller"
+#			sys.exit()
+#		allocation_bu = np.array(allocation)
+
+		for j in range(nr_res):
+			if amount_allocated[j] 	> 	1 - target_radius:
+				if depleted[j] == False:
+					depletion_order.append(j)
+				depleted[j] = True
+		
+		for i in range(nr_VMs):
+			 starvation_limits[i,:] = np.array(allocation[i,:])
+
+			 if any(	demands_relative[i,j] > 0 and depleted[j]	for j in range(demands.shape[1]) ):
+			 	demands_relative[i,:]  = np.array(allocation[i,:])
+			 else:
+			 	if not (allocation[i] == demands_relative[i,:]).all():
+			 		escape = False
+		x += 1
+		approximator =  approximator_default/x
+		if escape:
+			break
+#		print allocation
+#		print("reentering")
+	
 #	print allocation
-#		print		
+	if False:
+	#	abfangen, dass alle schon zufrieden sind (muss man vielleicht gar nicht)
+		while	np.min(greediness) < float("inf"):
+			cont = False
+#			print "\n\n\n\n\n"
+			print ("npmax : %.20f"%np.max( np.sum( allocation, axis=0)))
+#			print allocation
+#			print "________________"
+#			print np.sum( allocation, axis=0)
+			allocate_to_user = np.argmin(greediness)
+			print (allocate_to_user),
+#			print ("Changing user\t"),
+#			print (allocate_to_user)
+			greediness [allocate_to_user] = float("inf")
 		
-#		if greed_max - greed_min 	>= 	target_radius:
-#			print ("greedniess not close\t"),
-#		if np.max( np.sum( allocation, axis=0)) 	< 	1 - target_radius:
-#			print ("not enough allocated"),
-#		if np.max( np.sum( allocation, axis=0)) 	> 	1:
-#			print ("too much allocated"),
-#		print
-#		print np.max( np.sum( allocation, axis=0))
-#		print greed_min
-#		print greed_max
-#		print greediness
-#		print happy
-#		print gotze
+			vm_still_wants = demands_relative[allocate_to_user,:]	-	allocation[allocate_to_user,:]
+#			print ("vm demand"),
+#			print demands_relative[allocate_to_user,:]
+#			print ("receives"),
+#			print allocation[allocate_to_user,:]
+#			print ("still wants"),
+#			print vm_still_wants
+			if np.max(vm_still_wants) == 0:
+				print("VM happy continue")
+				continue
+		
+			still_available = np.ones(allocation.shape[1]) - np.sum( allocation, axis=0)
+#			print ("still available"),
+#			print still_available		
+		
+			if (still_available >= vm_still_wants).all():
+				allocation[ allocate_to_user , : ] = np.array(demands_relative[ allocate_to_user , : ])
+				print("continue 2")
+				continue
+		
+			demand_factors = np.zeros(demands.shape[1])
+			for i in range(demands.shape[1]):			
+				if still_available[i] > 0:
+					demand_factors[i] = vm_still_wants[i]/still_available[i]
+				else:
+					if vm_still_wants[i] > 0:
+						print("continue 1")
+						cont = True
+			if cont:
+				continue				
+
+#			print ("demand factors"),
+#			print demand_factors
+				
+			scarcest_resource = np.argmax(demand_factors)
+		
+#			print "scarcest resource %d"%scarcest_resource
+					
+			available_of_scarcest = 1	- np.sum(allocation[:,scarcest_resource]) + allocation[allocate_to_user,scarcest_resource]			#np.ones(allocation.shape[1]) - np.sum( np.delete(allocation,allocate_to_user,0), axis=0)
+		
+#			print "consumed of scarcest resoure: %f"%np.sum(allocation[:,scarcest_resource])
+#			print "consumed by current user: %f"%allocation[allocate_to_user,scarcest_resource]
+#			print "available of scarcest resource %d: %f"%(scarcest_resource,available_of_scarcest)
+		
+#			print ("factor of what is currently received"),
+#			print "%.20f"%(allocation[allocate_to_user,0] / demands_relative[ allocate_to_user , 0])
+#			print ("factor should be changed to"),
+#			print (available_of_scarcest / demands_relative[allocate_to_user,scarcest_resource])
+		
+			allocation[allocate_to_user,:] = (available_of_scarcest / demands_relative[allocate_to_user,scarcest_resource]) * demands_relative[ allocate_to_user , : ]			
+#			print ("change allocation to"),
+#			print allocation[allocate_to_user,:]
+		
 
 
-		
 #		if False:
 #			if approximator < 0:
 #				inc = -0.1

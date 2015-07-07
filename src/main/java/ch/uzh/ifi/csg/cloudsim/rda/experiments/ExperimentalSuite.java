@@ -349,11 +349,12 @@ public class ExperimentalSuite {
 				+ System.getProperty("line.separator"));
 		double timeTotal = 0;
 		for (String cust : totalTime.keySet()) {
-			result.append(cust + " time: " + totalTime.get(cust)
+			result.append(cust + " time: "
+					+ Math.round(totalTime.get(cust) * 100) / 100.0
 					+ System.getProperty("line.separator"));
 			timeTotal += totalTime.get(cust);
 		}
-		result.append("Time total: " + timeTotal
+		result.append("Time total: " + Math.round(timeTotal * 100) / 100.0
 				+ System.getProperty("line.separator"));
 
 		double[][] userTotals = new double[userCnt][3];
@@ -369,9 +370,9 @@ public class ExperimentalSuite {
 					totalBw += line[2];
 					totalStorageIO += line[3];
 				}
-				result.append("Cloudlet: " + i + ", mips: " + totalCpu
-						+ ", bw: " + totalBw + ", storageIO: " + totalStorageIO
-						+ System.getProperty("line.separator"));
+				// result.append("Cloudlet: " + i + ", mips: " + totalCpu
+				// + ", bw: " + totalBw + ", storageIO: " + totalStorageIO
+				// + System.getProperty("line.separator"));
 				userTotals[i % userCnt][0] = userTotals[i % userCnt][0]
 						+ totalCpu;
 				userTotals[i % userCnt][1] = userTotals[i % userCnt][1]

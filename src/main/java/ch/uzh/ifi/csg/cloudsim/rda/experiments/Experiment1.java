@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import org.cloudbus.cloudsim.Cloudlet;
 
 import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudlet;
-import ch.uzh.ifi.csg.cloudsim.rda.data.StochasticDataGenerator;
 
 /**
  * 
