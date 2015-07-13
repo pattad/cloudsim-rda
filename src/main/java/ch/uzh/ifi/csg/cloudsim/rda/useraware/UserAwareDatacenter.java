@@ -24,6 +24,12 @@ import ch.uzh.ifi.csg.cloudsim.rda.RdaDatacenter;
  */
 public class UserAwareDatacenter extends RdaDatacenter {
 
+	private Map<String, Float> userPriorities;
+
+	private double lastUpdateTime;
+
+	private double priorityUpdateInterval = 5;
+
 	/**
 	 * 
 	 * Instantiates a new user aware datacenter.
@@ -60,22 +66,30 @@ public class UserAwareDatacenter extends RdaDatacenter {
 
 	@Override
 	protected double processHosts(double currentTime, double minTime) {
-		Map<String, Float> userPriorities = new HashMap<String, Float>();
 
-		for (PowerHost host : this.<PowerHost> getHostList()) {
+		// only update user priority every X seconds
+		if (userPriorities == null
+				|| currentTime - lastUpdateTime >= priorityUpdateInterval) {
 
-			Map<String, Float> updatedUsers = ((UserAwareHost) host)
-					.getUserPriorities(currentTime);
+			userPriorities = new HashMap<String, Float>();
 
-			for (String userName : updatedUsers.keySet()) {
-				if (userPriorities.containsKey(userName)) {
-					Float currentVal = userPriorities.get(userName);
-					userPriorities.put(userName,
-							currentVal + updatedUsers.get(userName));
-				} else {
-					userPriorities.put(userName, updatedUsers.get(userName));
+			for (PowerHost host : this.<PowerHost> getHostList()) {
+
+				Map<String, Float> updatedUsers = ((UserAwareHost) host)
+						.getUserPriorities(currentTime);
+
+				for (String userName : updatedUsers.keySet()) {
+					if (userPriorities.containsKey(userName)) {
+						Float currentVal = userPriorities.get(userName);
+						userPriorities.put(userName,
+								currentVal + updatedUsers.get(userName));
+					} else {
+						userPriorities
+								.put(userName, updatedUsers.get(userName));
+					}
 				}
 			}
+			lastUpdateTime = currentTime;
 		}
 
 		for (PowerHost host : this.<PowerHost> getHostList()) {
@@ -89,7 +103,24 @@ public class UserAwareDatacenter extends RdaDatacenter {
 			}
 		}
 
-		
 		return minTime;
 	}
+
+	/**
+	 * 
+	 * @return the current update interval of the priorities
+	 */
+	public double getPriorityUpdateInterval() {
+		return priorityUpdateInterval;
+	}
+
+	/**
+	 * Specifies the interval to update the priorities. (in seconds)
+	 * 
+	 * @param priorityUpdateInterval
+	 */
+	public void setPriorityUpdateInterval(double priorityUpdateInterval) {
+		this.priorityUpdateInterval = priorityUpdateInterval;
+	}
+
 }

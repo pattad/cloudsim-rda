@@ -115,7 +115,7 @@ public class FairShareExample2 {
 			long outputSize = 300;
 
 			Cloudlet cloudlet = new RdaCloudlet(1, pesNumber, fileSize,
-					outputSize, "src\\main\\resources\\input4.csv", record);
+					outputSize, "src/main/resources/input4.csv", record);
 			cloudlet.setUserId(brokerId);
 			cloudlet.setVmId(0);
 			cloudletList.add(cloudlet);

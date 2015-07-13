@@ -71,14 +71,12 @@ public class RdaDatacenter extends PowerDatacenter {
 				+ "_resourceShare.csv").getAbsoluteFile(), "UTF-8");
 	}
 
+	public double getAccumulatedUnfairness() {
+		return Math.round(accumulatedUnfairness * 100) / 100.0;
+	}
+
 	@Override
 	public void shutdownEntity() {
-		String outputString = "Accumulated unfairness: "
-				+ Math.round(accumulatedUnfairness * 100) / 100.0;
-
-		Log.print(System.getProperty("line.separator") + outputString);
-		System.out.println(outputString);
-
 		resourceTrace.close();
 	}
 
@@ -222,7 +220,7 @@ public class RdaDatacenter extends PowerDatacenter {
 						dev = Math
 								.round(((fair - allocated) * 100 / req) * 100) / 100.0;
 					}
-
+					
 					accumulatedUnfairness += dev;
 					unfair += dev + ",";
 				} else {

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -57,6 +58,8 @@ public class ExperimentalSuite {
 	/** The input data for the cloudlets */
 	private ArrayList<ArrayList<double[]>> inputData;
 
+	private Datacenter datacenter;
+
 	/**
 	 * Main method to run this example as an application.
 	 *
@@ -100,7 +103,7 @@ public class ExperimentalSuite {
 			CloudSim.init(num_user, Calendar.getInstance(), trace_flag,
 					schedulingInterval);
 
-			createDatacenter("Datacenter_01", hostCnt);
+			datacenter = createDatacenter("Datacenter_01", hostCnt);
 			DatacenterBroker broker = createBroker();
 			int brokerId = broker.getId();
 
@@ -399,12 +402,22 @@ public class ExperimentalSuite {
 		result.append("total mips: " + totalCpu + ", bw: " + totalBw
 				+ ", storageIO: " + totalStorageIO
 				+ System.getProperty("line.separator"));
+
+		result.append("Accumulated unfairness: "
+				+ ((RdaDatacenter) datacenter).getAccumulatedUnfairness());
 		System.out.print(result);
 
+		PrintWriter summary = null;
 		try {
 			Log.getOutput().write(result.toString().getBytes());
+
+			summary = new PrintWriter(
+					new File("summary.log").getAbsoluteFile(), "UTF-8");
+			summary.append(result);
 		} catch (IOException e) {
 			e.printStackTrace();
+		} finally {
+			summary.close();
 		}
 
 	}
