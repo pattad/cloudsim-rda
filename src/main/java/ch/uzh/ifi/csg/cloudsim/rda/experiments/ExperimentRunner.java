@@ -8,12 +8,16 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.WorkloadConfig;
+
 public class ExperimentRunner {
 
 	private static SimpleDateFormat df = new SimpleDateFormat(
 			"yyyyMMddhhmmssSSS");
 
 	private static String pythonPath = "python bin";
+
+	private static WorkloadConfig workloadConfig = new WorkloadConfig();
 
 	public static void main(String[] args) {
 
@@ -37,6 +41,19 @@ public class ExperimentRunner {
 			pythonPath = args[4];
 		}
 
+		if (args.length > 5) {
+			try {
+				workloadConfig = (WorkloadConfig) Class.forName(args[5])
+						.newInstance();
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+
 		// number of experiments to conduct
 		for (int exp = 0; exp < experimentCnt; exp++) {
 
@@ -46,22 +63,21 @@ public class ExperimentRunner {
 			setCurrentDirectory(baseDir);
 
 			// generating input data that can be used for the experiments
-			ArrayList<ArrayList<double[]>> inputData = new ArrayList<ArrayList<double[]>>();
-			StochasticDataGenerator randomData = new StochasticDataGenerator(60);
-			for (int i = 0; i < vmCnt; i++) {
+			ArrayList<ArrayList<double[]>> inputData = workloadConfig
+					.generateWorkload(vmCnt);
 
-				ArrayList<double[]> workloadData = randomData.generateData(350,
-						100, 40, 250, 10, 0.5, 10, 0.5, 75);
-				inputData.add(workloadData);
+			int i = 0;
+			for (ArrayList<double[]> wl : inputData) {
+
 				PrintWriter trace = null;
 
 				try {
-					trace = new PrintWriter(new File(df.format(new Date())
-							+ "_" + i + "_workload.csv").getAbsoluteFile(),
+					trace = new PrintWriter(
+							new File(+i + "_workload.csv").getAbsoluteFile(),
 							"UTF-8");
 					trace.println("cpu,ram,bw,storageIO");
 
-					for (double[] line : workloadData) {
+					for (double[] line : wl) {
 						trace.println(line[0] + "," + line[1] + "," + line[2]
 								+ "," + line[3]);
 					}
@@ -72,7 +88,7 @@ public class ExperimentRunner {
 				} finally {
 					trace.close();
 				}
-
+				i++;
 			}
 
 			setCurrentDirectory(baseDir + "/mmfs");

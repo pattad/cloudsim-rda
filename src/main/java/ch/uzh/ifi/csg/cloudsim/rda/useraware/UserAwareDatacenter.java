@@ -28,7 +28,7 @@ public class UserAwareDatacenter extends RdaDatacenter {
 
 	private double lastUpdateTime;
 
-	private double priorityUpdateInterval = 5;
+	private double priorityUpdateInterval = 1;
 
 	/**
 	 * 

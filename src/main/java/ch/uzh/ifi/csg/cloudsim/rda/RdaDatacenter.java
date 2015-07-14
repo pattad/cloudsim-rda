@@ -161,6 +161,9 @@ public class RdaDatacenter extends PowerDatacenter {
 			HashMap<String, Float> userPriorities = new HashMap<String, Float>();
 
 			double totalMipsSupply = 0.0d;
+			double totalMipsReq = 0.0d;
+
+			String detail = "";
 
 			for (PowerHost host : this.<PowerHost> getHostList()) {
 
@@ -172,6 +175,7 @@ public class RdaDatacenter extends PowerDatacenter {
 				for (Vm vm : host.getVmList()) {
 					double req = ((RdaVm) vm)
 							.getCurrentRequestedTotalMips(currentTime);
+					totalMipsReq += req;
 					String customer = ((RdaVm) vm).getCustomer();
 
 					// store current priority of the user
@@ -191,6 +195,8 @@ public class RdaDatacenter extends PowerDatacenter {
 						totalAllocated += pe;
 					}
 					val = allocatedMips.get(customer);
+					detail += vm.getId() + "," + customer + "," + req + ","
+							+ totalAllocated + ",";
 					if (val != null) {
 						allocatedMips.put(customer, val + totalAllocated);
 					} else {
@@ -202,9 +208,8 @@ public class RdaDatacenter extends PowerDatacenter {
 
 			HashMap<String, Double> fairShare = new MaxMinAlgorithm().evaluate(
 					reqMips, totalMipsSupply);
-
-			String unfair = "";
 			String line = "";
+			String unfair = "";
 			for (String customer : reqMips.keySet()) {
 				double req = reqMips.get(customer);
 				double allocated = allocatedMips.get(customer);
@@ -220,7 +225,10 @@ public class RdaDatacenter extends PowerDatacenter {
 						dev = Math
 								.round(((fair - allocated) * 100 / req) * 100) / 100.0;
 					}
-					
+
+					dev = (100 - (req * 100 / totalMipsReq)) / 100
+							* dev;
+
 					accumulatedUnfairness += dev;
 					unfair += dev + ",";
 				} else {
@@ -233,7 +241,7 @@ public class RdaDatacenter extends PowerDatacenter {
 				}
 			}
 
-			line += unfair;
+			line += unfair + detail;
 			resourceTrace.println(line);
 
 			pastResourceConsumptionTraceTime = currentTime;
