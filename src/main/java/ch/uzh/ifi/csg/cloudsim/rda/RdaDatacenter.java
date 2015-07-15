@@ -226,11 +226,10 @@ public class RdaDatacenter extends PowerDatacenter {
 								.round(((fair - allocated) * 100 / req) * 100) / 100.0;
 					}
 
-					dev = (100 - (req * 100 / totalMipsReq)) / 100
-							* dev;
+					dev = (100 - (req * 100 / totalMipsReq)) / 100 * dev;
 
 					accumulatedUnfairness += dev;
-					unfair += dev + ",";
+					unfair += Math.round(dev * 100) / 100.0 + ",";
 				} else {
 					unfair += ",";
 				}
