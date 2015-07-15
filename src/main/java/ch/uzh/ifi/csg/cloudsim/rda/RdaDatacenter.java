@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
@@ -210,7 +211,8 @@ public class RdaDatacenter extends PowerDatacenter {
 					reqMips, totalMipsSupply);
 			String line = "";
 			String unfair = "";
-			for (String customer : reqMips.keySet()) {
+
+			for (String customer : new TreeMap<String, Double>(reqMips).keySet()) {
 				double req = reqMips.get(customer);
 				double allocated = allocatedMips.get(customer);
 				if (req > allocated && allocated < fairShare.get(customer)) {
@@ -219,14 +221,18 @@ public class RdaDatacenter extends PowerDatacenter {
 
 					double dev;
 					if (fair < req) {
-						dev = Math
-								.round(((fair - allocated) * 100 / fair) * 100) / 100.0;
+						// fair is higher than requested, take percentage from
+						// fair amount
+						dev = ((fair - allocated) * 100 / fair);
 					} else {
-						dev = Math
-								.round(((fair - allocated) * 100 / req) * 100) / 100.0;
+						// if fair is less than requested, only take percentage
+						// from requested amount
+						dev = ((fair - allocated) * 100 / req);
 					}
 
-					dev = (100 - (req * 100 / totalMipsReq)) / 100 * dev;
+					// dev weighted with request
+					// double dev2 = (100 - (req * 100 / totalMipsReq)) / 100
+					// * dev;
 
 					accumulatedUnfairness += dev;
 					unfair += Math.round(dev * 100) / 100.0 + ",";

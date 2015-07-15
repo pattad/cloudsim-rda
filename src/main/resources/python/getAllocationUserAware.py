@@ -1,4 +1,3 @@
-
 from metrics import get_Greediness
 from metrics import get_allocation
 from metrics import get_allocation_for_leontief
@@ -9,7 +8,7 @@ import random
 import sys
 
 while True:
-	text = input('') # if using python 2.x change this to raw_input('')
+	text = input('') 
 	text = text.split(' ')
 
 	# sample input: requested resources by <users>, <greediness>, resources 
@@ -19,7 +18,7 @@ while True:
 
 
 	offset = 4
-	print (text[offset])
+
 	U1 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
 	U1.greed_user = float(text[offset+1])
 	VMs = [U1]
@@ -41,17 +40,6 @@ while True:
 		U4 = VM([float(text[offset+2]),float(text[offset+3]),float(text[offset+4]),float(text[offset+5])],text[offset])
 		U4.greed_user = float(text[offset+1])
 		VMs = [U1,U2,U3,U4]
-
-# define a set of VMs
-#U1 = VM([6,5,6,5],'a')
-#U2 = VM([6,3,7,3],'b')
-#U3 = VM([5,3,2,7],'c')
-#U4 = VM([4,4,3,6],'d')
-
-# combine the VMs to a list
-#VMs = [U1,U2,U3,U4]
-# of each resource are 16 unit available
-#supply = [16,16,16,16]
 
 # calculate a new allocation for the 4th (last) resource
 	out = get_allocation_for_leontief(VMs,supply)

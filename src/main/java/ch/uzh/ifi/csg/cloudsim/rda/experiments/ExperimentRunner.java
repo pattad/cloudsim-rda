@@ -54,11 +54,13 @@ public class ExperimentRunner {
 			}
 		}
 
+		String homeDir = new File("output/").getAbsolutePath();
+
 		// number of experiments to conduct
 		for (int exp = 0; exp < experimentCnt; exp++) {
 
-			String baseDir = new File("output/" + df.format(new Date()))
-					.getAbsolutePath();
+			String baseDir = new File(homeDir + "/"
+					+ df.format(new Date())).getAbsolutePath();
 
 			setCurrentDirectory(baseDir);
 

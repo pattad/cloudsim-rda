@@ -17,9 +17,6 @@ class VM:
 			demands[i] = demands[i]*1.0
 		self.request_vector = list(demands)
 		self.receive_vector = [0.0]*len(demands)
-		print("!!!")
-		print(name)
-		print(type(name))
 		if not (name == -1 or isinstance(name,str)):
 			raise ValueError("Second parameter must be a string")
 		self.name = name
@@ -40,15 +37,15 @@ class VM:
 	def __repr__(self):
 		neu = list()
 		for i in self.receive_vector:
-			neu.append("%.2f"%i)
+			neu.append("%.8f"%i)
 		neu2 = list()
 		for j in self.request_vector:
-			neu2.append("%.2f"%j)
+			neu2.append("%.8f"%j)
 		neu3 = list()
 		for j in self.starve_vector:
-			neu3.append("%.2f"%j)
+			neu3.append("%.8f"%j)
 
-		return '\nVM %s\n\tgreed: %.3f + %.3f = %.3f\n\tweight: %f \n'%(self.name,self.greed_self,self.greed_user,(self.greed_self + self.greed_user),self.weight) + "gets  " + str(neu) + "\nwants " + str(neu2) + "\nstarv " + str(neu3)
+		return '\nVM %s, greed: %.3f + %.3f = %.3f\n\tweight: %f \n'%(self.name,self.greed_self,self.greed_user,(self.greed_self + self.greed_user),self.weight) + "gets  " + str(neu) + "\nwants " + str(neu2) + "\nstarv " + str(neu3)
 
 starve_design_parameter = 1.0
 
@@ -438,7 +435,7 @@ def get_allocation_for_leontief( VMs, supply):
 	approximator_default = 0.05
 	factor = 0.9
 	approximator =  approximator_default# the fraction of a VM's demand that will be added or removed per loop (change frequently)	
-	greediness = getGreediness( np.ones(nr_res), allocation )
+	greediness = get_Greediness( np.ones(nr_res), allocation )
 	greediness += greed_users
 	depleted = np.zeros(nr_res, dtype=bool)
 
@@ -500,7 +497,7 @@ def get_allocation_for_leontief( VMs, supply):
 			if (allocation[allocate_to_user] >= demands_relative[allocate_to_user,:]).all():
 				allocation[allocate_to_user,:] = demands_relative[allocate_to_user,:]
 
-			greediness = getGreediness( np.ones(nr_res), allocation )
+			greediness = get_Greediness( np.ones(nr_res), allocation )
 
 			greediness += greed_users
 			greed_min = float("inf")
@@ -677,7 +674,7 @@ def get_allocation_for_leontief( VMs, supply):
 #			ax.set_title(str(np.max( np.sum( allocation, axis=0))))
 #			plt.show()
 
-	greed = getGreediness( np.ones(allocation.shape[1]), allocation )
+	greed = get_Greediness( np.ones(allocation.shape[1]), allocation )
 	allocation_denorm = np.zeros(allocation.shape)
 
 	for i in range(demands.shape[1]):
