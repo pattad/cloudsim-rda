@@ -4,7 +4,7 @@
 
   <groupId>ch.uzh.ifi.csg.cloudsim</groupId>
   <artifactId>rda</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.5</version>
   <packaging>jar</packaging>
 
   <name>Cloudsim Resource Dependency Aware Module</name>
