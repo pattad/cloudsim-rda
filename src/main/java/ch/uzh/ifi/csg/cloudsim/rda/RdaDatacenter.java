@@ -163,6 +163,7 @@ public class RdaDatacenter extends PowerDatacenter {
 
 			double totalMipsSupply = 0.0d;
 			double totalMipsReq = 0.0d;
+			double totalMipsAllocated = 0.0d;
 
 			String detail = "";
 
@@ -195,6 +196,8 @@ public class RdaDatacenter extends PowerDatacenter {
 					for (Double pe : allocated) {
 						totalAllocated += pe;
 					}
+					totalMipsAllocated += totalAllocated;
+
 					val = allocatedMips.get(customer);
 					detail += vm.getId() + "," + customer + "," + req + ","
 							+ totalAllocated + ",";
@@ -208,11 +211,13 @@ public class RdaDatacenter extends PowerDatacenter {
 			}
 
 			HashMap<String, Double> fairShare = new MaxMinAlgorithm().evaluate(
-					reqMips, totalMipsSupply);
+					reqMips, totalMipsAllocated);
 			String line = "";
 			String unfair = "";
 
-			for (String customer : new TreeMap<String, Double>(reqMips).keySet()) {
+			double totalDev = 0.0d; // over all users
+			for (String customer : new TreeMap<String, Double>(reqMips)
+					.keySet()) {
 				double req = reqMips.get(customer);
 				double allocated = allocatedMips.get(customer);
 				if (req > allocated && allocated < fairShare.get(customer)) {
@@ -223,19 +228,21 @@ public class RdaDatacenter extends PowerDatacenter {
 					if (fair < req) {
 						// fair is higher than requested, take percentage from
 						// fair amount
-						dev = ((fair - allocated) * 100 / fair);
+						dev = (fair - allocated) * 100 / fair;
 					} else {
 						// if fair is less than requested, only take percentage
 						// from requested amount
-						dev = ((fair - allocated) * 100 / req);
+						dev = (fair - allocated) * 100 / req;
 					}
 
-					// dev weighted with request
-					// double dev2 = (100 - (req * 100 / totalMipsReq)) / 100
-					// * dev;
-
+					totalDev += dev;
 					accumulatedUnfairness += dev;
 					unfair += Math.round(dev * 100) / 100.0 + ",";
+
+					// dev weighted with request
+				//	double dev2 = (100 - (req * 100 / totalMipsReq)) / 100
+					//		* dev;
+
 				} else {
 					unfair += ",";
 				}
@@ -246,7 +253,8 @@ public class RdaDatacenter extends PowerDatacenter {
 				}
 			}
 
-			line += unfair + detail;
+			line += unfair + roundTwoPositions(totalDev) + ","
+					+ roundTwoPositions(accumulatedUnfairness) + "," + detail;
 			resourceTrace.println(line);
 
 			pastResourceConsumptionTraceTime = currentTime;
@@ -365,6 +373,10 @@ public class RdaDatacenter extends PowerDatacenter {
 		return timeframePower;
 	}
 
+	private double roundTwoPositions(double val) {
+		return Math.round(val * 100) / 100.0;
+	}
+
 	/*
 	 * rounding up to the 9th position behind the comma.
 	 */
@@ -374,4 +386,5 @@ public class RdaDatacenter extends PowerDatacenter {
 
 		return a;
 	}
+
 }

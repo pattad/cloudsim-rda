@@ -15,14 +15,14 @@ class VM:
 			raise ValueError("First parameter must be a list of integers or floats")
 		for i in range(len(demands)):
 			demands[i] = demands[i]*1.0
-		self.request_vector = list(demands)
-		self.receive_vector = [0.0]*len(demands)
+		self.request_vector = np.array(demands)
+		self.receive_vector = np.zeros(len(demands))
 		if not (name == -1 or isinstance(name,str)):
 			raise ValueError("Second parameter must be a string")
 		self.name = name
 		self.weight = 1
 		self.greed_user = 0
-		self.greed_self = float("inf")
+		self.greed_self = 0#float("inf")
 		self.request_scalar = None # helper variable for function getTargetAllocation
 		self.receive_scalar = 0 # helper variable for function getTargetAllocation
 		self.starve_scalar = 0 # helper variable for function getTargetAllocation
@@ -30,6 +30,9 @@ class VM:
 		if name == -1:
 			self.name = str(VM.nr)
 			VM.nr += 1
+	def greed_total(self):
+		return (self.greed_user + self.greed_self)
+
 
 	def update_printer(self):
 		self.printer = "test = VM()\ntest.greed = %f\ntest.wants = %f\ntest.name = '%s'\nVMs.append(test)\ntest.update_printer()\n"%(self.greed_self,self.request_scalar, self.name)
@@ -47,10 +50,8 @@ class VM:
 
 		return '\nVM %s, greed: %.3f + %.3f = %.3f\n\tweight: %f \n'%(self.name,self.greed_self,self.greed_user,(self.greed_self + self.greed_user),self.weight) + "gets  " + str(neu) + "\nwants " + str(neu2) + "\nstarv " + str(neu3)
 
-starve_design_parameter = 1.0
-
+starve_design_parameter = 0.66
 final_normalizer = 1.
-
 normalizer = final_normalizer
 
 increase_normalizer = True
@@ -81,24 +82,22 @@ def initialize_raw( endowments, demands, weights = 0):
 
 	# Make sure both input parameters are numpy arrays
 	if not isinstance(endowments, np.ndarray):
-		print("Input error: first parameter must be np.array")
-		return
+		raise ValueError("Input error: first parameter must be np.array")
 	if not isinstance(demands, np.ndarray):
-		print("Input error: second parameter must be np.array")
-		return
+		raise ValueError("Input error: second parameter must be np.array")
+		
 
 	# If endowments are a matrix, it is indeed the enowments per VM
 	# If endowments are a vector, it is the overall resource supply and therefore the endowment per VM is 'vector' divided by 'number of VMs'
 	if len(endowments.shape)==1: #if endowments is a vector
 		endowments=np.array([endowments]) # make endowments two dimensional
-	
+		
+		
 	# Ensure that the dimensions of the input matrices fit
 	if endowments.shape[0] != 1 and endowments.shape[0] != demands.shape[0]:
-		print ("Input Error: Endowments height must either be 1 (equal endowments for all VMs) or equal to the demands height")
-		return
+		raise ValueError("Input Error: Endowments height must either be 1 (equal endowments for all VMs) or equal to the demands height")
 	if endowments.shape[1] != demands.shape[1]:
-		print ("Input Error: Endwoments and demands must have same length")
-		return
+		raise ValueError("Input Error: Endwoments and demands must have same length")
 
 	# If handed endowments is a matrix, add up the columns to arrive at total supplies
 	if endowments.shape[0] != 1:
@@ -139,15 +138,16 @@ def get_JustSumWScarcity( endowments, demands, weights = 0 ):
 	init = initialize_raw( endowments, demands, weights )
 	return np.sum(demands*init['norm_w_scarcity'],axis=1)
 
-def get_Greediness( endowments, demands, weights = 0):
-
-#	if increase_normalizer:
-#		print "[getGreediness] multiplying normalizer with %d" %demands.shape[0]	
-#		global normalizer
-#		global final_normalizer
-#		normalizer = final_normalizer * demands.shape[0]
-
+def get_Greediness( endowments, demands, weights = 0):	
 	init = initialize_raw( endowments, demands, weights )
+	
+#	print "***"
+#	print init['endowments']
+#	print demands
+#	print init['norm']
+#	print init['resources']
+#	print "+++"
+	
 	return greediness_raw( init['endowments'], demands, init['norm'], init['resources'] )
 
 def get_GreedinessWScarcity( endowments, demands, weights = 0 ):
@@ -201,6 +201,8 @@ def get_starvation_factors( VMs , basic_endowment = 0 ):
 	if isinstance(basic_endowment, np.ndarray):
 		for i in range(len(VMs)):
 			VMs[i].starve_vector = basic_endowment * starvation_factors[i]
+#			print("Greed %f, weight %d starvation: %f"%( (VMs[i].greed_user + VMs[i].greed_self), VMs[i].weight, starvation_factors[i] ))
+
 	return starvation_factors
 
 def starvation_factors_raw( greediness , weight ):
@@ -222,8 +224,166 @@ def starvation_factors_raw( greediness , weight ):
 					(greediness[i] + weight[i] - greediness[i] * weight[i] )/2
 				)
 			)
-		starvation_factors[i] = starvation_factor	
+		starvation_factors[i] = starvation_factor
+#		print("Greed %f\tStarv %f"%(greediness[i],starvation_factor))
 	return starvation_factors
+
+def get_Target_allocation(VMs_in, supply):
+
+	VMs = list(VMs_in)
+	
+	
+	# check if there is enough for all
+	total_request = 0
+	for vm in VMs:
+		total_request += vm.request_scalar
+	
+	if total_request <= supply:
+	
+		alloc = np.zeros(len(VMs))			
+		for i in range(len(VMs)):
+			VMs[i].receive_scalar = VMs[i].request_scalar
+			alloc[i] = VMs[i].receive_scalar
+		greed = get_Greediness(
+					np.array([supply]) ,
+					np.transpose(np.array([alloc]))
+				)
+		for i in range(len(VMs)):
+			VMs[i].greed_self += greed[i]
+		return {'supply_left' : supply - total_request} 		
+	
+	currently_receiving =  [None for _ in range(0)]
+	done =  [None for _ in range(0)]
+		
+	endow = 1.0*supply/len(VMs) # Equal-share of the resource that is being allocated for every VM
+		
+	norm = (final_normalizer * len(VMs_in))/supply # Scale of one unit of the resource to be allocated
+	
+	allocated = 0
+	
+	greediness = np.zeros(len(VMs))
+	weight = np.zeros(len(VMs))
+	
+	for i in range(len(VMs)):
+		greediness[i] 	=	VMs[i].greed_total()
+		weight[i] 		=	VMs[i].weight
+		
+		VMs[i].greed_user /= norm
+		
+	starvation_factors = starvation_factors_raw( greediness , weight )
+	starvation_limits = np.zeros(len(VMs))
+
+	for i in range(len(VMs)):
+		if starvation_factors[i] * endow >= VMs[i].request_scalar:
+			supply -= VMs[i].request_scalar
+			VMs[i].starve_scalar = VMs[i].request_scalar
+			VMs[i].request_scalar = 0
+			VMs[i].greed_self = VMs[i].greed_self/norm + VMs[i].starve_scalar # The VMs greediness is its current greediness (normalized by the resource that is allocated) plus the amount it receives of the resource
+			done.append(VMs[i])# Because the VM is already happy with receiving its starvation limit or less, it can be moved to list _done_, which contains all VMs that will not receive further resources
+		else:
+			supply -= starvation_factors[i] * endow
+			VMs[i].request_scalar = VMs[i].request_scalar - starvation_factors[i] * endow
+			VMs[i].greed_self = VMs[i].greed_self/norm + starvation_factors[i] * endow
+			VMs[i].starve_scalar = starvation_factors[i] * endow
+	for vm in done:
+		VMs.remove(vm)
+		
+    # Sort VMs by greediness and set the baseline to the least greedy VM
+	VMs.sort(key=lambda x: x.greed_total())
+	
+	# WE DEFINE THE BASELINE OF A VM AS ITS GREEDINESS + WHAT IT IS ALLOCATED OF THE SCARCE RESOURCE, I.E. THE BASELINE IS THE GREEDINESS OF A VM, WHEN ALSO THE REALLOCATED RESOURCE IS TAKEN INTO ACCOUNT
+	
+    # baseline of initial greediness + allocationg to which all VM should be raised by allocating them more of the scarce resource
+		
+    # As long as VMs want resources and there is supply to be allocated
+	
+	round = 0
+	while VMs and supply>0:
+		round += 1
+#		print "round %d" %round
+#		print "\tSupply %.2f"%supply
+		baseline = VMs[0].greed_total()
+#		print "\tbaseline %.2f"%baseline
+		currently_receiving.append(VMs.pop(0))
+		while VMs and VMs[0].greed_total() == baseline:
+			currently_receiving.append(VMs.pop(0))
+		currently_receiving.sort(key=lambda x: x.greed_total()+x.request_scalar)
+		
+#		print "\tcurrently receiving: "
+#		for i in currently_receiving:
+#			print "\t\t%s   g: %f, w:%.2f"%(i.name,i.greed_self,i.request_scalar)
+		
+#		print "VMs[0].greed_self %f"%VMs[0].greed_self
+		
+		while (
+				supply > 0
+			and
+				currently_receiving
+			and
+				(
+					len(VMs)==0
+				or
+					currently_receiving[0].greed_total()+currently_receiving[0].request_scalar <= VMs[0].greed_total()
+				)
+			):
+			baseline_inc = currently_receiving[0].greed_total()+currently_receiving[0].request_scalar - baseline
+#			print "\t\t\tBL: %.2f"%baseline_inc
+#			print "\t\t\tLe: %.2f"%len(currently_receiving)
+#			print "\t\t\tSu: %.2f"%supply
+			if baseline_inc * len(currently_receiving) > supply:
+#				print "ja"
+				baseline = baseline + supply/len(currently_receiving)
+				supply = 0
+#				print "\t\tResources depleted"
+			else:
+				baseline = currently_receiving[0].greed_total()+currently_receiving[0].request_scalar
+				supply -= baseline_inc * len(currently_receiving)
+#			print "\t\tbaseline %.2f (+ %.2f), supply: %.2f"%(baseline, baseline_inc,supply)
+			while(
+					currently_receiving
+				and
+					currently_receiving[0].greed_total()+currently_receiving[0].request_scalar == baseline
+				):				
+				currently_receiving[0].receive_scalar = currently_receiving[0].request_scalar
+				currently_receiving[0].greed_self += currently_receiving[0].request_scalar
+#				print "\t\t\tBaseline reached %s (moved to done)" %(currently_receiving[0].name)
+				done.append(currently_receiving.pop(0))
+				
+		if VMs and currently_receiving:
+#			print "reached in round %d" %round
+#			print
+#			print "greed\t%f"%VMs[0].greed_self
+#			print "base\t%f"%baseline
+#			print "res\t%f"%(VMs[0].greed_self - baseline)
+#			print "len\t%d"%len(currently_receiving)
+			
+			if (VMs[0].greed_total() - baseline) * len(currently_receiving) < supply:# important that it is not <=
+				supply -= (VMs[0].greed_total() - baseline) * len(currently_receiving)
+				#baseline = VMs[0].greed_self
+				# above not needed, because "baseline" will be updated any at the beginning of outer loop.
+				# it would be needed if the "if" above would be "<=" instead of "<"
+			else:
+				baseline += supply/len(currently_receiving)		
+				supply = 0
+	while currently_receiving:#needs to be here (and not in else part of "if VMs and currently_receiving:") because, if part is also fulfilled in case of equality, i.e., supply is then zero and big loop not traversed again
+#		print "baseline %f" %baseline
+#		print "Current_greed %f" %currently_receiving[0].greed_self
+		currently_receiving[0].receive_scalar = baseline - currently_receiving[0].greed_total()
+#		print currently_receiving[0].receive_scalar
+		currently_receiving[0].greed_self += baseline - currently_receiving[0].greed_total()
+		done.append(currently_receiving.pop(0))
+	for i in VMs:
+		i.receive_scalar = 0
+		
+	done.extend(VMs)
+	for i in done:
+		i.receive_scalar += i.starve_scalar
+		i.request_scalar += i.starve_scalar
+		i.greed_self 	*= norm
+		i.greed_self -= i.weight # because receiving one "unit" of the resource is covered by the endowment of the VM
+		i.greed_user *= norm
+				
+	return {'supply_left' : supply}
 
 def check_input( VMs, supply ):
 	# Verify first parameter
@@ -300,57 +460,25 @@ def get_only_greediness_FOR_requests( VMs, supply ):
 	demands = init['demands']
 	allocates = init['allocates']
 	weights = init['weights']
-	greediness = getGreediness(np.array(supply),demands, weights)
+	greediness = get_Greediness(np.array(supply),demands, weights)
 
 	for i in range(len(VMs)):
 		VMs[i].greed_self = greediness[i]		
 	return VMs
 
-def get_allocation( VMs, supply ):
-
-	init = check_input( VMs, supply )		
-	supply  = init['supply']
-	demands = init['demands']
-	total_requests = np.sum(demands, axis=0)*1.0
-	ratio = np.divide( total_requests, supply )
-	
-	while np.max(ratio)>1:
-#		print '######################################'
-#		print
-		resource_to_reallocate = np.argmax(ratio)			
-
-		# this variable contains the indices with resources where there is more demand than supply.
-		# the [0] at the end is necessary because np.argwhere returns a two dimensional array
-		scarce_resources = np.transpose(np.argwhere(ratio > 1))[0]
-
-#		remove all demands of not yet allocated resources.
-		demands_mod = np.delete(demands, scarce_resources, 1)
-		
-		supply_mod = np.delete(supply, scarce_resources)
-		if len(supply_mod)>0:
-			greediness = getGreediness(np.array(supply_mod),demands_mod)
-		else:
-			greediness = np.zeros(len(VMs))
-			
-		for i in range(len(VMs)):
-			VMs[i].greed_self = greediness[i] + VMs[i].greed_user # kritisch, wie wird greed_self und greed_user berechnet
-			VMs[i].request_scalar = VMs[i].request_vector[resource_to_reallocate]
-		VMreturn = getTargetAllocation(list(VMs), supply[resource_to_reallocate])
-		
-		for i in range(len(VMs)):
-			VMs[i].receive_vector[resource_to_reallocate] = VMs[i].receive_scalar
-			demands[i,resource_to_reallocate] = VMs[i].receive_scalar
-		
-		ratio[resource_to_reallocate] = 0
-
-	greediness = getGreediness(np.array(supply),demands)
-	for i in range(len(VMs)):
-		VMs[i].greed_self = greediness[i] + VMs[i].greed_user
-	return VMs
+#	OUTDATED???
+# get_allocation calculates the fairest allocation according to the greediness metric
+# Input:
+#	- A list of VMs with certain resources requests
+#	- A list with the amounts that are available of each resource
+# Output:
+# 	- The VM objects in the input list are updated and returned
+#	- In particular the .gets attribute is set with the values that the VM should receive of each resource
+#	- Also the .greed_self attribute is updated with the greediness this VM has, when it receives the resources as specified by .gets
 
 def get_allocation_for_leontief( VMs, supply):
 	output = False
-	depletion_order = list()
+#	depletion_order = list()
 
 	init = check_input( VMs, supply )		
 	supply  = init['supply']
@@ -358,15 +486,20 @@ def get_allocation_for_leontief( VMs, supply):
 	nr_VMs = len(VMs)
 	nr_res = len(supply)
 	
-	greed_users = np.zeros(nr_VMs)
+	greed_const = np.zeros(nr_VMs)
+	greed_selfs = np.zeros(nr_VMs)
 	for i in range(nr_VMs):
-		greed_users[i] = VMs[i].greed_user
+#		print VMs[i]
+		greed_const[i] = VMs[i].greed_user + VMs[i].greed_self
+		greed_selfs[i] = VMs[i].greed_self
 	
 	# if there is no scarcity
 	if (np.sum( demands, axis=0) <= supply).all():
 		for vm in VMs:
 			vm.receive_vector = np.array(vm.request_vector)
 		get_only_greediness( VMs, supply.tolist() )
+		for i in range(nr_VMs):
+			VMs[i].greed_self += greed_selfs[i]
 		return VMs
 
 	# demands_relative contains VM requests relative to the overall supply
@@ -392,20 +525,16 @@ def get_allocation_for_leontief( VMs, supply):
 			else:
 				demands_DRF_norm[i,j] = demands_relative[i,j]/np.sum(demands_relative[i,:])
 
-
 	greediness = np.zeros(nr_VMs)
 	weight = np.zeros(nr_VMs)
 
 	for i in range(nr_VMs):
-		greediness[i] 	=	VMs[i].greed_user #+ VMs[i].greed_self
+		greediness[i] 	=	VMs[i].greed_total()#greed_user #+ VMs[i].greed_self
 		weight[i] 		=	VMs[i].weight
-		
+
 	starvation_factors = starvation_factors_raw( greediness , weight )
 	starvation_limits = np.zeros(demands.shape)
 
-#	print "dfsdf"
-#	print nr_VMs
-#	print "fff"
 	for i in range(nr_VMs):
 		if np.max(demands_DRF_norm[i,:]) > 0:
 			starvation_limits[i,:] = starvation_factors[i] * demands_DRF_norm[i,:]/( np.max(demands_DRF_norm[i,:]) * nr_VMs )
@@ -413,11 +542,6 @@ def get_allocation_for_leontief( VMs, supply):
 				starvation_limits[i,:] = demands_relative[i,:]
 		else:
 			starvation_limits[i,:] = np.zeros(demands.shape[1])
-			
-#		print "greed %d factor %f"%(VMs[i].greed_user, starvation_factors[i])
-#		print demands_relative[i,:]
-#		print starvation_limits[i,:]
-#		print
 		
 		starvation_limits[i,:] *= starve_design_parameter	
 		VMs[i].starve_vector = np.array(starvation_limits[i,:])
@@ -436,7 +560,7 @@ def get_allocation_for_leontief( VMs, supply):
 	factor = 0.9
 	approximator =  approximator_default# the fraction of a VM's demand that will be added or removed per loop (change frequently)	
 	greediness = get_Greediness( np.ones(nr_res), allocation )
-	greediness += greed_users
+	greediness += greed_const
 	depleted = np.zeros(nr_res, dtype=bool)
 
 	while True:
@@ -499,7 +623,7 @@ def get_allocation_for_leontief( VMs, supply):
 
 			greediness = get_Greediness( np.ones(nr_res), allocation )
 
-			greediness += greed_users
+			greediness += greed_const
 			greed_min = float("inf")
 			greed_max = float("-inf")
 		
@@ -568,8 +692,8 @@ def get_allocation_for_leontief( VMs, supply):
 
 		for j in range(nr_res):
 			if amount_allocated[j] 	> 	1 - target_radius:
-				if depleted[j] == False:
-					depletion_order.append(j)
+#				if depleted[j] == False:
+#					depletion_order.append(j)
 				depleted[j] = True
 		
 		for i in range(nr_VMs):
@@ -682,8 +806,86 @@ def get_allocation_for_leontief( VMs, supply):
 	
 	for i in range(demands_DRF_norm.shape[0]):
 		VMs[i].receive_vector = allocation_denorm[i,:]
-		VMs[i].greed_self = greed[i]
+		VMs[i].greed_self = greed[i] + greed_selfs[i]
 		for j in range(demands_DRF_norm.shape[1]):
 			VMs[i].starve_vector[j] *= supply[j]
 			
+	return VMs
+
+def get_allocation_realistic( VMs, supply ):
+
+	init = check_input( VMs, supply )		
+	supply  = init['supply']
+	demands = init['demands']
+	if len(supply)!=4:
+		raise ValueError("There must be exactly four resources.")
+
+	for vm in VMs:
+		vm.request_scalar = vm.request_vector[1]
+		vm.request_vector[1] = 0
+
+	get_Target_allocation(VMs,supply[1])
+	get_allocation_for_leontief(VMs,supply)
+	
+	for vm in VMs:
+		vm.receive_vector[1] = vm.receive_scalar
+		vm.request_vector[1] = vm.request_scalar
+		vm.starve_vector[1] = vm.starve_scalar
+	
+	return VMs
+
+def get_allocation( VMs, supply ):
+
+	init = check_input( VMs, supply )		
+	supply  = init['supply']
+	demands = init['demands']
+	total_requests = np.sum(demands, axis=0)*1.0
+	ratio = np.divide( total_requests, supply )
+	
+	
+#	print np.transpose(np.argwhere(ratio <= 1))[0]
+	for i in np.transpose(np.argwhere(ratio <= 1))[0]:
+		for vm in VMs:
+			vm.receive_vector[i] = vm.request_vector[i]
+	
+	while np.max(ratio)>1:
+#		print '######################################'
+#		print
+		resource_to_reallocate = np.argmax(ratio)			
+		# this variable contains the indices with resources where there is more demand than supply.
+		# the [0] at the end is necessary because np.argwhere returns a two dimensional array
+		scarce_resources = np.transpose(np.argwhere(ratio > 1))[0]
+
+#		remove all not yet allocated resources from demands and supply.
+		demands_mod = np.delete(demands, scarce_resources, 1)		
+		supply_mod = np.delete(supply, scarce_resources)
+
+		if len(supply_mod)>0:
+			greediness = get_Greediness(np.array(supply_mod),demands_mod)
+		else:
+			greediness = np.zeros(len(VMs))
+			
+		for i in range(len(VMs)):
+			VMs[i].greed_self = greediness[i]
+			VMs[i].request_scalar = VMs[i].request_vector[resource_to_reallocate]
+			VMs[i].receive_scalar = 0
+		
+		
+#		for vm in VMs:
+#			print "\t%s %f"%(vm.name,vm.request_scalar)
+		
+		get_Target_allocation(list(VMs), supply[resource_to_reallocate])
+#		for vm in VMs:
+#			print "\t%s %f"%(vm.name,vm.receive_scalar)
+
+		
+		for i in range(len(VMs)):
+			VMs[i].receive_vector[resource_to_reallocate] = VMs[i].receive_scalar
+			demands[i,resource_to_reallocate] = VMs[i].receive_scalar
+		
+		ratio[resource_to_reallocate] = 0
+
+	greediness = get_Greediness(np.array(supply),demands)
+	for i in range(len(VMs)):
+		VMs[i].greed_self = greediness[i] + VMs[i].greed_user
 	return VMs

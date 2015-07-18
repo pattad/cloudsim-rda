@@ -19,13 +19,17 @@ public class ExperimentRunner {
 
 	private static WorkloadConfig workloadConfig = new WorkloadConfig();
 
+	private static int vmCnt = 9;
+	private static int hostCnt = 3;
+	private static int userCnt = 3;
+
+	private static int workloadLength = 60;
+
+	private static int experimentCnt = 1;
+
+	private static boolean logTrace = true;
+
 	public static void main(String[] args) {
-
-		int vmCnt = 9;
-		int hostCnt = 3;
-		int userCnt = 3;
-
-		int experimentCnt = 1;
 
 		if (args.length > 2) {
 			vmCnt = Integer.valueOf(args[0]);
@@ -54,19 +58,34 @@ public class ExperimentRunner {
 			}
 		}
 
+		if (args.length > 6) {
+			workloadLength = Integer.valueOf(args[6]);
+		}
+
+		if (args.length > 7) {
+			logTrace = Boolean.valueOf(args[7]);
+		}
+
+		System.out.println("Running experiments with parameters:");
+		System.out.println("vmCnt: "
+				+ vmCnt + ", hostCnt: " + hostCnt + ", userCnt: " + userCnt
+				+ ", workloadLength: " + workloadLength + ", experimentCnt: "
+				+ experimentCnt + ", workloadConfig: "
+				+ workloadConfig.getClass().getName());
+
 		String homeDir = new File("output/").getAbsolutePath();
 
 		// number of experiments to conduct
 		for (int exp = 0; exp < experimentCnt; exp++) {
 
-			String baseDir = new File(homeDir + "/"
-					+ df.format(new Date())).getAbsolutePath();
+			String baseDir = new File(homeDir + "/" + df.format(new Date()))
+					.getAbsolutePath();
 
 			setCurrentDirectory(baseDir);
 
 			// generating input data that can be used for the experiments
 			ArrayList<ArrayList<double[]>> inputData = workloadConfig
-					.generateWorkload(vmCnt);
+					.generateWorkload(vmCnt, workloadLength);
 
 			int i = 0;
 			for (ArrayList<double[]> wl : inputData) {
@@ -95,21 +114,27 @@ public class ExperimentRunner {
 
 			setCurrentDirectory(baseDir + "/mmfs");
 
+			System.out.println();
+			System.out.println("MMFS (Max Min Fair Share)...");
+
 			// MMFS policy
 			ExperimentalSuite suite = new ExperimentalSuite();
 			suite.setInputData(inputData);
-			suite.setTrace(true);
+			suite.setTrace(logTrace);
 
 			// VMs and Hosts and users to create
 			suite.simulate(vmCnt, hostCnt, userCnt);
 
 			setCurrentDirectory(baseDir + "/greediness");
 
+			System.out.println();
+			System.out.println("Greediness Allocation Algorithm...");
+
 			// greediness policy
 			UserAwareExperimentalSuite userAwareSuite = new UserAwareExperimentalSuite(
 					pythonPath);
 			userAwareSuite.setInputData(inputData);
-			userAwareSuite.setTrace(true);
+			userAwareSuite.setTrace(logTrace);
 
 			// VMs and Hosts and users to create
 			userAwareSuite.simulate(vmCnt, hostCnt, userCnt);

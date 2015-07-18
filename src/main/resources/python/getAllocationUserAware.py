@@ -42,7 +42,7 @@ while True:
 		VMs = [U1,U2,U3,U4]
 
 # calculate a new allocation for the 4th (last) resource
-	out = get_allocation_for_leontief(VMs,supply)
+	out = get_allocation(VMs,supply)
 
 	for i in out:
 		print(i)

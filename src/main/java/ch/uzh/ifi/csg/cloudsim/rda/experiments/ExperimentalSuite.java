@@ -11,9 +11,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.TreeMap;
 
 import org.cloudbus.cloudsim.Cloudlet;
 import org.cloudbus.cloudsim.Datacenter;
@@ -95,6 +95,8 @@ public class ExperimentalSuite {
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
+			}else{
+				Log.setDisabled(true);
 			}
 
 			int num_user = 1; // number of cloud users
@@ -296,12 +298,14 @@ public class ExperimentalSuite {
 	private void printCloudletList(List<Cloudlet> cloudlets, List<Vm> vms,
 			int userCnt) {
 		int size = cloudlets.size();
+		double[][] userTotals = new double[userCnt][4];
+
 		Cloudlet cloudlet;
 
 		StringBuilder result = new StringBuilder();
 
 		String indent = "    ";
-		HashMap<String, Double> totalTime = new HashMap<String, Double>();
+		TreeMap<String, Double> totalTime = new TreeMap<String, Double>();
 
 		result.append(System.getProperty("line.separator")
 				+ " ========== RESULT ========== "
@@ -343,68 +347,105 @@ public class ExperimentalSuite {
 						+ indent + indent + indent + customer);
 			}
 
+			ArrayList<double[]> workload = this.getInputData().get(
+					cloudlet.getCloudletId());
+
+			double totalCpu = 0.0d;
+			double totalBw = 0.0d;
+			double totalStorageIO = 0.0d;
+			for (double[] line : workload) {
+				totalCpu += line[0];
+				totalBw += line[2];
+				totalStorageIO += line[3];
+			}
+
+			userTotals[i % userCnt][0] = userTotals[i % userCnt][0] + totalCpu;
+			userTotals[i % userCnt][1] = userTotals[i % userCnt][1] + totalBw;
+			userTotals[i % userCnt][2] = userTotals[i % userCnt][2]
+					+ totalStorageIO;
+
 			result.append(System.getProperty("line.separator"));
 			// Log.printLine(cloudlet.getCloudletHistory());
 
 		}
 
+		result.append("Accumulated unfairness: "
+				+ ((RdaDatacenter) datacenter).getAccumulatedUnfairness());
+
 		result.append(System.getProperty("line.separator") + "By customers "
 				+ System.getProperty("line.separator"));
 		double timeTotal = 0;
+
+		int n = 0;
 		for (String cust : totalTime.keySet()) {
-			result.append(cust + " time: "
-					+ Math.round(totalTime.get(cust) * 100) / 100.0
+
+			double time = round(totalTime.get(cust));
+			result.append(cust + " time: " + time
 					+ System.getProperty("line.separator"));
 			timeTotal += totalTime.get(cust);
+
+			userTotals[n % userCnt][3] = time;
+			n++;
 		}
-		result.append("Time total: " + Math.round(timeTotal * 100) / 100.0
+
+		result.append("sum time: " + round(timeTotal)
 				+ System.getProperty("line.separator"));
 
-		double[][] userTotals = new double[userCnt][3];
-
-		if (this.getInputData() != null) {
-			int i = 0;
-			for (ArrayList<double[]> workload : this.getInputData()) {
-				double totalCpu = 0.0d;
-				double totalBw = 0.0d;
-				double totalStorageIO = 0.0d;
-				for (double[] line : workload) {
-					totalCpu += line[0];
-					totalBw += line[2];
-					totalStorageIO += line[3];
-				}
-				// result.append("Cloudlet: " + i + ", mips: " + totalCpu
-				// + ", bw: " + totalBw + ", storageIO: " + totalStorageIO
-				// + System.getProperty("line.separator"));
-				userTotals[i % userCnt][0] = userTotals[i % userCnt][0]
-						+ totalCpu;
-				userTotals[i % userCnt][1] = userTotals[i % userCnt][1]
-						+ totalBw;
-				userTotals[i % userCnt][2] = userTotals[i % userCnt][2]
-						+ totalStorageIO;
-				i++;
-			}
-		}
+		result.append("Resources: " + System.getProperty("line.separator"));
 
 		int i = 0;
 		double totalCpu = 0.0d;
 		double totalBw = 0.0d;
 		double totalStorageIO = 0.0d;
 		for (double[] entry : userTotals) {
-			result.append("user " + i + " mips: " + entry[0] + ", bw: "
-					+ entry[1] + ", storageIO: " + entry[2]
+			result.append("mips: " + round(entry[0]) + ", bw: " + round(entry[1])
+					+ ", disk I/O: " + round(entry[2])
 					+ System.getProperty("line.separator"));
 			totalCpu += entry[0];
 			totalBw += entry[1];
 			totalStorageIO += entry[2];
 			i++;
 		}
-		result.append("total mips: " + totalCpu + ", bw: " + totalBw
-				+ ", storageIO: " + totalStorageIO
+
+		result.append("sum mips: " + round(totalCpu) + ", bw: " + round(totalBw)
+				+ ", disk I/O: " + round(totalStorageIO)
 				+ System.getProperty("line.separator"));
 
-		result.append("Accumulated unfairness: "
-				+ ((RdaDatacenter) datacenter).getAccumulatedUnfairness());
+		result.append("Percentages: " + System.getProperty("line.separator"));
+
+		for (double[] entry : userTotals) {
+			result.append("mips: " + roundFine(entry[0] * 100 / totalCpu / 100)
+					+ ", bw: " + roundFine(entry[1] * 100 / totalBw / 100)
+					+ ", disk I/O: "
+					+ roundFine(entry[2] * 100 / totalStorageIO / 100) + ", time: "
+					+ roundFine(entry[3] * 100 / timeTotal / 100)
+					+ System.getProperty("line.separator"));
+		}
+
+		result.append("Offsets: " + System.getProperty("line.separator"));
+
+		double mipsTotal = 0;
+		double bwTotal = 0;
+		double diskTotal = 0;
+		for (double[] entry : userTotals) {
+			double time = round(entry[3] * 100 / timeTotal / 100);
+
+			double mips = Math.abs(time - (entry[0] * 100 / totalCpu / 100));
+			double bw = Math.abs(time - (entry[1] * 100 / totalBw / 100));
+			double disk = Math.abs(time
+					- (entry[2] * 100 / totalStorageIO / 100));
+
+			result.append("mips: " + roundFine(mips) + ", bw: " + roundFine(bw)
+					+ ", disk I/O: " + roundFine(disk)
+					+ System.getProperty("line.separator"));
+			mipsTotal += mips;
+			bwTotal += bw;
+			diskTotal += disk;
+		}
+
+		result.append("sum mips: " + roundFine(mipsTotal) + ", bw: "
+				+ roundFine(bwTotal) + ", disk I/O: " + roundFine(diskTotal)
+				+ System.getProperty("line.separator"));
 		System.out.print(result);
 
 		PrintWriter summary = null;
@@ -420,6 +461,14 @@ public class ExperimentalSuite {
 			summary.close();
 		}
 
+	}
+
+	private double round(double val) {
+		return Math.round(val * 100) / 100.0;
+	}
+
+	private double roundFine(double val) {
+		return Math.round(val * 10000) / 10000.0;
 	}
 
 	public void setRecord(boolean record) {
