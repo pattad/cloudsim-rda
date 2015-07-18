@@ -95,7 +95,7 @@ public class ExperimentalSuite {
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
-			}else{
+			} else {
 				Log.setDisabled(true);
 			}
 
@@ -398,8 +398,8 @@ public class ExperimentalSuite {
 		double totalBw = 0.0d;
 		double totalStorageIO = 0.0d;
 		for (double[] entry : userTotals) {
-			result.append("mips: " + round(entry[0]) + ", bw: " + round(entry[1])
-					+ ", disk I/O: " + round(entry[2])
+			result.append("mips: " + round(entry[0]) + ", bw: "
+					+ round(entry[1]) + ", disk I/O: " + round(entry[2])
 					+ System.getProperty("line.separator"));
 			totalCpu += entry[0];
 			totalBw += entry[1];
@@ -407,8 +407,8 @@ public class ExperimentalSuite {
 			i++;
 		}
 
-		result.append("sum mips: " + round(totalCpu) + ", bw: " + round(totalBw)
-				+ ", disk I/O: " + round(totalStorageIO)
+		result.append("sum mips: " + round(totalCpu) + ", bw: "
+				+ round(totalBw) + ", disk I/O: " + round(totalStorageIO)
 				+ System.getProperty("line.separator"));
 
 		result.append("Percentages: " + System.getProperty("line.separator"));
@@ -417,8 +417,8 @@ public class ExperimentalSuite {
 			result.append("mips: " + roundFine(entry[0] * 100 / totalCpu / 100)
 					+ ", bw: " + roundFine(entry[1] * 100 / totalBw / 100)
 					+ ", disk I/O: "
-					+ roundFine(entry[2] * 100 / totalStorageIO / 100) + ", time: "
-					+ roundFine(entry[3] * 100 / timeTotal / 100)
+					+ roundFine(entry[2] * 100 / totalStorageIO / 100)
+					+ ", time: " + roundFine(entry[3] * 100 / timeTotal / 100)
 					+ System.getProperty("line.separator"));
 		}
 
@@ -450,8 +450,9 @@ public class ExperimentalSuite {
 
 		PrintWriter summary = null;
 		try {
-			Log.getOutput().write(result.toString().getBytes());
-
+			if (trace) {
+				Log.getOutput().write(result.toString().getBytes());
+			}
 			summary = new PrintWriter(
 					new File("summary.log").getAbsoluteFile(), "UTF-8");
 			summary.append(result);

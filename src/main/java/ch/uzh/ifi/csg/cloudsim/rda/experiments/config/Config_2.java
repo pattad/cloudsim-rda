@@ -6,11 +6,10 @@ import ch.uzh.ifi.csg.cloudsim.rda.experiments.StochasticDataGenerator;
 
 public class Config_2 extends WorkloadConfig {
 
-	private ArrayList<ArrayList<double[]>> inputData = new ArrayList<ArrayList<double[]>>();
-
-	public ArrayList<ArrayList<double[]>> generateWorkload(int cnt, int workloadLength) {
+	public ArrayList<ArrayList<double[]>> generateWorkload(int vmCnt, int workloadLength) {
+		ArrayList<ArrayList<double[]>> inputData = new ArrayList<ArrayList<double[]>>();
 		StochasticDataGenerator randomDataGenerator = new StochasticDataGenerator(workloadLength);
-		for (int i = 0; i < cnt; i++) {
+		for (int i = 0; i < vmCnt; i++) {
 
 			ArrayList<double[]> workloadData = randomDataGenerator
 					.generateWaveingData(350, 40, 150, 10, 1.5, 2);

@@ -67,11 +67,12 @@ public class ExperimentRunner {
 		}
 
 		System.out.println("Running experiments with parameters:");
-		System.out.println("vmCnt: "
+		String params = "vmCnt: "
 				+ vmCnt + ", hostCnt: " + hostCnt + ", userCnt: " + userCnt
 				+ ", workloadLength: " + workloadLength + ", experimentCnt: "
 				+ experimentCnt + ", workloadConfig: "
-				+ workloadConfig.getClass().getName());
+				+ workloadConfig.getClass().getName();
+		System.out.println(params);
 
 		String homeDir = new File("output/").getAbsolutePath();
 
@@ -80,18 +81,34 @@ public class ExperimentRunner {
 
 			String baseDir = new File(homeDir + "/" + df.format(new Date()))
 					.getAbsolutePath();
-
+			
 			setCurrentDirectory(baseDir);
 
+			PrintWriter paramsLog = null;
+			
+			try {
+				paramsLog = new PrintWriter(
+						new File("experimentParams.log").getAbsoluteFile(),
+						"UTF-8");
+				paramsLog.println(params);
+
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			} finally {
+				paramsLog.close();
+			}
+			
 			// generating input data that can be used for the experiments
 			ArrayList<ArrayList<double[]>> inputData = workloadConfig
 					.generateWorkload(vmCnt, workloadLength);
-
+			
 			int i = 0;
 			for (ArrayList<double[]> wl : inputData) {
 
 				PrintWriter trace = null;
-
+				
 				try {
 					trace = new PrintWriter(
 							new File(+i + "_workload.csv").getAbsoluteFile(),
