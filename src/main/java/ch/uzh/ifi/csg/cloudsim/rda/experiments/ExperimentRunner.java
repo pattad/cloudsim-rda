@@ -8,7 +8,8 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.WorkloadConfig;
+import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.Config_1;
+import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig;
 
 public class ExperimentRunner {
 
@@ -17,7 +18,7 @@ public class ExperimentRunner {
 
 	private static String pythonPath = "python bin";
 
-	private static WorkloadConfig workloadConfig = new WorkloadConfig();
+	private static ExperimentConfig workloadConfig = new Config_1();
 
 	private static int vmCnt = 9;
 	private static int hostCnt = 3;
@@ -47,7 +48,7 @@ public class ExperimentRunner {
 
 		if (args.length > 5) {
 			try {
-				workloadConfig = (WorkloadConfig) Class.forName(args[5])
+				workloadConfig = (ExperimentConfig) Class.forName(args[5])
 						.newInstance();
 			} catch (InstantiationException e) {
 				e.printStackTrace();

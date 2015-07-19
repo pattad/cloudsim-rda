@@ -4,11 +4,18 @@ import java.util.ArrayList;
 
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.StochasticDataGenerator;
 
-public class Config_2 extends WorkloadConfig {
-
-	public ArrayList<ArrayList<double[]>> generateWorkload(int vmCnt, int workloadLength) {
+public class Config_2 implements ExperimentConfig {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
+	 * generateWorkload(int, int)
+	 */
+	public ArrayList<ArrayList<double[]>> generateWorkload(int vmCnt,
+			int workloadLength) {
 		ArrayList<ArrayList<double[]>> inputData = new ArrayList<ArrayList<double[]>>();
-		StochasticDataGenerator randomDataGenerator = new StochasticDataGenerator(workloadLength);
+		StochasticDataGenerator randomDataGenerator = new StochasticDataGenerator(
+				workloadLength);
 		for (int i = 0; i < vmCnt; i++) {
 
 			ArrayList<double[]> workloadData = randomDataGenerator

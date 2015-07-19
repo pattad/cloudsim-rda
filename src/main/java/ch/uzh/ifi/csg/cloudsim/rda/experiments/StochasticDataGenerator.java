@@ -131,6 +131,14 @@ public class StochasticDataGenerator {
 				// included
 			} // else stay
 
+			// hard limits for ram
+			if (ram < medianRam * 0.5) {
+				ram = medianRam * 0.5;
+			}
+			if (ram > medianRam * 1.5) {
+				ram = medianRam * 1.5;
+			}
+
 			double finalDevBw = (dependencyFactor * deviationCpu)
 					+ ((1 - dependencyFactor) * deviationBw);
 
