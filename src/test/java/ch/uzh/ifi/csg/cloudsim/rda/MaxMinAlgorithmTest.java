@@ -107,7 +107,8 @@ public class MaxMinAlgorithmTest {
 		requestedResources.put("customer_02", 84.0d);
 		requestedResources.put("customer_03", 44.0d);
 		requestedResources.put("customer_04", 10.0d);
-
+		requestedResources.put("customer_05", 0d);
+		
 		Map<String, Double> allocatedResources = algorithm.evaluate(
 				requestedResources, 100.0d);
 
@@ -116,6 +117,7 @@ public class MaxMinAlgorithmTest {
 		assertEquals(30, allocatedResources.get("customer_02"), 0);
 		assertEquals(30, allocatedResources.get("customer_03"), 0);
 		assertEquals(10, allocatedResources.get("customer_04"), 0);
+		assertEquals(0, allocatedResources.get("customer_05"), 0);
 	}
 
 	@Test
@@ -123,25 +125,23 @@ public class MaxMinAlgorithmTest {
 		HashMap<String, Double> requestedResources = new HashMap<String, Double>();
 
 		requestedResources.put("customer_01", 73.0d);
-		requestedResources.put("customer_02", 84.0d);
 		requestedResources.put("customer_03", 44.0d);
 		requestedResources.put("customer_04", 13.0d);
 		requestedResources.put("customer_05", 9.0d);
 		requestedResources.put("customer_06", 10.0d);
 		requestedResources.put("customer_07", 11.0d);
 		requestedResources.put("customer_08", 12.0d);
-
+		
 		Map<String, Double> allocatedResources = algorithm.evaluate(
 				requestedResources, 100.0d);
 
 		Log.printLine(allocatedResources);
-		assertEquals(30, allocatedResources.get("customer_01"), 15);
-		assertEquals(30, allocatedResources.get("customer_02"), 15);
-		assertEquals(30, allocatedResources.get("customer_03"), 15);
-		assertEquals(10, allocatedResources.get("customer_04"), 13);
-		assertEquals(10, allocatedResources.get("customer_05"), 9);
-		assertEquals(10, allocatedResources.get("customer_06"), 10);
-		assertEquals(10, allocatedResources.get("customer_07"), 11);
-		assertEquals(10, allocatedResources.get("customer_08"), 12);
+		assertEquals(22.5, allocatedResources.get("customer_01"), 1);
+		assertEquals(22.5, allocatedResources.get("customer_03"), 1);
+		assertEquals(13, allocatedResources.get("customer_04"), 0);
+		assertEquals(9, allocatedResources.get("customer_05"), 0);
+		assertEquals(10, allocatedResources.get("customer_06"), 0);
+		assertEquals(11, allocatedResources.get("customer_07"), 0);
+		assertEquals(12, allocatedResources.get("customer_08"), 0);
 	}
 }

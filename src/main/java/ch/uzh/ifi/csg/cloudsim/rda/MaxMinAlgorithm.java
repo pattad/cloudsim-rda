@@ -1,8 +1,6 @@
 package ch.uzh.ifi.csg.cloudsim.rda;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 /**
  * This class is an implementation of the Max-Min fair share (MMFS) algorithm.
@@ -41,36 +39,38 @@ public class MaxMinAlgorithm {
 		}
 
 		HashMap<String, Double> allocatedResources = new HashMap<String, Double>();
+		for (String customer : reqResources.keySet()) {
+			allocatedResources.put(customer, new Double(0));
+		}
 
-		int customerCnt = reqResources.size();
-		double fairShare = maxCapacity / customerCnt;
 		double remainingCapacity = maxCapacity;
-
-		List<String> toRemove = null;
+		double remainingCustomers = requestedResources.size();
 
 		// provision resources as long as the requested share of a customer is
 		// smaller or equal to the remaining fair share of at least one customer
-		while (toRemove == null || toRemove.size() != 0) {
-			toRemove = new ArrayList<String>();
+		while (remainingCapacity > 0 && remainingCustomers > 0) {
+			double fairShare = remainingCapacity / remainingCustomers;
+
 			for (String customer : reqResources.keySet()) {
 				double requested = reqResources.get(customer);
-				if (requested <= fairShare) {
-					allocatedResources.put(customer, requested);
-					toRemove.add(customer);
-					remainingCapacity -= requested;
-				}
-			}
-			for (String customer : toRemove) {
-				reqResources.remove(customer);
-			}
-			customerCnt = reqResources.size();
-			fairShare = remainingCapacity / customerCnt;
-		}
+				double allocated = allocatedResources.get(customer);
 
-		// splitting up leftover between the remaining customers
-		fairShare = remainingCapacity / customerCnt;
-		for (String s : reqResources.keySet()) {
-			allocatedResources.put(s, fairShare);
+				if (requested > 0) {
+					if (fairShare < requested) {
+						allocated = allocated + fairShare;
+						remainingCapacity -= fairShare;
+						requested = requested - fairShare;
+					} else {
+						allocated = allocated + requested;
+						remainingCapacity = remainingCapacity - requested;
+						remainingCustomers--;
+						requested = 0;
+					}
+				}
+				allocatedResources.put(customer, allocated);
+				reqResources.put(customer, requested);
+
+			}
 		}
 
 		return allocatedResources;
