@@ -124,6 +124,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 		String supply = (int) super.getPeCapacity() + " "
 				+ ramProvisioner.getRam() + " " + bwProvisioner.getBw() + " "
 				+ sProvisioner.getStorageIO();
+		Log.printLine("Determining greediness: ");
 		try {
 			Log.printLine(supply + " " + requestedResources);
 			out.write(supply + " " + requestedResources);
@@ -141,7 +142,8 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 					Log.printLine(line);
 					line = line.substring(3);
 					String userName = line.substring(0, line.indexOf(","));
-					line = line.substring(line.indexOf("=") + 1);
+					line = line.substring(line.indexOf(":") + 1);
+					line = line.substring(0,line.indexOf("+"));
 					float greediness = Float.valueOf(line);
 
 					if (userPriorities.containsKey(userName)) {

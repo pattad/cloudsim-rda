@@ -9,7 +9,7 @@ while True:
 	text = input('') 
 	text = text.split(' ')
 
-	# sample input: 
+	# sample input: currently allocated resources
 	# 1000 2048.0 1000.0 10000.0 user1 230.0 20.0 22.0 0.0 user2 230.0 20.0 22.0 0.0 
 	
 	supply = [float(text[0]),float(text[1]),float(text[2]),float(text[3])]

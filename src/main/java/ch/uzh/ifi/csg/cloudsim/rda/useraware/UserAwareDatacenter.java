@@ -1,5 +1,6 @@
 package ch.uzh.ifi.csg.cloudsim.rda.useraware;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,22 +74,37 @@ public class UserAwareDatacenter extends RdaDatacenter {
 
 			userPriorities = new HashMap<String, Float>();
 
+			HashMap<String, ArrayList<Float>> collectedPriorities = new HashMap<String, ArrayList<Float>>();
+
 			for (PowerHost host : this.<PowerHost> getHostList()) {
 
 				Map<String, Float> updatedUsers = ((UserAwareHost) host)
 						.getUserPriorities(currentTime);
 
 				for (String userName : updatedUsers.keySet()) {
-					if (userPriorities.containsKey(userName)) {
-						Float currentVal = userPriorities.get(userName);
-						userPriorities.put(userName,
-								currentVal + updatedUsers.get(userName));
+					float priority = updatedUsers.get(userName);
+					if (collectedPriorities.containsKey(userName)) {
+						ArrayList<Float> currentVal = collectedPriorities
+								.get(userName);
+						currentVal.add(priority);
 					} else {
-						userPriorities
-								.put(userName, updatedUsers.get(userName));
+						ArrayList<Float> values = new ArrayList<Float>();
+						values.add(priority);
+						collectedPriorities.put(userName, values);
 					}
 				}
 			}
+
+			// putting the mean value of the collected values into the userPriorities map
+			for (String customer : collectedPriorities.keySet()) {
+				ArrayList<Float> currentVal = collectedPriorities.get(customer);
+				float total = 0.0f;
+				for (float val : currentVal) {
+					total += val;
+				}
+				userPriorities.put(customer, total/currentVal.size());
+			}
+
 			lastUpdateTime = currentTime;
 		}
 

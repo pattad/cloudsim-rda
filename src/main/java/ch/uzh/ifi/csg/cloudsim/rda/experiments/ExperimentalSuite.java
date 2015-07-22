@@ -369,8 +369,8 @@ public class ExperimentalSuite {
 
 		}
 
-		result.append("Accumulated unfairness: "
-				+ ((RdaDatacenter) datacenter).getAccumulatedUnfairness());
+		result.append("Evaluation result: "
+				+ ((RdaDatacenter) datacenter).getEvaluationtString());
 
 		result.append(System.getProperty("line.separator") + "By customers "
 				+ System.getProperty("line.separator"));

@@ -30,11 +30,27 @@ public class RdaDatacenter extends PowerDatacenter {
 
 	SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmssSSS");
 
-	private PrintWriter resourceTrace;
+	private PrintWriter cpuTrace;
+	private PrintWriter bwTrace;
+	private PrintWriter diskTrace;
+	private PrintWriter summaryTrace;
 
 	private double pastResourceConsumptionTraceTime = 0.0d;
 
-	private double accumulatedUnfairness = 0.0d;
+	/**
+	 * contains the current results as shown in this table:
+	 * 
+	 * cpu | bw | disk<br>
+	 * fairness | accumulatedUnfairness
+	 * 
+	 * 
+	 */
+	private double[][] unfairness = new double[3][2];
+
+	/** array contains: cpu | bw | disk */
+	private TreeMap<String, double[]> fairnessByUser = new TreeMap<String, double[]>();
+
+	private double assetUnfairness = 0.0d;
 
 	/**
 	 * Instantiates a new RDA datacenter.
@@ -68,17 +84,33 @@ public class RdaDatacenter extends PowerDatacenter {
 		super(name, characteristics, vmAllocationPolicy, storageList,
 				schedulingInterval);
 
-		resourceTrace = new PrintWriter(new File(df.format(new Date())
-				+ "_resourceShare.csv").getAbsoluteFile(), "UTF-8");
-	}
-
-	public double getAccumulatedUnfairness() {
-		return Math.round(accumulatedUnfairness * 100) / 100.0;
+		cpuTrace = new PrintWriter(new File(df.format(new Date())
+				+ "_resourceShare_cpu.csv").getAbsoluteFile(), "UTF-8");
+		bwTrace = new PrintWriter(new File(df.format(new Date())
+				+ "_resourceShare_bw.csv").getAbsoluteFile(), "UTF-8");
+		diskTrace = new PrintWriter(new File(df.format(new Date())
+				+ "_resourceShare_disk.csv").getAbsoluteFile(), "UTF-8");
+		summaryTrace = new PrintWriter(new File(df.format(new Date())
+				+ "_resourceShare_summary.csv").getAbsoluteFile(), "UTF-8");
 	}
 
 	@Override
 	public void shutdownEntity() {
-		resourceTrace.close();
+		cpuTrace.close();
+		bwTrace.close();
+		diskTrace.close();
+
+		summaryTrace.println(getEvaluationtString());
+
+		summaryTrace.close();
+	}
+
+	public String getEvaluationtString() {
+		return "Total asset unfairness: " + roundTwoPositions(assetUnfairness)
+				+ ", Total unfairness by resource: CPU: "
+				+ roundTwoPositions(unfairness[0][1]) + ", BW: "
+				+ roundTwoPositions(unfairness[1][1]) + ", Disk I/O: "
+				+ roundTwoPositions(unfairness[2][1]);
 	}
 
 	@Override
@@ -157,108 +189,239 @@ public class RdaDatacenter extends PowerDatacenter {
 	private void logResourceShareByUser(double currentTime) {
 
 		if (currentTime - pastResourceConsumptionTraceTime >= 1.0d) {
-			HashMap<String, Double> reqMips = new HashMap<String, Double>();
-			HashMap<String, Double> allocatedMips = new HashMap<String, Double>();
-			HashMap<String, Float> userPriorities = new HashMap<String, Float>();
 
-			double totalMipsSupply = 0.0d;
-			double totalMipsReq = 0.0d;
-			double totalMipsAllocated = 0.0d;
+			fairnessByUser.clear();
 
-			String detail = "";
+			traceCpu(currentTime);
+			traceBw(currentTime);
+			traceDisk(currentTime);
 
-			for (PowerHost host : this.<PowerHost> getHostList()) {
-
-				// only add to total, if host has some VMs running on it
-				if (host.getVmList().size() > 0) {
-					totalMipsSupply += host.getTotalMips();
-				}
-
-				for (Vm vm : host.getVmList()) {
-					double req = ((RdaVm) vm)
-							.getCurrentRequestedTotalMips(currentTime);
-					totalMipsReq += req;
-					String customer = ((RdaVm) vm).getCustomer();
-
-					// store current priority of the user
-					userPriorities.put(customer,
-							((RdaVm) vm).getCurrentPriority());
-
-					Double val = reqMips.get(customer);
-					if (val != null) {
-						reqMips.put(customer, val + req);
-					} else {
-						reqMips.put(customer, req);
-					}
-					double totalAllocated = 0.0d;
-					List<Double> allocated = ((RdaVm) vm)
-							.getCurrentAllocatedMips();
-					for (Double pe : allocated) {
-						totalAllocated += pe;
-					}
-					totalMipsAllocated += totalAllocated;
-
-					val = allocatedMips.get(customer);
-					detail += vm.getId() + "," + customer + "," + req + ","
-							+ totalAllocated + ",";
-					if (val != null) {
-						allocatedMips.put(customer, val + totalAllocated);
-					} else {
-						allocatedMips.put(customer, totalAllocated);
-					}
-
-				}
-			}
-
-			HashMap<String, Double> fairShare = new MaxMinAlgorithm().evaluate(
-					reqMips, totalMipsAllocated);
 			String line = "";
-			String unfair = "";
+			double totUnfairness = 0.0d;
+			for (String customer : fairnessByUser.keySet()) {
+				double[] fairness = fairnessByUser.get(customer);
 
-			double totalDev = 0.0d; // over all users
-			for (String customer : new TreeMap<String, Double>(reqMips)
-					.keySet()) {
-				double req = reqMips.get(customer);
-				double allocated = allocatedMips.get(customer);
-				if (req > allocated && allocated < fairShare.get(customer)) {
-					// considered as unfair
-					double fair = fairShare.get(customer);
+				double sum = fairness[0] + fairness[1] + fairness[2];
 
-					double dev;
-					if (fair < req) {
-						// fair is higher than requested, take percentage from
-						// fair amount
-						dev = (fair - allocated) * 100 / fair;
-					} else {
-						// if fair is less than requested, only take percentage
-						// from requested amount
-						dev = (fair - allocated) * 100 / req;
-					}
+				totUnfairness += Math.abs(sum);
 
-					totalDev += dev;
-					accumulatedUnfairness += dev;
-					unfair += Math.round(dev * 100) / 100.0 + ",";
-
-					// dev weighted with request
-				//	double dev2 = (100 - (req * 100 / totalMipsReq)) / 100
-					//		* dev;
-
-				} else {
-					unfair += ",";
-				}
-				line += req + "," + allocated + ",";
-
-				if (userPriorities.get(customer) != null) {
-					line += userPriorities.get(customer) + ",";
-				}
+				line += customer + "," + fairness[0] + "," + fairness[1] + ","
+						+ fairness[2] + "," + totUnfairness + ",";
 			}
 
-			line += unfair + roundTwoPositions(totalDev) + ","
-					+ roundTwoPositions(accumulatedUnfairness) + "," + detail;
-			resourceTrace.println(line);
+			assetUnfairness += totUnfairness;
 
+			line += ",All users total dev," + roundTwoPositions(totUnfairness);
+
+			summaryTrace.println(line);
 			pastResourceConsumptionTraceTime = currentTime;
 		}
+	}
+
+	public void traceCpu(double currentTime) {
+		HashMap<String, Double> requested = new HashMap<String, Double>();
+		HashMap<String, Double> allocated = new HashMap<String, Double>();
+		HashMap<String, Float> userPriorities = new HashMap<String, Float>();
+
+		double totalAllocated = 0.0d;
+
+		String detail = "";
+
+		for (PowerHost host : this.<PowerHost> getHostList()) {
+
+			for (Vm vm : host.getVmList()) {
+				double req = ((RdaVm) vm)
+						.getCurrentRequestedTotalMips(currentTime);
+
+				String customer = ((RdaVm) vm).getCustomer();
+
+				// store current priority of the user
+				userPriorities.put(customer, ((RdaVm) vm).getCurrentPriority());
+
+				Double val = requested.get(customer);
+				if (val != null) {
+					requested.put(customer, val + req);
+				} else {
+					requested.put(customer, req);
+				}
+				double totalAllocatedForUserOnVm = 0.0d;
+				List<Double> alloc = ((RdaVm) vm).getCurrentAllocatedMips();
+				for (Double pe : alloc) {
+					totalAllocatedForUserOnVm += pe;
+				}
+				totalAllocated += totalAllocatedForUserOnVm;
+
+				val = allocated.get(customer);
+				detail += vm.getId() + "," + customer + "," + req + ","
+						+ totalAllocatedForUserOnVm + ",";
+				if (val != null) {
+					allocated.put(customer, val + totalAllocatedForUserOnVm);
+				} else {
+					allocated.put(customer, totalAllocatedForUserOnVm);
+				}
+
+			}
+		}
+
+		calculateUnfairness(requested, allocated, userPriorities,
+				totalAllocated, detail, cpuTrace, 0);
+	}
+
+	public void traceBw(double currentTime) {
+		HashMap<String, Double> requested = new HashMap<String, Double>();
+		HashMap<String, Double> allocated = new HashMap<String, Double>();
+		HashMap<String, Float> userPriorities = new HashMap<String, Float>();
+
+		double totalAllocated = 0.0d;
+
+		String detail = "";
+
+		for (PowerHost host : this.<PowerHost> getHostList()) {
+
+			for (Vm vm : host.getVmList()) {
+				double req = ((RdaVm) vm).getCurrentRequestedBw(currentTime);
+
+				String customer = ((RdaVm) vm).getCustomer();
+
+				// store current priority of the user
+				userPriorities.put(customer, ((RdaVm) vm).getCurrentPriority());
+
+				Double val = requested.get(customer);
+				if (val != null) {
+					requested.put(customer, val + req);
+				} else {
+					requested.put(customer, req);
+				}
+
+				double alloc = ((RdaVm) vm).getCurrentAllocatedBwFine();
+				totalAllocated += alloc;
+
+				val = allocated.get(customer);
+				detail += vm.getId() + "," + customer + "," + req + "," + alloc
+						+ ",";
+				if (val != null) {
+					allocated.put(customer, val + alloc);
+				} else {
+					allocated.put(customer, alloc);
+				}
+
+			}
+		}
+
+		calculateUnfairness(requested, allocated, userPriorities,
+				totalAllocated, detail, bwTrace, 1);
+	}
+
+	public void traceDisk(double currentTime) {
+		HashMap<String, Double> requested = new HashMap<String, Double>();
+		HashMap<String, Double> allocated = new HashMap<String, Double>();
+		HashMap<String, Float> userPriorities = new HashMap<String, Float>();
+
+		double totalAllocated = 0.0d;
+
+		String detail = "";
+
+		for (PowerHost host : this.<PowerHost> getHostList()) {
+
+			for (Vm vm : host.getVmList()) {
+				double req = ((RdaVm) vm)
+						.getCurrentRequestedStorageIO(currentTime);
+
+				String customer = ((RdaVm) vm).getCustomer();
+
+				// store current priority of the user
+				userPriorities.put(customer, ((RdaVm) vm).getCurrentPriority());
+
+				Double val = requested.get(customer);
+				if (val != null) {
+					requested.put(customer, val + req);
+				} else {
+					requested.put(customer, req);
+				}
+
+				double alloc = ((RdaVm) vm).getCurrentAllocatedStorageIO();
+				totalAllocated += alloc;
+
+				val = allocated.get(customer);
+				detail += vm.getId() + "," + customer + "," + req + "," + alloc
+						+ ",";
+				if (val != null) {
+					allocated.put(customer, val + alloc);
+				} else {
+					allocated.put(customer, alloc);
+				}
+
+			}
+		}
+
+		calculateUnfairness(requested, allocated, userPriorities,
+				totalAllocated, detail, diskTrace, 2);
+	}
+
+	public void calculateUnfairness(HashMap<String, Double> requested,
+			HashMap<String, Double> allocated,
+			HashMap<String, Float> userPriorities, double totalAllocated,
+			String detail, PrintWriter writer, int resourceId) {
+
+		HashMap<String, Double> fairShare = new MaxMinAlgorithm().evaluate(
+				requested, totalAllocated);
+		String line = "";
+		String unfair = "";
+
+		double totalDev = 0.0d; // over all users
+		for (String customer : new TreeMap<String, Double>(requested).keySet()) {
+			double req = requested.get(customer);
+			double alloc = allocated.get(customer);
+			if (req > alloc && alloc < fairShare.get(customer)) {
+				// considered as unfair
+				double fair = fairShare.get(customer);
+
+				double dev;
+				if (fair < req) {
+					// fair is higher than requested, take percentage from
+					// fair amount
+					dev = (fair - alloc) * 100 / fair;
+				} else {
+					// if fair is less than requested, only take percentage
+					// from requested amount
+					dev = (fair - alloc) * 100 / req;
+				}
+
+				totalDev += dev;
+				unfair += roundTwoPositions(dev) + ",";
+			} else {
+				unfair += ",";
+			}
+
+			//double equalShare = totalAllocated / requested.size();
+			double fair = fairShare.get(customer);
+			double dev = 0;
+			if (fair != 0) {
+				dev = -((fair - alloc) * 100 / fair);
+			}
+			double[] fairness = fairnessByUser.get(customer);
+			if (fairness == null) {
+				fairness = new double[3];
+			}
+
+			fairness[resourceId] = fairness[resourceId] + dev;
+
+			fairnessByUser.put(customer, fairness);
+
+			line += req + "," + alloc + ",";
+
+			if (userPriorities.get(customer) != null) {
+				line += userPriorities.get(customer) + ",";
+			}
+		}
+
+		// unfairness
+		unfairness[resourceId][0] = totalDev;
+		unfairness[resourceId][1] = unfairness[resourceId][1] + totalDev;
+
+		line += unfair + roundTwoPositions(totalDev) + ","
+				+ roundTwoPositions(unfairness[resourceId][1]) + "," + detail;
+		writer.println(line);
 	}
 
 	/**
@@ -374,7 +537,7 @@ public class RdaDatacenter extends PowerDatacenter {
 	}
 
 	private double roundTwoPositions(double val) {
-		return Math.round(val * 100) / 100.0;
+		return Math.round(val * 100) / 100.0d;
 	}
 
 	/*
