@@ -138,7 +138,7 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 				String uid = (String) vm.getUid();
 				double dampingFactor = requestedCpu.get(uid)
 						/ allocatedCpu.get(uid);
-				if (dampingFactor != 0) {
+				if (dampingFactor != 0 && !Double.isNaN(dampingFactor)) {
 					double bw = requestedBw.get(uid);
 					requestedBw.put(uid, bw / dampingFactor);
 					double storageIO = requestedStorageIO.get(uid);
@@ -155,7 +155,7 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 				String uid = (String) vm.getUid();
 				double dampingFactor = requestedBw.get(uid)
 						/ allocatedBw.get(uid);
-				if (dampingFactor != 0) {
+				if (dampingFactor != 0 && !Double.isNaN(dampingFactor)) {
 
 					double cpu = requestedCpu.get(uid);
 					requestedCpu.put(uid, cpu / dampingFactor);
@@ -174,7 +174,7 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 				String uid = (String) vm.getUid();
 				double dampingFactor = requestedStorageIO.get(uid)
 						/ allocatedStorageIO.get(uid);
-				if (dampingFactor != 0) {
+				if (dampingFactor != 0 && !Double.isNaN(dampingFactor)) {
 					double cpu = requestedCpu.get(uid);
 					requestedCpu.put(uid, cpu / dampingFactor);
 					double bw = requestedBw.get(uid);
