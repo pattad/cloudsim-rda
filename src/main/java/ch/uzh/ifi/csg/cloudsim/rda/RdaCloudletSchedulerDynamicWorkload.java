@@ -48,7 +48,7 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	public double scarcitySchedulingInterval;
 
 	/**
-	 * Instantiates a new VM scheduler 
+	 * Instantiates a new VM scheduler
 	 * 
 	 * @param mips
 	 *            the mips
@@ -79,8 +79,7 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	 * @param storageIOShare
 	 *            storage IO share available
 	 * 
-	 * @return time predicted completion time of the earliest finishing
-	 *         cloudlet
+	 * @return time predicted completion time of the earliest finishing cloudlet
 	 */
 	public double updateVmProcessing(double currentTime,
 			List<Double> mipsShare, double bwShare, double storageIOShare) {
@@ -198,11 +197,6 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 				effectiveGradient = cloudlet.getGradOfCpu();
 			}
 
-			// XXX remove this traces
-			// Log.printLine("effective Grad: " + effectiveGradient);
-			// Log.printLine("last CPU: " + lastCPU);
-			// Log.printLine("timeSpan: " + timeSpan);
-			// Log.printLine("current_time: " + currentTime);
 			long processedInstructions;
 			if (effectiveGradient != 0.0) {
 				double instructions = (effectiveGradient / 2.0
@@ -270,7 +264,7 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	}
 
 	private double getTimeSpan(double currentTime) {
-		if(getPreviousTime() == 0.0d){
+		if (getPreviousTime() == 0.0d) {
 			return 0.0d;
 		}
 		double timeSpan = currentTime - getPreviousTime();
@@ -352,16 +346,6 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public double getCurrentRequestedUtilizationOfRam() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public double getCurrentRequestedUtilizationOfBw() {
-		throw new UnsupportedOperationException();
-	}
-
 	/**
 	 * 
 	 * @see RdaCloudletScheduler interface
@@ -372,6 +356,19 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		for (ResCloudlet cloudlet : cloudletExecList) {
 			ram += ((RdaCloudlet) cloudlet.getCloudlet())
 					.getRequestedUtilizationOfRam(timeSpan);
+		}
+		return ram;
+	}
+
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
+	public double getCurrentRequestedUtilizationOfRam() {
+		double ram = 0;
+		for (ResCloudlet cloudlet : cloudletExecList) {
+			ram += ((RdaCloudlet) cloudlet.getCloudlet())
+					.getRequestedUtilizationOfRam(0.0);
 		}
 		return ram;
 	}
@@ -396,6 +393,21 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 	 * 
 	 * @see RdaCloudletScheduler interface
 	 */
+	public double getCurrentRequestedUtilizationOfBw() {
+		double bw = 0;
+
+		for (ResCloudlet resCloudlet : cloudletExecList) {
+			RdaCloudlet cloudlet = (RdaCloudlet) resCloudlet.getCloudlet();
+
+			bw += cloudlet.getRequestedUtilizationOfBw(0.0);
+		}
+		return bw;
+	}
+
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
 	public double getCurrentRequestedUtilizationOfStorageIO(double currentTime) {
 		double storageIO = 0;
 		double timeSpan = getTimeSpan(currentTime);
@@ -404,6 +416,21 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 			RdaCloudlet cloudlet = (RdaCloudlet) resCloudlet.getCloudlet();
 
 			storageIO += cloudlet.getRequestedUtilizationOfStorageIO(timeSpan);
+		}
+		return storageIO;
+	}
+
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
+	public double getCurrentRequestedUtilizationOfStorageIO() {
+		double storageIO = 0;
+
+		for (ResCloudlet resCloudlet : cloudletExecList) {
+			RdaCloudlet cloudlet = (RdaCloudlet) resCloudlet.getCloudlet();
+
+			storageIO += cloudlet.getRequestedUtilizationOfStorageIO(0.0);
 		}
 		return storageIO;
 	}
@@ -418,10 +445,76 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 		return totalUtilization;
 	}
 
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
+	public double getCurrentUtilizationOfCpu() {
+		double totalUtilization = 0;
+		for (ResCloudlet rcl : getCloudletExecList()) {
+			totalUtilization += ((RdaCloudlet) rcl.getCloudlet())
+					.getUtilizationOfCpu(0.0d);
+		}
+		return totalUtilization;
+	}
+
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
+	public double getCurrentUtilizationOfRam() {
+		double totalUtilization = 0;
+		for (ResCloudlet rcl : getCloudletExecList()) {
+			totalUtilization += ((RdaCloudlet) rcl.getCloudlet())
+					.getUtilizationOfRam(0.0d);
+		}
+		return totalUtilization;
+	}
+
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
+	public double getCurrentUtilizationOfBw() {
+		double totalUtilization = 0;
+		for (ResCloudlet rcl : getCloudletExecList()) {
+			totalUtilization += ((RdaCloudlet) rcl.getCloudlet())
+					.getUtilizationOfBw(0.0d);
+		}
+		return totalUtilization;
+	}
+
+	/**
+	 * 
+	 * @see RdaCloudletScheduler interface
+	 */
+	public double getCurrentUtilizationOfStorageIO() {
+		double totalUtilization = 0;
+		for (ResCloudlet rcl : getCloudletExecList()) {
+			totalUtilization += ((RdaCloudlet) rcl.getCloudlet())
+					.getUtilizationOfStorage();
+		}
+		return totalUtilization;
+	}
+
 	@Override
 	public List<Double> getCurrentRequestedMips() {
-		// this method is called, when allocating a VM on the host to check
-		return getCurrentRequestedMips(0.0);
+		double totalMips = 0;
+
+		for (ResCloudlet rcl : getCloudletExecList()) {
+
+			RdaCloudlet cloudlet = (RdaCloudlet) rcl.getCloudlet();
+			totalMips += cloudlet.getRequestedUtilizationOfCpu(0.0);
+		}
+
+		List<Double> currentMips = new ArrayList<Double>();
+		double mipsForPe = totalMips / getNumberOfPes();
+
+		for (int i = 0; i < getNumberOfPes(); i++) {
+			currentMips.add(mipsForPe);
+		}
+
+		return currentMips;
 	}
 
 	/**

@@ -338,4 +338,24 @@ public class MockRdaCloudletScheduler extends CloudletSchedulerTimeShared
 		return mips;
 	}
 
+	public double getCurrentUtilizationOfStorageIO() {
+		return storageIO;
+	}
+
+	public double getCurrentRequestedUtilizationOfStorageIO() {
+		return storageIO;
+	}
+
+	public double getCurrentUtilizationOfBw() {
+		return bw;
+	}
+
+	public double getCurrentUtilizationOfRam() {
+		return ram;
+	}
+
+	public double getCurrentUtilizationOfCpu() {
+		return mips;
+	}
+
 }

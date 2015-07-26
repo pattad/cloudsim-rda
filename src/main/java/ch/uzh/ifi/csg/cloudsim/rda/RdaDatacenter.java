@@ -51,6 +51,7 @@ public class RdaDatacenter extends PowerDatacenter {
 	private TreeMap<String, double[]> fairnessByUser = new TreeMap<String, double[]>();
 
 	private double assetUnfairness = 0.0d;
+	private double unusedAllocation = 0.0d;
 
 	/**
 	 * Instantiates a new RDA datacenter.
@@ -110,7 +111,7 @@ public class RdaDatacenter extends PowerDatacenter {
 				+ ", Total unfairness by resource: CPU: "
 				+ roundTwoPositions(unfairness[0][1]) + ", BW: "
 				+ roundTwoPositions(unfairness[1][1]) + ", Disk I/O: "
-				+ roundTwoPositions(unfairness[2][1]);
+				+ roundTwoPositions(unfairness[2][1])+", Unused allocation: " + roundTwoPositions(unusedAllocation);
 	}
 
 	@Override
@@ -230,8 +231,13 @@ public class RdaDatacenter extends PowerDatacenter {
 		for (PowerHost host : this.<PowerHost> getHostList()) {
 
 			for (Vm vm : host.getVmList()) {
-				double req = ((RdaVm) vm)
-						.getCurrentRequestedTotalMips(currentTime);
+				double req = 0;
+
+				List<Double> pes = ((RdaCloudletScheduler) vm
+						.getCloudletScheduler()).getCurrentRequestedMips();
+				for (Double pe : pes) {
+					req += pe;
+				}
 
 				String customer = ((RdaVm) vm).getCustomer();
 
@@ -244,20 +250,28 @@ public class RdaDatacenter extends PowerDatacenter {
 				} else {
 					requested.put(customer, req);
 				}
+
 				double totalAllocatedForUserOnVm = 0.0d;
 				List<Double> alloc = ((RdaVm) vm).getCurrentAllocatedMips();
 				for (Double pe : alloc) {
 					totalAllocatedForUserOnVm += pe;
 				}
-				totalAllocated += totalAllocatedForUserOnVm;
+
+				double utilization = ((RdaCloudletScheduler) vm
+						.getCloudletScheduler()).getCurrentUtilizationOfCpu();
+				double unused = 100 - roundTwoPositions(utilization * 100
+						/ totalAllocatedForUserOnVm);
+				unusedAllocation += unused;
+
+				totalAllocated += utilization;
 
 				val = allocated.get(customer);
 				detail += vm.getId() + "," + customer + "," + req + ","
-						+ totalAllocatedForUserOnVm + ",";
+						+ utilization + "," + unused + ",";
 				if (val != null) {
-					allocated.put(customer, val + totalAllocatedForUserOnVm);
+					allocated.put(customer, val + utilization);
 				} else {
-					allocated.put(customer, totalAllocatedForUserOnVm);
+					allocated.put(customer, utilization);
 				}
 
 			}
@@ -279,7 +293,8 @@ public class RdaDatacenter extends PowerDatacenter {
 		for (PowerHost host : this.<PowerHost> getHostList()) {
 
 			for (Vm vm : host.getVmList()) {
-				double req = ((RdaVm) vm).getCurrentRequestedBw(currentTime);
+				double req = ((RdaCloudletScheduler) vm.getCloudletScheduler())
+						.getCurrentRequestedUtilizationOfBw();
 
 				String customer = ((RdaVm) vm).getCustomer();
 
@@ -294,15 +309,22 @@ public class RdaDatacenter extends PowerDatacenter {
 				}
 
 				double alloc = ((RdaVm) vm).getCurrentAllocatedBwFine();
-				totalAllocated += alloc;
+
+				double utilization = ((RdaCloudletScheduler) vm
+						.getCloudletScheduler()).getCurrentUtilizationOfBw();
+				totalAllocated += utilization;
+
+				double unused = 100 - roundTwoPositions(utilization * 100
+						/ alloc);
+				unusedAllocation += unused;
 
 				val = allocated.get(customer);
-				detail += vm.getId() + "," + customer + "," + req + "," + alloc
-						+ ",";
+				detail += vm.getId() + "," + customer + "," + req + ","
+						+ utilization + "," + unused + ",";
 				if (val != null) {
-					allocated.put(customer, val + alloc);
+					allocated.put(customer, val + utilization);
 				} else {
-					allocated.put(customer, alloc);
+					allocated.put(customer, utilization);
 				}
 
 			}
@@ -317,15 +339,15 @@ public class RdaDatacenter extends PowerDatacenter {
 		HashMap<String, Double> allocated = new HashMap<String, Double>();
 		HashMap<String, Float> userPriorities = new HashMap<String, Float>();
 
-		double totalAllocated = 0.0d;
+		double totalUtilization = 0.0d;
 
 		String detail = "";
 
 		for (PowerHost host : this.<PowerHost> getHostList()) {
 
 			for (Vm vm : host.getVmList()) {
-				double req = ((RdaVm) vm)
-						.getCurrentRequestedStorageIO(currentTime);
+				double req = ((RdaCloudletScheduler) vm.getCloudletScheduler())
+						.getCurrentRequestedUtilizationOfStorageIO();
 
 				String customer = ((RdaVm) vm).getCustomer();
 
@@ -340,22 +362,30 @@ public class RdaDatacenter extends PowerDatacenter {
 				}
 
 				double alloc = ((RdaVm) vm).getCurrentAllocatedStorageIO();
-				totalAllocated += alloc;
 
+				double utilization = ((RdaCloudletScheduler) vm
+						.getCloudletScheduler())
+						.getCurrentUtilizationOfStorageIO();
+
+				double unused = 100 - roundTwoPositions(utilization * 100
+						/ alloc);
+				unusedAllocation += unused;
+
+				totalUtilization += utilization;
 				val = allocated.get(customer);
-				detail += vm.getId() + "," + customer + "," + req + "," + alloc
-						+ ",";
+				detail += vm.getId() + "," + customer + "," + req + ","
+						+ utilization + "," + unused + ",";
 				if (val != null) {
-					allocated.put(customer, val + alloc);
+					allocated.put(customer, val + utilization);
 				} else {
-					allocated.put(customer, alloc);
+					allocated.put(customer, utilization);
 				}
 
 			}
 		}
 
 		calculateUnfairness(requested, allocated, userPriorities,
-				totalAllocated, detail, diskTrace, 2);
+				totalUtilization, detail, diskTrace, 2);
 	}
 
 	public void calculateUnfairness(HashMap<String, Double> requested,
@@ -393,7 +423,7 @@ public class RdaDatacenter extends PowerDatacenter {
 				unfair += ",";
 			}
 
-			//double equalShare = totalAllocated / requested.size();
+			// double equalShare = totalAllocated / requested.size();
 			double fair = fairShare.get(customer);
 			double dev = 0;
 			if (fair != 0) {

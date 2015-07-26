@@ -86,4 +86,36 @@ public interface RdaCloudletScheduler {
 	 */
 	public double getCurrentRequestedGradStorageIO();
 
+	public double getCurrentUtilizationOfStorageIO();
+	public double getCurrentUtilizationOfBw();
+	public double getCurrentUtilizationOfRam();
+	public double getCurrentUtilizationOfCpu();
+	
+	/**
+	 * Returns the requested cpu utilization.
+	 * 
+	 * @return list of cpu cores with their utilization
+	 */
+	public List<Double> getCurrentRequestedMips();
+
+	/**
+	 * Returns the requested ram utilization
+	 * 
+	 * @return requested ram
+	 */
+	public double getCurrentRequestedUtilizationOfRam();
+
+	/**
+	 * Returns the requested bandwidth utilization.
+	 * 
+	 * @return requested bandwidth
+	 */
+	public double getCurrentRequestedUtilizationOfBw();
+
+	/**
+	 * Returns the requested storage I/O utilization.
+	 * 
+	 * @return requested storage I/O
+	 */
+	public double getCurrentRequestedUtilizationOfStorageIO();
 }

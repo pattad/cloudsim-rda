@@ -287,7 +287,7 @@ public class RdaCloudletSchedulerDynamicWorkloadTest {
 	 *
 	 * @generatedBy CodePro at 6/1/15 9:28 AM
 	 */
-	@Test(expected = java.lang.UnsupportedOperationException.class)
+	@Test
 	public void testGetCurrentRequestedUtilizationOfBw_1() throws Exception {
 		RdaCloudletSchedulerDynamicWorkload fixture = new RdaCloudletSchedulerDynamicWorkload(
 				1.0, 1, 1.0);
@@ -342,7 +342,7 @@ public class RdaCloudletSchedulerDynamicWorkloadTest {
 	 *
 	 * @generatedBy CodePro at 6/1/15 9:28 AM
 	 */
-	@Test(expected = java.lang.UnsupportedOperationException.class)
+	@Test
 	public void testGetCurrentRequestedUtilizationOfRam_1() throws Exception {
 		RdaCloudletSchedulerDynamicWorkload fixture = new RdaCloudletSchedulerDynamicWorkload(
 				1.0, 1, 1.0);

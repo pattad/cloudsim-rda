@@ -44,7 +44,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
 public class ExperimentalSuite {
 
 	/** the minimal scheduling interval between events */
-	public static double schedulingInterval = 0.000000001; // nano second
+	public static double schedulingInterval = 0.01; // nano second
 
 	/** the maximal scheduling interval if scarcity occurs on a host */
 	public static double scarcitySchedulingInterval = 0.01;

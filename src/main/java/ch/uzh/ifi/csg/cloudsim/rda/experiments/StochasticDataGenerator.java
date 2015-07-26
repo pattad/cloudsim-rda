@@ -257,8 +257,8 @@ public class StochasticDataGenerator {
 						* (i % periodLength);
 			}
 
-			double bw = mips / bwFactor;
-			double storageIO = mips / storageFactor;
+			double bw = mips * bwFactor;
+			double storageIO = mips * storageFactor;
 
 			// correlation is about 0.92, when randomizing this way
 			double stDivFactor = 33;
