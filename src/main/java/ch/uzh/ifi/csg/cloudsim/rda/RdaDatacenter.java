@@ -206,7 +206,7 @@ public class RdaDatacenter extends PowerDatacenter {
 				totUnfairness += Math.abs(sum);
 
 				line += customer + "," + fairness[0] + "," + fairness[1] + ","
-						+ fairness[2] + "," + totUnfairness + ",";
+						+ fairness[2] + "," + roundTwoPositions(sum) + ",";
 			}
 
 			assetUnfairness += totUnfairness;

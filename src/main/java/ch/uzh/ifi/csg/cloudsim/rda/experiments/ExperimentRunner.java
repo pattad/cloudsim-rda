@@ -30,6 +30,9 @@ public class ExperimentRunner {
 
 	private static boolean logTrace = true;
 
+	private static double priorityUpdateInterval = 1.0;
+
+	
 	public static void main(String[] args) {
 
 		if (args.length > 2) {
@@ -67,6 +70,10 @@ public class ExperimentRunner {
 			logTrace = Boolean.valueOf(args[7]);
 		}
 
+		if (args.length > 8) {
+			priorityUpdateInterval = Double.valueOf(args[8]);
+		}
+		
 		System.out.println("Running experiments with parameters:");
 		String params = "vmCnt: "
 				+ vmCnt + ", hostCnt: " + hostCnt + ", userCnt: " + userCnt
@@ -130,8 +137,23 @@ public class ExperimentRunner {
 				i++;
 			}
 
-			setCurrentDirectory(baseDir + "/mmfs");
+// ---------------- DRF
+			setCurrentDirectory(baseDir + "/drf");
+			
+			System.out.println();
+			System.out.println("DRF (Dominant Resource Fairness)...");
 
+			// DRF policy
+			DRFExperimentalSuite drfSuite = new DRFExperimentalSuite();
+			drfSuite.setInputData(inputData);
+			drfSuite.setTrace(logTrace);
+
+			// VMs and Hosts and users to create
+			drfSuite.simulate(vmCnt, hostCnt, userCnt);
+			
+			
+// ---------------- MMFS
+			setCurrentDirectory(baseDir + "/mmfs");
 			System.out.println();
 			System.out.println("MMFS (Max Min Fair Share)...");
 
@@ -143,16 +165,18 @@ public class ExperimentRunner {
 			// VMs and Hosts and users to create
 			suite.simulate(vmCnt, hostCnt, userCnt);
 
+// ---------------- Greediness	
 			setCurrentDirectory(baseDir + "/greediness");
 
 			System.out.println();
 			System.out.println("Greediness Allocation Algorithm...");
 
 			// greediness policy
-			UserAwareExperimentalSuite userAwareSuite = new UserAwareExperimentalSuite(
+			GreedinessExperimentalSuite userAwareSuite = new GreedinessExperimentalSuite(
 					pythonPath);
 			userAwareSuite.setInputData(inputData);
 			userAwareSuite.setTrace(logTrace);
+			userAwareSuite.setPriorityUpdateInterval(priorityUpdateInterval);
 
 			// VMs and Hosts and users to create
 			userAwareSuite.simulate(vmCnt, hostCnt, userCnt);

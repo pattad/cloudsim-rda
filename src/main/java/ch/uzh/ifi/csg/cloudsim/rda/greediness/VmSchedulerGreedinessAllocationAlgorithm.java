@@ -121,8 +121,8 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 					+ " " + reqRam + " " + reqBw + " " + reqStorage + " ";
 		}
 
-		String supply = (int) super.getPeCapacity() + " "
-				+ ramProvisioner.getRam() + " " + bwProvisioner.getBw() + " "
+		String supply = (int) getMipsCapacity() + " " + ramProvisioner.getRam()
+				+ " " + bwProvisioner.getBw() + " "
 				+ sProvisioner.getStorageIO();
 		Log.printLine("Determining greediness: ");
 		try {
@@ -143,7 +143,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 					line = line.substring(3);
 					String userName = line.substring(0, line.indexOf(","));
 					line = line.substring(line.indexOf(":") + 1);
-					line = line.substring(0,line.indexOf("+"));
+					line = line.substring(0, line.indexOf("+"));
 					float greediness = Float.valueOf(line);
 
 					if (userPriorities.containsKey(userName)) {
@@ -199,7 +199,7 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			Map<String, Float> userPriorities) {
 
 		super.getMipsMap().clear();
-		setAvailableMips(super.getPeCapacity());
+		setAvailableMips(getMipsCapacity());
 
 		bwProvisioner.deallocateBwForAllVms();
 		ramProvisioner.deallocateRamForAllVms();
@@ -245,8 +245,8 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 					+ reqRam + " " + reqBw + " " + reqStorage + " ";
 		}
 
-		String supply = (int) super.getPeCapacity() + " "
-				+ ramProvisioner.getRam() + " " + bwProvisioner.getBw() + " "
+		String supply = (int) getMipsCapacity() + " " + ramProvisioner.getRam()
+				+ " " + bwProvisioner.getBw() + " "
 				+ sProvisioner.getStorageIO();
 
 		try {
@@ -318,4 +318,22 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 		}
 	}
 
+	/**
+	 * Returns total MIPS among all the PEs.
+	 * 
+	 * @return mips capacity
+	 */
+	private double getMipsCapacity() {
+		if (getPeList() == null) {
+			Log.printLine("Pe list is empty");
+			return 0;
+		}
+
+		double capacity = 0.0;
+		for (Pe pe : getPeList()) {
+			capacity += pe.getMips();
+		}
+
+		return capacity;
+	}
 }

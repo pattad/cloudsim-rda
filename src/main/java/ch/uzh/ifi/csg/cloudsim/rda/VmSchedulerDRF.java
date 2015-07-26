@@ -15,31 +15,13 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
 
 /**
- * This VM scheduler is the standard VM scheduler to be used within the RDA
- * module.
- * 
- * This scheduler uses the Max-Min Fair Share (MMFS) algorithm to allocate the
- * resource to the different VMs. The MMFS algorithm is the basic way, how
- * multiple processes on one host are sharing the physical resources.
- * 
- * How does it work:
- * 
- * 1. Check which resource is the most scarce of the resources cpu, bandwidth
- * and storage I/O.
- * 
- * 2. Downgrade that resource for all VMs
- * 
- * 3. Downgrade all the other resources of each VM. According to the Leontief
- * production function dependencies.
- * 
- * 4. Apply Max-Min to the remaining resources.
- * 
- * This procedure guarantees that the host resources are not overused.
+ * This VM scheduler is the Dominan Resource Fairness (DRF) VM scheduler to be
+ * used within the RDA module.
  * 
  * @author Patrick A. Taddei
  * @see MaxMinAlgorithm
  */
-public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
+public class VmSchedulerDRF extends VmSchedulerTimeShared implements
 		RdaVmScheduler {
 
 	private MaxMinAlgorithm maxMin = new MaxMinAlgorithm();
@@ -60,7 +42,7 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 	 * @param sProvisioner
 	 *            the storage I/O provisioner
 	 */
-	public VmSchedulerMaxMinFairShare(List<? extends Pe> pelist,
+	public VmSchedulerDRF(List<? extends Pe> pelist,
 			RamProvisioner ramProvisioner, BwProvisioner bwProvisioner,
 			StorageIOProvisioner storageIOProvisioner) {
 		super(pelist);
@@ -118,85 +100,83 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 					"Requested RAM is more than available RAM. ");
 		}
 
-		double mipsCapacity = getMipsCapacity();
+		// determine max capacity of resources
+		double cpuCapacity = getMipsCapacity();
+		double bwCapacity = bwProvisioner.getBw();
+		double storageCapacity = sProvisioner.getStorageIO();
+		double ramCapacity = ramProvisioner.getRam();
+
+		double[] dominantResources = new double[4];
+
+		// determine the dominant resource for each user and put it into the map
+		for (String customer : requestedCpu.keySet()) {
+			double cpu = requestedCpu.get(customer) * 100 / cpuCapacity;
+			double bw = requestedBw.get(customer) * 100 / bwCapacity;
+			double ram = requestedRam.get(customer) * 100 / ramCapacity;
+			double storage = requestedStorageIO.get(customer) * 100
+					/ storageCapacity;
+
+			if (cpu >= storage && cpu >= bw && cpu >= ram) {
+				dominantResources[0] = Math.min(dominantResources[0], cpu);
+			} else if (bw >= storage && bw >= cpu && bw >= ram) {
+				dominantResources[1] = Math.min(dominantResources[1], bw);
+			} else if (ram >= storage && ram >= cpu && ram >= bw) {
+				dominantResources[2] = Math.min(dominantResources[2], ram);
+			} else {
+				dominantResources[3] = Math.min(dominantResources[3], storage);
+			}
+
+		}
 
 		Map<String, Double> allocatedCpu = null;
 		Map<String, Double> allocatedBw = null;
+		Map<String, Double> allocatedRam = null;
 		Map<String, Double> allocatedStorageIO = null;
 
-		// check which resource is the most scarce resource
-		double demandCpu = maxMin.getResourceDemand(requestedCpu, mipsCapacity);
-		double demandBw = maxMin.getResourceDemand(requestedBw,
-				bwProvisioner.getBw());
-		double demandStorageIO = maxMin.getResourceDemand(requestedStorageIO,
-				sProvisioner.getStorageIO());
+		for (int i = 0; i < 4; i++) {
+			// start with the smallest dominant resource
+			if (dominantResources[0] >= dominantResources[1]
+					&& dominantResources[0] >= dominantResources[2]
+					&& dominantResources[0] >= dominantResources[3]) {
+				allocatedCpu = maxMin.evaluate(requestedCpu, cpuCapacity);
+				dominantResources[0] = -1;
 
-		// if the demand for CPU has the highest percentage
-		if (demandCpu >= demandBw && demandCpu >= demandStorageIO) {
-			allocatedCpu = maxMin.evaluate(requestedCpu, mipsCapacity);
-			for (Vm vm : vms) {
-				String uid = (String) vm.getUid();
-				double dampingFactor = requestedCpu.get(uid)
-						/ allocatedCpu.get(uid);
-				if (dampingFactor != 0) {
-					double bw = requestedBw.get(uid);
-					requestedBw.put(uid, bw / dampingFactor);
-					double storageIO = requestedStorageIO.get(uid);
-					requestedStorageIO.put(uid, storageIO / dampingFactor);
-				}
+			} else if (dominantResources[1] >= dominantResources[0]
+					&& dominantResources[1] >= dominantResources[2]
+					&& dominantResources[1] >= dominantResources[3]) {
+				allocatedBw = maxMin.evaluate(requestedBw,
+						bwProvisioner.getBw());
+
+				dominantResources[1] = -1;
+			} else if (dominantResources[2] >= dominantResources[0]
+					&& dominantResources[2] >= dominantResources[1]
+					&& dominantResources[2] >= dominantResources[3]) {
+
+				// no over-demand supported. therefore allocated equals
+				// requested and no MMFS has to be applied.
+				allocatedRam = requestedRam;
+				dominantResources[2] = -1;
+			} else {
+				allocatedStorageIO = maxMin.evaluate(requestedStorageIO,
+						sProvisioner.getStorageIO());
+				dominantResources[3] = -1;
 			}
-			
-
-		}
-		// if the demand for BW has the highest percentage
-		else if (demandBw >= demandStorageIO) {
-			allocatedBw = maxMin.evaluate(requestedBw, bwProvisioner.getBw());
-			for (Vm vm : vms) {
-				String uid = (String) vm.getUid();
-				double dampingFactor = requestedBw.get(uid)
-						/ allocatedBw.get(uid);
-				if (dampingFactor != 0) {
-
-					double cpu = requestedCpu.get(uid);
-					requestedCpu.put(uid, cpu / dampingFactor);
-					double storageIO = requestedStorageIO.get(uid);
-					requestedStorageIO.put(uid, storageIO / dampingFactor);
-				}
-
-			}
-
-		}
-		// if the demand for storage has the highest percentage
-		else {
-			allocatedStorageIO = maxMin.evaluate(requestedStorageIO,
-					sProvisioner.getStorageIO());
-			for (Vm vm : vms) {
-				String uid = (String) vm.getUid();
-				double dampingFactor = requestedStorageIO.get(uid)
-						/ allocatedStorageIO.get(uid);
-				if (dampingFactor != 0) {
-					double cpu = requestedCpu.get(uid);
-					requestedCpu.put(uid, cpu / dampingFactor);
-					double bw = requestedBw.get(uid);
-					requestedBw.put(uid, bw / dampingFactor);
-				}
-
-			}
-
 		}
 
+		if (allocatedRam == null) {
+			allocatedRam = requestedRam;
+		}
 		if (allocatedCpu == null) {
-			allocatedCpu = maxMin.evaluate(requestedCpu, mipsCapacity);
+			allocatedCpu = maxMin.evaluate(requestedCpu, cpuCapacity);
 		}
 		if (allocatedBw == null) {
-			allocatedBw = maxMin.evaluate(requestedBw,
-					bwProvisioner.getBw());
+			allocatedBw = maxMin.evaluate(requestedBw, bwProvisioner.getBw());
 		}
 		if (allocatedStorageIO == null) {
 			allocatedStorageIO = maxMin.evaluate(requestedStorageIO,
 					sProvisioner.getStorageIO());
-
 		}
+
 		for (Vm vm : vms) {
 
 			double mips = allocatedCpu.get(vm.getUid());
@@ -219,7 +199,7 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 			String uid = (String) vm.getUid();
 			((RdaVm) vm).setCurrentAllocatedMips(mipsMapCapped);
 
-			double ram = requestedRam.get(uid);
+			double ram = allocatedRam.get(uid);
 			double bw = allocatedBw.get(uid);
 			double storageIO = allocatedStorageIO.get(uid);
 

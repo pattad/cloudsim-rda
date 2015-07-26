@@ -151,7 +151,22 @@ public class StochasticDataGenerator {
 			double storageIO = Math.round(rd.nextGaussian(minStorage
 					+ (minStorage * finalDevStorageIO * verticalStretch),
 					standardDiv));
-
+			// hard limits for storage
+			if (storageIO < minStorage * 0.2) {
+				storageIO = minStorage * 0.2;
+			}
+			if (storageIO > minStorage * 3) {
+				storageIO = minStorage * 3;
+			}
+			
+			// hard limits for bw
+			if (bw < minBw * 0.2) {
+				bw = minBw * 0.2;
+			}
+			if (bw > minBw * 3) {
+				bw = minBw * 3;
+			}
+			
 			checkValidity(mips, ram, bw, storageIO);
 
 			double[] entry = { mips, ram, bw, storageIO };

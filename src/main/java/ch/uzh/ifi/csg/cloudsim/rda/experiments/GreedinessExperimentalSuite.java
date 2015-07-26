@@ -25,18 +25,16 @@ import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareDatacenter;
  * @author pat
  *
  */
-public class UserAwareExperimentalSuite extends ExperimentalSuite {
-
+public class GreedinessExperimentalSuite extends ExperimentalSuite {
 
 	private String pythonPath = "python bin/";
-	
-	
-	public UserAwareExperimentalSuite(String pythonPath) {
+	private double priorityUpdateInterval = 1.0;
+
+	public GreedinessExperimentalSuite(String pythonPath) {
 		super();
 		this.pythonPath = pythonPath;
 	}
 
-	
 	/**
 	 * Main method to run this experiment
 	 *
@@ -45,7 +43,8 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 	 */
 	public static void main(String[] args) {
 
-		UserAwareExperimentalSuite suite = new UserAwareExperimentalSuite("python bin/");
+		GreedinessExperimentalSuite suite = new GreedinessExperimentalSuite(
+				"python bin/");
 		// VMs and Hosts to create
 		suite.simulate(2, 3, 3);
 
@@ -79,7 +78,7 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 				arch, os, vmm, hostList, time_zone, cost, costPerMem,
 				costPerStorage, costPerBw);
 
-		Datacenter datacenter = null;
+		UserAwareDatacenter datacenter = null;
 		try {
 			datacenter = new UserAwareDatacenter(name, characteristics,
 					new PowerVmAllocationPolicySimple(hostList), storageList,
@@ -87,6 +86,8 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+
+		datacenter.setPriorityUpdateInterval(priorityUpdateInterval);
 
 		return datacenter;
 	}
@@ -112,4 +113,13 @@ public class UserAwareExperimentalSuite extends ExperimentalSuite {
 						this.pythonPath), scarcitySchedulingInterval);
 
 	}
+
+	public double getPriorityUpdateInterval() {
+		return priorityUpdateInterval;
+	}
+
+	public void setPriorityUpdateInterval(double priorityUpdateInterval) {
+		this.priorityUpdateInterval = priorityUpdateInterval;
+	}
+
 }

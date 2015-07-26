@@ -118,10 +118,6 @@ public class MaxMinAlgorithm {
 			totalRequested += s;
 		}
 
-		// no shortage of the requested resources
-		if (totalRequested <= maxCapacity) {
-			return 0;
-		}
 		return totalRequested * 100 / maxCapacity;
 	}
 }

@@ -263,6 +263,73 @@ public class VmSchedulerMaxMinFairShareTest {
 	}
 
 	/**
+	 * Run the void allocateResourcesForAllVms(double,List<Vm>) method test.
+	 * 
+	 * Testing over-demand of CPU with multiple VMs
+	 * 
+	 * @throws Exception
+	 *
+	 * @generatedBy CodePro at 6/3/15 8:12 AM
+	 */
+	@Test
+	public void testAllocateResourcesForAllVms_5() throws Exception {
+		List<Pe> pelist = new ArrayList<Pe>();
+		pelist.add(new Pe(0, new PeProvisionerSimple(1000)));
+
+		VmSchedulerMaxMinFairShare fixture = new VmSchedulerMaxMinFairShare(
+				pelist, new RamProvisionerSimple(500), new BwProvisionerSimple(
+						1000), new StorageIOProvisionerSimple(1000));
+		double currentTime = 1.0;
+		List<Vm> vms = new ArrayList<Vm>();
+
+		int mips = 1000;
+		long size = 10000; // image size (MB)
+		int ram = 512; // vm memory (MB)
+		long bw = 1000;
+		int pesNumber = 1; // number of cpus
+		String vmm = "Xen"; // VMM name
+		double schedulingInterval = 0.000000001; // nano second
+		double scarcitySchedulingInterval = 0.01; // milli second
+		int brokerId = 0;
+
+		MockRdaCloudletScheduler mockScheduler = new MockRdaCloudletScheduler(
+				800, pesNumber, scarcitySchedulingInterval);
+		mockScheduler.setMips(800);
+		mockScheduler.setBw(1000);
+		mockScheduler.setRam(123);
+		mockScheduler.setStorageIO(300);
+
+		MockRdaCloudletScheduler mockScheduler2 = new MockRdaCloudletScheduler(
+				100, pesNumber, scarcitySchedulingInterval);
+		mockScheduler2.setMips(100);
+		mockScheduler2.setBw(200);
+		mockScheduler2.setRam(123);
+		mockScheduler2.setStorageIO(300);
+		
+		// create VM
+		RdaVm vm = new RdaVm(0, brokerId, 800, pesNumber, ram, bw, size, 1,
+				vmm, mockScheduler, schedulingInterval);
+		
+		RdaVm vm2 = new RdaVm(1, brokerId, 100, pesNumber, ram, bw, size, 1,
+				vmm, mockScheduler2, schedulingInterval);
+		
+		// add the VM to the vmList
+		vms.add(vm);
+		vms.add(vm2);
+		
+		fixture.allocateResourcesForAllVms(currentTime, vms);
+
+		assertEquals(800, vm.getCurrentAllocatedBw(), 0);
+		assertEquals(123, vm.getCurrentAllocatedRam(), 0);
+		assertEquals(240, vm.getCurrentAllocatedStorageIO(), 0);
+		assertEquals(640, vm.getCurrentAllocatedMips().get(0), 0);
+
+		assertEquals(200, vm2.getCurrentAllocatedBw(), 0.1);
+		assertEquals(123, vm2.getCurrentAllocatedRam(), 0);
+		assertEquals(300, vm2.getCurrentAllocatedStorageIO(), 0.1);
+		assertEquals(100, vm2.getCurrentAllocatedMips().get(0), 0.1);
+	}
+	/**
 	 * Perform pre-test initialization.
 	 *
 	 * @throws Exception
