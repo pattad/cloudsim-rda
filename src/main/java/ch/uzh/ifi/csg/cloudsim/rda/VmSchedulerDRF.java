@@ -108,7 +108,8 @@ public class VmSchedulerDRF extends VmSchedulerTimeShared implements
 
 		double[] dominantResources = new double[4];
 
-		// determine the dominant resource for each user and put it into the map
+		// determine the dominant resource for each user and put it into the
+		// array
 		for (String customer : requestedCpu.keySet()) {
 			double cpu = requestedCpu.get(customer) * 100 / cpuCapacity;
 			double bw = requestedBw.get(customer) * 100 / bwCapacity;
@@ -135,31 +136,31 @@ public class VmSchedulerDRF extends VmSchedulerTimeShared implements
 
 		for (int i = 0; i < 4; i++) {
 			// start with the smallest dominant resource
-			if (dominantResources[0] >= dominantResources[1]
-					&& dominantResources[0] >= dominantResources[2]
-					&& dominantResources[0] >= dominantResources[3]) {
+			if (dominantResources[0] <= dominantResources[1]
+					&& dominantResources[0] <= dominantResources[2]
+					&& dominantResources[0] <= dominantResources[3]) {
 				allocatedCpu = maxMin.evaluate(requestedCpu, cpuCapacity);
-				dominantResources[0] = -1;
+				dominantResources[0] = Double.MAX_VALUE;
 
-			} else if (dominantResources[1] >= dominantResources[0]
-					&& dominantResources[1] >= dominantResources[2]
-					&& dominantResources[1] >= dominantResources[3]) {
+			} else if (dominantResources[1] <= dominantResources[0]
+					&& dominantResources[1] <= dominantResources[2]
+					&& dominantResources[1] <= dominantResources[3]) {
 				allocatedBw = maxMin.evaluate(requestedBw,
 						bwProvisioner.getBw());
 
-				dominantResources[1] = -1;
-			} else if (dominantResources[2] >= dominantResources[0]
-					&& dominantResources[2] >= dominantResources[1]
-					&& dominantResources[2] >= dominantResources[3]) {
+				dominantResources[1] = Double.MAX_VALUE;
+			} else if (dominantResources[2] <= dominantResources[0]
+					&& dominantResources[2] <= dominantResources[1]
+					&& dominantResources[2] <= dominantResources[3]) {
 
 				// no over-demand supported. therefore allocated equals
 				// requested and no MMFS has to be applied.
 				allocatedRam = requestedRam;
-				dominantResources[2] = -1;
+				dominantResources[2] = Double.MAX_VALUE;
 			} else {
 				allocatedStorageIO = maxMin.evaluate(requestedStorageIO,
 						sProvisioner.getStorageIO());
-				dominantResources[3] = -1;
+				dominantResources[3] = Double.MAX_VALUE;
 			}
 		}
 
