@@ -30,9 +30,8 @@ public class ExperimentRunner {
 
 	private static boolean logTrace = true;
 
-	private static double priorityUpdateInterval = 1.0;
+	private static double priorityUpdateInterval = 1;
 
-	
 	public static void main(String[] args) {
 
 		if (args.length > 2) {
@@ -73,13 +72,13 @@ public class ExperimentRunner {
 		if (args.length > 8) {
 			priorityUpdateInterval = Double.valueOf(args[8]);
 		}
-		
+
 		System.out.println("Running experiments with parameters:");
-		String params = "vmCnt: "
-				+ vmCnt + ", hostCnt: " + hostCnt + ", userCnt: " + userCnt
-				+ ", workloadLength: " + workloadLength + ", experimentCnt: "
-				+ experimentCnt + ", workloadConfig: "
-				+ workloadConfig.getClass().getName();
+		String params = "vmCnt: " + vmCnt + ", hostCnt: " + hostCnt
+				+ ", userCnt: " + userCnt + ", workloadLength: "
+				+ workloadLength + ", experimentCnt: " + experimentCnt
+				+ ", workloadConfig: " + workloadConfig.getClass().getName()
+				+ ", priorityUpdateInterval: " + priorityUpdateInterval;
 		System.out.println(params);
 
 		String homeDir = new File("output/").getAbsolutePath();
@@ -89,11 +88,11 @@ public class ExperimentRunner {
 
 			String baseDir = new File(homeDir + "/" + df.format(new Date()))
 					.getAbsolutePath();
-			
+
 			setCurrentDirectory(baseDir);
 
 			PrintWriter paramsLog = null;
-			
+
 			try {
 				paramsLog = new PrintWriter(
 						new File("experimentParams.log").getAbsoluteFile(),
@@ -107,16 +106,16 @@ public class ExperimentRunner {
 			} finally {
 				paramsLog.close();
 			}
-			
+
 			// generating input data that can be used for the experiments
 			ArrayList<ArrayList<double[]>> inputData = workloadConfig
 					.generateWorkload(vmCnt, workloadLength);
-			
+
 			int i = 0;
 			for (ArrayList<double[]> wl : inputData) {
 
 				PrintWriter trace = null;
-				
+
 				try {
 					trace = new PrintWriter(
 							new File(+i + "_workload.csv").getAbsoluteFile(),
@@ -137,9 +136,9 @@ public class ExperimentRunner {
 				i++;
 			}
 
-// ---------------- DRF
+			// ---------------- DRF
 			setCurrentDirectory(baseDir + "/drf");
-			
+
 			System.out.println();
 			System.out.println("DRF (Dominant Resource Fairness)...");
 
@@ -150,9 +149,8 @@ public class ExperimentRunner {
 
 			// VMs and Hosts and users to create
 			drfSuite.simulate(vmCnt, hostCnt, userCnt);
-			
-			
-// ---------------- MMFS
+
+			// ---------------- MMFS
 			setCurrentDirectory(baseDir + "/mmfs");
 			System.out.println();
 			System.out.println("MMFS (Max Min Fair Share)...");
@@ -165,7 +163,7 @@ public class ExperimentRunner {
 			// VMs and Hosts and users to create
 			suite.simulate(vmCnt, hostCnt, userCnt);
 
-// ---------------- Greediness	
+			// ---------------- Greediness
 			setCurrentDirectory(baseDir + "/greediness");
 
 			System.out.println();

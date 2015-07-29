@@ -1,6 +1,7 @@
 from metrics import get_Greediness
 from metrics import get_allocation
 from metrics import get_allocation_for_leontief
+from metrics import get_allocation_realistic
 
 from metrics import VM
 import numpy as np
@@ -42,7 +43,7 @@ while True:
 		VMs = [U1,U2,U3,U4]
 
 # calculate a new allocation for the 4th (last) resource
-	out = get_allocation(VMs,supply)
+	out = get_allocation_realistic(VMs,supply)
 
 	for i in out:
 		print(i)
