@@ -3,7 +3,6 @@ package ch.uzh.ifi.csg.cloudsim.rda;
 import java.io.File;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +33,7 @@ public class RdaDatacenter extends PowerDatacenter {
 	private PrintWriter bwTrace;
 	private PrintWriter diskTrace;
 	private PrintWriter summaryTrace;
+	private PrintWriter utilizationTrace;
 
 	private double pastResourceConsumptionTraceTime = 0.0d;
 
@@ -49,6 +49,9 @@ public class RdaDatacenter extends PowerDatacenter {
 
 	/** array contains: cpu | bw | disk */
 	private TreeMap<String, double[]> fairnessByUser = new TreeMap<String, double[]>();
+
+	/** array contains: cpu | ram | bw | disk */
+	private TreeMap<String, double[]> utilizationByUser = new TreeMap<String, double[]>();
 
 	private double assetUnfairness = 0.0d;
 	private double unusedAllocation = 0.0d;
@@ -85,14 +88,11 @@ public class RdaDatacenter extends PowerDatacenter {
 		super(name, characteristics, vmAllocationPolicy, storageList,
 				schedulingInterval);
 
-		cpuTrace = new PrintWriter(new File(df.format(new Date())
-				+ "_resourceShare_cpu.csv").getAbsoluteFile(), "UTF-8");
-		bwTrace = new PrintWriter(new File(df.format(new Date())
-				+ "_resourceShare_bw.csv").getAbsoluteFile(), "UTF-8");
-		diskTrace = new PrintWriter(new File(df.format(new Date())
-				+ "_resourceShare_disk.csv").getAbsoluteFile(), "UTF-8");
-		summaryTrace = new PrintWriter(new File(df.format(new Date())
-				+ "_resourceShare_summary.csv").getAbsoluteFile(), "UTF-8");
+		cpuTrace = new PrintWriter(new File("resourceShare_cpu.csv").getAbsoluteFile(), "UTF-8");
+		bwTrace = new PrintWriter(new File("resourceShare_bw.csv").getAbsoluteFile(), "UTF-8");
+		diskTrace = new PrintWriter(new File("resourceShare_disk.csv").getAbsoluteFile(), "UTF-8");
+		summaryTrace = new PrintWriter(new File("fairness.csv").getAbsoluteFile(), "UTF-8");
+		utilizationTrace = new PrintWriter(new File("utilization.csv").getAbsoluteFile(), "UTF-8");
 	}
 
 	@Override
@@ -102,8 +102,9 @@ public class RdaDatacenter extends PowerDatacenter {
 		diskTrace.close();
 
 		summaryTrace.println(getEvaluationtString());
-
 		summaryTrace.close();
+
+		utilizationTrace.close();
 	}
 
 	public String getEvaluationtString() {
@@ -111,7 +112,8 @@ public class RdaDatacenter extends PowerDatacenter {
 				+ ", Total unfairness by resource: CPU: "
 				+ roundTwoPositions(unfairness[0][1]) + ", BW: "
 				+ roundTwoPositions(unfairness[1][1]) + ", Disk I/O: "
-				+ roundTwoPositions(unfairness[2][1])+", Unused allocation: " + roundTwoPositions(unusedAllocation);
+				+ roundTwoPositions(unfairness[2][1]) + ", Unused allocation: "
+				+ roundTwoPositions(unusedAllocation);
 	}
 
 	@Override
@@ -192,8 +194,10 @@ public class RdaDatacenter extends PowerDatacenter {
 		if (currentTime - pastResourceConsumptionTraceTime >= 1.0d) {
 
 			fairnessByUser.clear();
+			utilizationByUser.clear();
 
 			traceCpu(currentTime);
+			traceRam(currentTime);
 			traceBw(currentTime);
 			traceDisk(currentTime);
 
@@ -215,8 +219,53 @@ public class RdaDatacenter extends PowerDatacenter {
 			line += ",All users total dev," + roundTwoPositions(totUnfairness);
 
 			summaryTrace.println(line);
+
+			for (String customer : new TreeMap<String, double[]>(
+					utilizationByUser).keySet()) {
+
+				double[] util = utilizationByUser.get(customer);
+				utilizationTrace.print(util[0] + "," + util[1] + "," + util[2]
+						+ "," + util[3] + ",");
+			}
+
+			utilizationTrace.print(System.getProperty("line.separator"));
+
 			pastResourceConsumptionTraceTime = currentTime;
 		}
+	}
+
+	public void traceRam(double currentTime) {
+		HashMap<String, Double> allocated = new HashMap<String, Double>();
+
+		for (PowerHost host : this.<PowerHost> getHostList()) {
+
+			for (Vm vm : host.getVmList()) {
+				String customer = ((RdaVm) vm).getCustomer();
+
+				double utilization = ((RdaCloudletScheduler) vm
+						.getCloudletScheduler()).getCurrentUtilizationOfRam();
+
+				double[] util = utilizationByUser.get(customer);
+
+				if (util == null) {
+					util = new double[4];
+					util[1] = utilization;
+					utilizationByUser.put(customer, util);
+				} else {
+					util[1] = util[1] + utilization;
+				}
+
+				Double val = allocated.get(customer);
+
+				if (val != null) {
+					allocated.put(customer, val + utilization);
+				} else {
+					allocated.put(customer, utilization);
+				}
+
+			}
+		}
+
 	}
 
 	public void traceCpu(double currentTime) {
@@ -262,6 +311,16 @@ public class RdaDatacenter extends PowerDatacenter {
 				double unused = 100 - roundTwoPositions(utilization * 100
 						/ totalAllocatedForUserOnVm);
 				unusedAllocation += unused;
+
+				double[] util = utilizationByUser.get(customer);
+
+				if (util == null) {
+					util = new double[4];
+					util[0] = utilization;
+					utilizationByUser.put(customer, util);
+				} else {
+					util[0] = util[0] + utilization;
+				}
 
 				totalAllocated += utilization;
 
@@ -313,6 +372,16 @@ public class RdaDatacenter extends PowerDatacenter {
 				double utilization = ((RdaCloudletScheduler) vm
 						.getCloudletScheduler()).getCurrentUtilizationOfBw();
 				totalAllocated += utilization;
+
+				double[] util = utilizationByUser.get(customer);
+
+				if (util == null) {
+					util = new double[4];
+					util[2] = utilization;
+					utilizationByUser.put(customer, util);
+				} else {
+					util[2] = util[2] + utilization;
+				}
 
 				double unused = 100 - roundTwoPositions(utilization * 100
 						/ alloc);
@@ -366,6 +435,15 @@ public class RdaDatacenter extends PowerDatacenter {
 				double utilization = ((RdaCloudletScheduler) vm
 						.getCloudletScheduler())
 						.getCurrentUtilizationOfStorageIO();
+
+				double[] util = utilizationByUser.get(customer);
+				if (util == null) {
+					util = new double[4];
+					util[3] = utilization;
+					utilizationByUser.put(customer, util);
+				} else {
+					util[3] = util[3] + utilization;
+				}
 
 				double unused = 100 - roundTwoPositions(utilization * 100
 						/ alloc);

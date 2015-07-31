@@ -36,13 +36,11 @@ public class DRFExperimentalSuite extends ExperimentalSuite {
 
 	@Override
 	public RdaHost createHost(int hostId) {
-		List<Pe> peList = new ArrayList<Pe>();
-		int mips = 1000;
-		peList.add(new Pe(0, new PeProvisionerSimple(mips)));
-		int ram = 2048; // host memory (MB)
-		long storage = 1000000; // host storage (MB)
-		int bw = 1000; // MBit/s
-		int storageIO = 10000;
+		List<Pe> peList = getHostConfig().getPeList();
+		int ram = getHostConfig().getRam(); // host memory (MB)
+		long storage = getHostConfig().getStorage(); // host storage (MB)
+		int bw = getHostConfig().getBw(); // MBit/s
+		int storageIO = getHostConfig().getStorageIO();
 
 		RamProvisionerSimple ramProvisioner = new RamProvisionerSimple(ram);
 		BwProvisionerSimple bwProvisioner = new BwProvisionerSimple(bw);

@@ -34,6 +34,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.RdaDatacenter;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaHost;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
 import ch.uzh.ifi.csg.cloudsim.rda.VmSchedulerMaxMinFairShare;
+import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.HostConfig;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
@@ -60,6 +61,16 @@ public class ExperimentalSuite {
 
 	private Datacenter datacenter;
 
+	public void setHostConfig(HostConfig hostConfig) {
+		this.hostConfig = hostConfig;
+	}
+
+	public HostConfig getHostConfig() {
+		return hostConfig;
+	}
+
+	private HostConfig hostConfig = new HostConfig();
+	
 	/**
 	 * Main method to run this example as an application.
 	 *
@@ -254,13 +265,11 @@ public class ExperimentalSuite {
 	}
 
 	public RdaHost createHost(int hostId) {
-		List<Pe> peList = new ArrayList<Pe>();
-		int mips = 1000;
-		peList.add(new Pe(0, new PeProvisionerSimple(mips)));
-		int ram = 2048; // host memory (MB)
-		long storage = 1000000; // host storage (MB)
-		int bw = 1000; // MBit/s
-		int storageIO = 10000;
+		List<Pe> peList = hostConfig.getPeList();
+		int ram = hostConfig.getRam(); // host memory (MB)
+		long storage = hostConfig.getStorage(); // host storage (MB)
+		int bw = hostConfig.getBw(); // MBit/s
+		int storageIO = hostConfig.getStorageIO();
 
 		RamProvisionerSimple ramProvisioner = new RamProvisionerSimple(ram);
 		BwProvisionerSimple bwProvisioner = new BwProvisionerSimple(bw);

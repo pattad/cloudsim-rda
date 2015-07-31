@@ -15,6 +15,7 @@ import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmSchedulerTimeShared;
 
+import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudletScheduler;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
@@ -100,17 +101,14 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 		}
 
 		for (Vm vm : vms) {
-			double reqRam = ((RdaVm) vm).getCurrentAllocatedRamFine();
-			double reqBw = ((RdaVm) vm).getCurrentAllocatedBwFine();
-			double reqStorage = ((RdaVm) vm).getCurrentAllocatedStorageIO();
-			List<Double> reqCpuList = ((RdaVm) vm).getCurrentAllocatedMips();
-			double reqCpu = 0.0d;
-
-			if (reqCpuList != null) {
-				for (Double pe : reqCpuList) {
-					reqCpu += pe.doubleValue();
-				}
-			}
+			double reqRam = ((RdaCloudletScheduler) vm.getCloudletScheduler())
+					.getCurrentUtilizationOfRam();
+			double reqBw = ((RdaCloudletScheduler) vm.getCloudletScheduler())
+					.getCurrentUtilizationOfBw();
+			double reqStorage = ((RdaCloudletScheduler) vm
+					.getCloudletScheduler()).getCurrentUtilizationOfStorageIO();
+			double reqCpu = ((RdaCloudletScheduler) vm.getCloudletScheduler())
+					.getCurrentUtilizationOfCpu();
 
 			reqCpu = roundUpToZero(reqCpu);
 			reqRam = roundUpToZero(reqRam);

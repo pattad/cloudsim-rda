@@ -10,29 +10,26 @@ import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.power.PowerVmAllocationPolicySimple;
-import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
 import ch.uzh.ifi.csg.cloudsim.rda.RdaHost;
-import ch.uzh.ifi.csg.cloudsim.rda.greediness.VmSchedulerGreedinessAllocationAlgorithm;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.useraware.RdaHostUserAware;
 import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareDatacenter;
+import ch.uzh.ifi.csg.cloudsim.rda.useraware.VmSchedulerDRFMH;
 
 /**
  * 
  * @author pat
  *
  */
-public class GreedinessExperimentalSuite extends ExperimentalSuite {
+public class DRFMHExperimentalSuite extends ExperimentalSuite {
 
-	private String pythonPath = "python bin/";
 	private double priorityUpdateInterval = 1.0;
 
-	public GreedinessExperimentalSuite(String pythonPath) {
+	public DRFMHExperimentalSuite() {
 		super();
-		this.pythonPath = pythonPath;
 	}
 
 	/**
@@ -43,8 +40,7 @@ public class GreedinessExperimentalSuite extends ExperimentalSuite {
 	 */
 	public static void main(String[] args) {
 
-		GreedinessExperimentalSuite suite = new GreedinessExperimentalSuite(
-				"python bin/");
+		DRFMHExperimentalSuite suite = new DRFMHExperimentalSuite();
 		// VMs and Hosts to create
 		suite.simulate(2, 3, 3);
 
@@ -105,10 +101,9 @@ public class GreedinessExperimentalSuite extends ExperimentalSuite {
 		StorageIOProvisionerSimple storageIOProvisioner = new StorageIOProvisionerSimple(
 				storageIO);
 		return new RdaHostUserAware(hostId, ramProvisioner, bwProvisioner,
-				storageIOProvisioner, storage, peList,
-				new VmSchedulerGreedinessAllocationAlgorithm(peList,
-						ramProvisioner, bwProvisioner, storageIOProvisioner,
-						this.pythonPath), scarcitySchedulingInterval);
+				storageIOProvisioner, storage, peList, new VmSchedulerDRFMH(
+						peList, ramProvisioner, bwProvisioner,
+						storageIOProvisioner), scarcitySchedulingInterval);
 
 	}
 

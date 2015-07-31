@@ -25,4 +25,14 @@ public class Config_2 implements ExperimentConfig {
 		}
 		return inputData;
 	}
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#getHostConfig
+	 * ()
+	 */
+	public HostConfig getHostConfig() {
+		return new HostConfig();
+	}
 }

@@ -146,10 +146,27 @@ public class ExperimentRunner {
 			DRFExperimentalSuite drfSuite = new DRFExperimentalSuite();
 			drfSuite.setInputData(inputData);
 			drfSuite.setTrace(logTrace);
-
+			drfSuite.setHostConfig(workloadConfig.getHostConfig());
+			
 			// VMs and Hosts and users to create
 			drfSuite.simulate(vmCnt, hostCnt, userCnt);
 
+			// ---------------- DRF Multi Host
+			setCurrentDirectory(baseDir + "/drf_mh");
+
+			System.out.println();
+			System.out.println("DRF MH (Dominant Resource Fairness Multi Host Aware)...");
+
+			// DRF policy
+			DRFMHExperimentalSuite drfMhSuite = new DRFMHExperimentalSuite();
+			drfMhSuite.setInputData(inputData);
+			drfMhSuite.setTrace(logTrace);
+			drfMhSuite.setPriorityUpdateInterval(priorityUpdateInterval);
+			drfMhSuite.setHostConfig(workloadConfig.getHostConfig());
+
+			// VMs and Hosts and users to create
+			drfMhSuite.simulate(vmCnt, hostCnt, userCnt);
+			
 			// ---------------- MMFS
 			setCurrentDirectory(baseDir + "/mmfs");
 			System.out.println();
@@ -159,6 +176,7 @@ public class ExperimentRunner {
 			ExperimentalSuite suite = new ExperimentalSuite();
 			suite.setInputData(inputData);
 			suite.setTrace(logTrace);
+			suite.setHostConfig(workloadConfig.getHostConfig());
 
 			// VMs and Hosts and users to create
 			suite.simulate(vmCnt, hostCnt, userCnt);
@@ -175,6 +193,7 @@ public class ExperimentRunner {
 			userAwareSuite.setInputData(inputData);
 			userAwareSuite.setTrace(logTrace);
 			userAwareSuite.setPriorityUpdateInterval(priorityUpdateInterval);
+			userAwareSuite.setHostConfig(workloadConfig.getHostConfig());
 
 			// VMs and Hosts and users to create
 			userAwareSuite.simulate(vmCnt, hostCnt, userCnt);
