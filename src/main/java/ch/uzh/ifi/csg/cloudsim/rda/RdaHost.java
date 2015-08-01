@@ -10,6 +10,7 @@ import org.cloudbus.cloudsim.VmScheduler;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.power.PowerHost;
 import org.cloudbus.cloudsim.power.models.PowerModelSpecPowerHpProLiantMl110G4Xeon3040;
+
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
@@ -325,7 +326,7 @@ public class RdaHost extends PowerHost {
 
 			// get total mips for the current VM
 			List<Double> mips = ((RdaVm) vm).getCurrentAllocatedMips();
-		
+
 			if (mips == null) {
 				vmsToRemove.add(vm);
 			} else {
@@ -370,5 +371,30 @@ public class RdaHost extends PowerHost {
 		this.storageIOProvisioner.deallocateStorageIOForVm((RdaVm) vm);
 		getVmScheduler().deallocatePesForVm(vm);
 		setStorage(getStorage() + vm.getSize());
+	}
+
+	public StorageIOProvisioner getStorageIOProvisioner() {
+		return storageIOProvisioner;
+	}
+
+	/**
+	 * Gets the machine memory.
+	 * 
+	 * @return the machine memory
+	 * @pre $none
+	 * @post $result > 0
+	 */
+	public int getRam() {
+		return (int) this.ramProvisioner.getRam();
+	}
+	/**
+	 * Gets the machine bw.
+	 * 
+	 * @return the machine bw
+	 * @pre $none
+	 * @post $result > 0
+	 */
+	public long getBw() {
+		return (long) this.bwProvisioner.getBw();
 	}
 }

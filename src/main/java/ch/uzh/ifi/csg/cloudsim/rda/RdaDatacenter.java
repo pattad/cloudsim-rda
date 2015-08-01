@@ -10,6 +10,7 @@ import java.util.TreeMap;
 
 import org.cloudbus.cloudsim.DatacenterCharacteristics;
 import org.cloudbus.cloudsim.Log;
+import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.VmAllocationPolicy;
@@ -54,6 +55,8 @@ public class RdaDatacenter extends PowerDatacenter {
 	private TreeMap<String, double[]> utilizationByUser = new TreeMap<String, double[]>();
 
 	private double resourceUnfairness = 0.0d;
+	private double assetUnfairness = 0.0d;
+
 	private double unusedAllocation = 0.0d;
 
 	/**
@@ -88,11 +91,16 @@ public class RdaDatacenter extends PowerDatacenter {
 		super(name, characteristics, vmAllocationPolicy, storageList,
 				schedulingInterval);
 
-		cpuTrace = new PrintWriter(new File("resourceShare_cpu.csv").getAbsoluteFile(), "UTF-8");
-		bwTrace = new PrintWriter(new File("resourceShare_bw.csv").getAbsoluteFile(), "UTF-8");
-		diskTrace = new PrintWriter(new File("resourceShare_disk.csv").getAbsoluteFile(), "UTF-8");
-		summaryTrace = new PrintWriter(new File("fairness.csv").getAbsoluteFile(), "UTF-8");
-		utilizationTrace = new PrintWriter(new File("utilization.csv").getAbsoluteFile(), "UTF-8");
+		cpuTrace = new PrintWriter(
+				new File("resourceShare_cpu.csv").getAbsoluteFile(), "UTF-8");
+		bwTrace = new PrintWriter(
+				new File("resourceShare_bw.csv").getAbsoluteFile(), "UTF-8");
+		diskTrace = new PrintWriter(
+				new File("resourceShare_disk.csv").getAbsoluteFile(), "UTF-8");
+		summaryTrace = new PrintWriter(
+				new File("fairness.csv").getAbsoluteFile(), "UTF-8");
+		utilizationTrace = new PrintWriter(
+				new File("utilization.csv").getAbsoluteFile(), "UTF-8");
 	}
 
 	@Override
@@ -108,7 +116,9 @@ public class RdaDatacenter extends PowerDatacenter {
 	}
 
 	public String getEvaluationtString() {
-		return "Total resource unfairness: " + roundTwoPositions(resourceUnfairness)
+		return "Total asset unfairness: " + roundTwoPositions(assetUnfairness)
+				+ ", Total resource unfairness: "
+				+ roundTwoPositions(resourceUnfairness)
 				+ ", Total unfairness by resource: CPU: "
 				+ roundTwoPositions(unfairness[0][1]) + ", BW: "
 				+ roundTwoPositions(unfairness[1][1]) + ", Disk I/O: "
@@ -220,13 +230,49 @@ public class RdaDatacenter extends PowerDatacenter {
 
 			summaryTrace.println(line);
 
+			// calculate asset fairness over whole datecenter
+			double mipsCapacity = 0.0d;
+			double ramCapacity = 0.0d;
+			double bwCapacity = 0.0d;
+			double diskCapacity = 0.0d;
+
+			for (PowerHost host : this.<PowerHost> getHostList()) {
+				mipsCapacity += getMipsCapacity(host.getPeList());
+				ramCapacity += host.getRam();
+				bwCapacity += host.getBw();
+				diskCapacity += ((RdaHost) host).getStorageIOProvisioner()
+						.getStorageIO();
+			}
+
+			double totalShare = 0.0d;
 			for (String customer : new TreeMap<String, double[]>(
 					utilizationByUser).keySet()) {
 
 				double[] util = utilizationByUser.get(customer);
 				utilizationTrace.print(util[0] + "," + util[1] + "," + util[2]
 						+ "," + util[3] + ",");
+
+				double share = util[0] * 100 / mipsCapacity + util[1] * 100
+						/ ramCapacity + util[2] * 100 / bwCapacity + util[3]
+						* 100 / diskCapacity;
+
+				totalShare += share;
 			}
+
+			double avgShare = totalShare / utilizationByUser.size();
+			double assetShareDev = 0.0d;
+
+			for (String customer : new TreeMap<String, double[]>(
+					utilizationByUser).keySet()) {
+				double[] util = utilizationByUser.get(customer);
+				double share = util[0] * 100 / mipsCapacity + util[1] * 100
+						/ ramCapacity + util[2] * 100 / bwCapacity + util[3]
+						* 100 / diskCapacity;
+
+				assetShareDev += Math.abs(avgShare - share);
+			}
+
+			assetUnfairness += assetShareDev;
 
 			utilizationTrace.print(System.getProperty("line.separator"));
 
@@ -658,4 +704,22 @@ public class RdaDatacenter extends PowerDatacenter {
 		return a;
 	}
 
+	/**
+	 * Returns total MIPS among all the PEs.
+	 * 
+	 * @return mips capacity
+	 */
+	private double getMipsCapacity(List<Pe> peList) {
+		if (peList == null) {
+			Log.printLine("Pe list is empty");
+			return 0;
+		}
+
+		double capacity = 0.0;
+		for (Pe pe : peList) {
+			capacity += pe.getMips();
+		}
+
+		return capacity;
+	}
 }
