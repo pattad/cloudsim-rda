@@ -21,7 +21,7 @@ import org.cloudbus.cloudsim.power.PowerDatacenter;
 import org.cloudbus.cloudsim.power.PowerHost;
 
 /**
- * This datacenter implementation must be used, when using the RDA module.
+ * This data center implementation must be used, when using the RDA module.
  * 
  * @author Patrick A. Taddei
  */
@@ -53,7 +53,7 @@ public class RdaDatacenter extends PowerDatacenter {
 	/** array contains: cpu | ram | bw | disk */
 	private TreeMap<String, double[]> utilizationByUser = new TreeMap<String, double[]>();
 
-	private double assetUnfairness = 0.0d;
+	private double resourceUnfairness = 0.0d;
 	private double unusedAllocation = 0.0d;
 
 	/**
@@ -108,7 +108,7 @@ public class RdaDatacenter extends PowerDatacenter {
 	}
 
 	public String getEvaluationtString() {
-		return "Total asset unfairness: " + roundTwoPositions(assetUnfairness)
+		return "Total resource unfairness: " + roundTwoPositions(resourceUnfairness)
 				+ ", Total unfairness by resource: CPU: "
 				+ roundTwoPositions(unfairness[0][1]) + ", BW: "
 				+ roundTwoPositions(unfairness[1][1]) + ", Disk I/O: "
@@ -214,7 +214,7 @@ public class RdaDatacenter extends PowerDatacenter {
 						+ fairness[2] + "," + roundTwoPositions(sum) + ",";
 			}
 
-			assetUnfairness += totUnfairness;
+			resourceUnfairness += totUnfairness;
 
 			line += ",All users total dev," + roundTwoPositions(totUnfairness);
 
