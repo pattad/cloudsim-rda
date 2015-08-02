@@ -34,7 +34,15 @@ public class Config_7 implements ExperimentConfig {
 		}
 		return inputData;
 	}
-
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
+	 * getDescription()
+	 */
+	public String getDescription() {
+		return "DS WS WS";
+	}
 	/*
 	 * (non-Javadoc)
 	 * 

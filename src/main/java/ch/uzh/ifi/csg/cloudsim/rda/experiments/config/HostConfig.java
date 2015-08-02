@@ -12,7 +12,7 @@ public class HostConfig {
 	private int ram = 2048; // host memory (MB)
 	private long storage = 1000000; // host storage (MB)
 	private int bw = 1000; // MBit/s
-	private int storageIO = 10000;
+	private int storageIO = 4000;
 	private int peCnt = 1;
 
 	public HostConfig() {

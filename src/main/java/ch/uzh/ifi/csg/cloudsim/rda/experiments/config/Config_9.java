@@ -36,7 +36,15 @@ public class Config_9 implements ExperimentConfig {
 		}
 		return inputData;
 	}
-
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
+	 * getDescription()
+	 */
+	public String getDescription() {
+		return "random";
+	}
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -52,7 +60,7 @@ public class Config_9 implements ExperimentConfig {
 		int ram = 2048; // host memory (MB)
 		long storage = 1000000; // host storage (MB)
 		int bw = 1000; // MBit/s
-		int storageIO = 10000;
+		int storageIO = 4000;
 
 		return new HostConfig(peCnt, mips, ram, storage, bw, storageIO);
 	}

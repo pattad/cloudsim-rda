@@ -1,10 +1,8 @@
 package ch.uzh.ifi.csg.cloudsim.rda.experiments;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.cloudbus.cloudsim.Pe;
-import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
 import ch.uzh.ifi.csg.cloudsim.rda.RdaHost;
 import ch.uzh.ifi.csg.cloudsim.rda.VmSchedulerDRF;

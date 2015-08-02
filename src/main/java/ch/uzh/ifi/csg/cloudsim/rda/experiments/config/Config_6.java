@@ -40,7 +40,15 @@ public class Config_6 implements ExperimentConfig {
 		}
 		return inputData;
 	}
-
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
+	 * getDescription()
+	 */
+	public String getDescription() {
+		return "CI WS DS";
+	}
 	/*
 	 * (non-Javadoc)
 	 * 

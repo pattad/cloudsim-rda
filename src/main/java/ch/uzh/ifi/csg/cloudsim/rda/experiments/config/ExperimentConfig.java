@@ -8,4 +8,6 @@ public interface ExperimentConfig {
 			int workloadLength);
 
 	public abstract HostConfig getHostConfig();
+	
+	public abstract String getDescription();
 }

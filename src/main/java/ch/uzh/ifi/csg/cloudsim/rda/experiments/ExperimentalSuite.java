@@ -26,7 +26,6 @@ import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.Vm;
 import org.cloudbus.cloudsim.core.CloudSim;
 import org.cloudbus.cloudsim.power.PowerVmAllocationPolicySimple;
-import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
 import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudlet;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudletSchedulerDynamicWorkload;
@@ -61,6 +60,8 @@ public class ExperimentalSuite {
 
 	private Datacenter datacenter;
 
+	private double timeTotal;
+
 	public void setHostConfig(HostConfig hostConfig) {
 		this.hostConfig = hostConfig;
 	}
@@ -70,7 +71,7 @@ public class ExperimentalSuite {
 	}
 
 	private HostConfig hostConfig = new HostConfig();
-	
+
 	/**
 	 * Main method to run this example as an application.
 	 *
@@ -383,7 +384,7 @@ public class ExperimentalSuite {
 
 		result.append(System.getProperty("line.separator") + "By customers "
 				+ System.getProperty("line.separator"));
-		double timeTotal = 0;
+		timeTotal = 0;
 
 		int n = 0;
 		for (String cust : totalTime.keySet()) {
@@ -503,5 +504,10 @@ public class ExperimentalSuite {
 
 	public void setInputData(ArrayList<ArrayList<double[]>> inputData) {
 		this.inputData = inputData;
+	}
+
+	public String getResultStringCsv() {
+		return ((RdaDatacenter) datacenter).getEvaluationtStringCsv() + ","
+				+ this.timeTotal + ",";
 	}
 }

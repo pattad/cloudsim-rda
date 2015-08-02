@@ -58,7 +58,10 @@ public class RdaDatacenter extends PowerDatacenter {
 	private double assetUnfairness = 0.0d;
 
 	private double unusedAllocation = 0.0d;
-
+	
+	private int measurementCnt = 0;
+	
+	
 	/**
 	 * Instantiates a new RDA datacenter.
 	 * 
@@ -116,16 +119,22 @@ public class RdaDatacenter extends PowerDatacenter {
 	}
 
 	public String getEvaluationtString() {
-		return "Total asset unfairness: " + roundTwoPositions(assetUnfairness)
-				+ ", Total resource unfairness: "
-				+ roundTwoPositions(resourceUnfairness)
+		return "Avg. asset fairness: " + roundTwoPositions(-assetUnfairness/measurementCnt)
+				+ ", Avg. resource fairness: "
+				+ roundTwoPositions(-resourceUnfairness/measurementCnt)
 				+ ", Total unfairness by resource: CPU: "
 				+ roundTwoPositions(unfairness[0][1]) + ", BW: "
 				+ roundTwoPositions(unfairness[1][1]) + ", Disk I/O: "
 				+ roundTwoPositions(unfairness[2][1]) + ", Unused allocation: "
 				+ roundTwoPositions(unusedAllocation);
 	}
-
+	
+	public String getEvaluationtStringCsv() {
+		return roundFourPositions(-assetUnfairness/measurementCnt)
+				+ ","
+				+ roundFourPositions(-resourceUnfairness/measurementCnt)
+				+ ",";
+	}
 	@Override
 	protected void processVmCreate(SimEvent ev, boolean ack) {
 		RdaVm vm = (RdaVm) ev.getData();
@@ -276,6 +285,7 @@ public class RdaDatacenter extends PowerDatacenter {
 
 			utilizationTrace.print(System.getProperty("line.separator"));
 
+			measurementCnt++;
 			pastResourceConsumptionTraceTime = currentTime;
 		}
 	}
@@ -693,7 +703,9 @@ public class RdaDatacenter extends PowerDatacenter {
 	private double roundTwoPositions(double val) {
 		return Math.round(val * 100) / 100.0d;
 	}
-
+	private double roundFourPositions(double val) {
+		return Math.round(val * 10000) / 10000.0d;
+	}
 	/*
 	 * rounding up to the 9th position behind the comma.
 	 */

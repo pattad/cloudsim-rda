@@ -1,7 +1,10 @@
 package ch.uzh.ifi.csg.cloudsim.rda.experiments;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.text.SimpleDateFormat;
@@ -77,16 +80,37 @@ public class ExperimentRunner {
 		String params = "vmCnt: " + vmCnt + ", hostCnt: " + hostCnt
 				+ ", userCnt: " + userCnt + ", workloadLength: "
 				+ workloadLength + ", experimentCnt: " + experimentCnt
-				+ ", workloadConfig: " + workloadConfig.getClass().getName()
-				+ ", priorityUpdateInterval: " + priorityUpdateInterval;
+				+ ", workloadConfig: "
+				+ workloadConfig.getClass().getSimpleName()
+				+ ", priorityUpdateInterval: " + priorityUpdateInterval + ","
+				+ workloadConfig.getDescription();
 		System.out.println(params);
 
 		String homeDir = new File("output/").getAbsolutePath();
 
+		PrintWriter master = null;
+		try {
+			master = new PrintWriter(new BufferedWriter(new FileWriter(
+					"output/experimentResults.csv", true)));
+		} catch (IOException e1) {
+			e1.printStackTrace();
+		}
+		String paramsMaster = vmCnt + "," + userCnt + "," + hostCnt + ","
+				+ workloadLength + ","
+				+ workloadConfig.getClass().getSimpleName() + ","
+				+ workloadConfig.getDescription() + ","
+				+ priorityUpdateInterval + ","
+				+ workloadConfig.getHostConfig().getMips() + ","
+				+ workloadConfig.getHostConfig().getRam() + ","
+				+ workloadConfig.getHostConfig().getBw() + ","
+				+ workloadConfig.getHostConfig().getStorageIO() + ",";
+
 		// number of experiments to conduct
 		for (int exp = 0; exp < experimentCnt; exp++) {
 
-			String baseDir = new File(homeDir + "/" + df.format(new Date()))
+			String dirString = workloadConfig.getClass().getSimpleName() + "_"
+					+ df.format(new Date());
+			String baseDir = new File(homeDir + "/" + dirString)
 					.getAbsolutePath();
 
 			setCurrentDirectory(baseDir);
@@ -103,8 +127,6 @@ public class ExperimentRunner {
 				e.printStackTrace();
 			} catch (UnsupportedEncodingException e) {
 				e.printStackTrace();
-			} finally {
-				paramsLog.close();
 			}
 
 			// generating input data that can be used for the experiments
@@ -136,6 +158,8 @@ public class ExperimentRunner {
 				i++;
 			}
 
+			String resultString = "";
+
 			// ---------------- DRF
 			setCurrentDirectory(baseDir + "/drf");
 
@@ -147,15 +171,18 @@ public class ExperimentRunner {
 			drfSuite.setInputData(inputData);
 			drfSuite.setTrace(logTrace);
 			drfSuite.setHostConfig(workloadConfig.getHostConfig());
-			
+
 			// VMs and Hosts and users to create
 			drfSuite.simulate(vmCnt, hostCnt, userCnt);
+
+			resultString += drfSuite.getResultStringCsv();
 
 			// ---------------- DRF Multi Host
 			setCurrentDirectory(baseDir + "/drf_mh");
 
 			System.out.println();
-			System.out.println("DRF MH (Dominant Resource Fairness Multi Host Aware)...");
+			System.out
+					.println("DRF MH (Dominant Resource Fairness Multi Host Aware)...");
 
 			// DRF policy
 			DRFMHExperimentalSuite drfMhSuite = new DRFMHExperimentalSuite();
@@ -166,7 +193,8 @@ public class ExperimentRunner {
 
 			// VMs and Hosts and users to create
 			drfMhSuite.simulate(vmCnt, hostCnt, userCnt);
-			
+
+			resultString += drfMhSuite.getResultStringCsv();
 			// ---------------- MMFS
 			setCurrentDirectory(baseDir + "/mmfs");
 			System.out.println();
@@ -180,6 +208,8 @@ public class ExperimentRunner {
 
 			// VMs and Hosts and users to create
 			suite.simulate(vmCnt, hostCnt, userCnt);
+
+			resultString += suite.getResultStringCsv();
 
 			// ---------------- Greediness
 			setCurrentDirectory(baseDir + "/greediness");
@@ -197,7 +227,13 @@ public class ExperimentRunner {
 
 			// VMs and Hosts and users to create
 			userAwareSuite.simulate(vmCnt, hostCnt, userCnt);
+			resultString += userAwareSuite.getResultStringCsv();
+
+			master.println(dirString + "," + paramsMaster + resultString);
+			paramsLog.println(dirString + "," + paramsMaster + resultString);
+			paramsLog.close();
 		}
+		master.close();
 	}
 
 	public static boolean setCurrentDirectory(String directory_name) {

@@ -21,21 +21,31 @@ public class Config_13 implements ExperimentConfig {
 		for (int i = 0; i < vmCnt; i++) {
 
 			if (i % 3 == 0) {
-				// computing intensive workload, lot's of memory and cpu and network
+				// computing intensive workload, lot's of memory and cpu and
+				// network
 				ArrayList<double[]> workloadData = randomDataGenerator
 						.generateWaveingData(600, 20, 500, 10, 0.3, 0.1);
 				inputData.add(workloadData);
-			} else  {
+			} else {
 				// web-server: network intensive workload
 				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateWaveingData(275, 10, 250, 10, 0.3, 0.1);
+						.generateWaveingData(250, 10, 250, 10, 0.3, 0.1);
 				inputData.add(workloadData);
-			} 
+			}
 		}
 		return inputData;
 	}
-	
-	
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
+	 * getDescription()
+	 */
+	public String getDescription() {
+		return "CI WS WS";
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -51,7 +61,7 @@ public class Config_13 implements ExperimentConfig {
 		int ram = 2048; // host memory (MB)
 		long storage = 1000000; // host storage (MB)
 		int bw = 1000; // MBit/s
-		int storageIO = 10000;
+		int storageIO = 4000;
 
 		return new HostConfig(peCnt, mips, ram, storage, bw, storageIO);
 	}

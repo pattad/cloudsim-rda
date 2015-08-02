@@ -38,4 +38,13 @@ public class Config_1 implements ExperimentConfig {
 	public HostConfig getHostConfig() {
 		return new HostConfig();
 	}
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
+	 * getDescription()
+	 */
+	public String getDescription() {
+		return "Only WS";
+	}
 }
