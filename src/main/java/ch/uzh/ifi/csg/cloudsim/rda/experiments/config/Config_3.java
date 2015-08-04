@@ -21,15 +21,15 @@ public class Config_3 implements ExperimentConfig {
 
 		for (int i = 0; i < vmCnt; i++) {
 
-			if (i % 2 == 0) {
-				// computing intensive workload, lot's of memory and cpu
-				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateData(400, 50, 20, 500, 10, 0.8, 10, 0.8, 75);
-				inputData.add(workloadData);
-			} else {
+			if (i % 3 == 0) {
 				// network intensive workload, lots of network
 				ArrayList<double[]> workloadData = randomDataGenerator
 						.generateData(200, 200, 20, 250, 10, 0.8, 10, 0.8, 75);
+				inputData.add(workloadData);		
+			} else {
+				// computing intensive workload, lot's of memory and cpu
+				ArrayList<double[]> workloadData = randomDataGenerator
+						.generateData(400, 50, 20, 500, 10, 0.8, 10, 0.8, 75);
 				inputData.add(workloadData);
 			}
 		}
@@ -43,7 +43,7 @@ public class Config_3 implements ExperimentConfig {
 	 * getDescription()
 	 */
 	public String getDescription() {
-		return "CI WS";
+		return "CI CI WS";
 	}
 	
 	/*

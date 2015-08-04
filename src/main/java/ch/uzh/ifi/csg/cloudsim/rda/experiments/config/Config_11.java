@@ -68,6 +68,6 @@ public class Config_11 implements ExperimentConfig {
 	 * getDescription()
 	 */
 	public String getDescription() {
-		return "CI WS DS";
+		return "DB WS DB";
 	}
 }

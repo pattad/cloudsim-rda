@@ -41,7 +41,7 @@ public class Config_8 implements ExperimentConfig {
 	 * getDescription()
 	 */
 	public String getDescription() {
-		return "CI WS";
+		return "CI WS WS";
 	}
 	/*
 	 * (non-Javadoc)

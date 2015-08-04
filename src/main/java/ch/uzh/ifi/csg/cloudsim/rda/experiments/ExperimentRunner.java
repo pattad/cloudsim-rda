@@ -82,8 +82,8 @@ public class ExperimentRunner {
 				+ workloadLength + ", experimentCnt: " + experimentCnt
 				+ ", workloadConfig: "
 				+ workloadConfig.getClass().getSimpleName()
-				+ ", priorityUpdateInterval: " + priorityUpdateInterval + ","
-				+ workloadConfig.getDescription();
+				+ ", priorityUpdateInterval: " + priorityUpdateInterval + ", "
+				+ workloadConfig.getDescription() + ",";
 		System.out.println(params);
 
 		String homeDir = new File("output/").getAbsolutePath();
@@ -230,7 +230,8 @@ public class ExperimentRunner {
 			resultString += userAwareSuite.getResultStringCsv();
 
 			master.println(dirString + "," + paramsMaster + resultString);
-			paramsLog.println(dirString + "," + paramsMaster + resultString);
+			paramsLog.println("," + dirString + "," + paramsMaster
+					+ resultString);
 			paramsLog.close();
 		}
 		master.close();
