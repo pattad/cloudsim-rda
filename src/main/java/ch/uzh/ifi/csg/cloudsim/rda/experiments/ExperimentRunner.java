@@ -140,7 +140,8 @@ public class ExperimentRunner {
 
 				try {
 					trace = new PrintWriter(
-							new File(+i + "_workload.csv").getAbsoluteFile(),
+							new File("workload_" + i + ".csv")
+									.getAbsoluteFile(),
 							"UTF-8");
 					trace.println("cpu,ram,bw,storageIO");
 

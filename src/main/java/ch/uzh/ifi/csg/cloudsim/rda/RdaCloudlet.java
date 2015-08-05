@@ -175,9 +175,7 @@ public class RdaCloudlet extends Cloudlet {
 
 		if (this.record) {
 
-			SimpleDateFormat df = new SimpleDateFormat("yyyyMMddhhmmssSSS");
-
-			recorder = new PrintWriter(new File(df.format(new Date()) + "_"
+			recorder = new PrintWriter(new File("workload_trace_"
 					+ super.getCloudletId() + ".csv").getAbsoluteFile(),
 					"UTF-8");
 			recorder.println("time,cpu,memory,bandwidth,storageIO,delay");
