@@ -32,7 +32,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
  * 3. Downgrade all the other resources of each VM. According to the Leontief
  * production function dependencies.
  * 
- * 4. Apply Max-Min to the remaining resources.
+ * 4. Repeat the step 1-3 for the remaining resources.
  * 
  * This procedure guarantees that the host resources are not overused.
  * 
@@ -131,72 +131,61 @@ public class VmSchedulerMaxMinFairShare extends VmSchedulerTimeShared implements
 		double demandStorageIO = maxMin.getResourceDemand(requestedStorageIO,
 				sProvisioner.getStorageIO());
 
-		// if the demand for CPU has the highest percentage
-		if (demandCpu >= demandBw && demandCpu >= demandStorageIO) {
-			allocatedCpu = maxMin.evaluate(requestedCpu, mipsCapacity);
-			for (Vm vm : vms) {
-				String uid = (String) vm.getUid();
-				double dampingFactor = requestedCpu.get(uid)
-						/ allocatedCpu.get(uid);
-				if (dampingFactor != 0 && !Double.isNaN(dampingFactor)) {
-					double bw = requestedBw.get(uid);
-					requestedBw.put(uid, bw / dampingFactor);
-					double storageIO = requestedStorageIO.get(uid);
-					requestedStorageIO.put(uid, storageIO / dampingFactor);
+		for (int i = 0; i < 3; i++) {
+			// if the demand for CPU has the highest percentage
+			if (demandCpu >= demandBw && demandCpu >= demandStorageIO) {
+				allocatedCpu = maxMin.evaluate(requestedCpu, mipsCapacity);
+				for (Vm vm : vms) {
+					String uid = (String) vm.getUid();
+					double dampingFactor = requestedCpu.get(uid)
+							/ allocatedCpu.get(uid);
+					if (dampingFactor != 0 && !Double.isNaN(dampingFactor)) {
+						double bw = requestedBw.get(uid);
+						requestedBw.put(uid, bw / dampingFactor);
+						double storageIO = requestedStorageIO.get(uid);
+						requestedStorageIO.put(uid, storageIO / dampingFactor);
+					}
 				}
+				demandCpu = -1;
 			}
-			
+			// if the demand for BW has the highest percentage
+			else if (demandBw >= demandStorageIO) {
+				allocatedBw = maxMin.evaluate(requestedBw,
+						bwProvisioner.getBw());
+				for (Vm vm : vms) {
+					String uid = (String) vm.getUid();
+					double dampingFactor = requestedBw.get(uid)
+							/ allocatedBw.get(uid);
+					if (dampingFactor != 0 && !Double.isNaN(dampingFactor)) {
+						double cpu = requestedCpu.get(uid);
+						requestedCpu.put(uid, cpu / dampingFactor);
+						double storageIO = requestedStorageIO.get(uid);
+						requestedStorageIO.put(uid, storageIO / dampingFactor);
+					}
 
-		}
-		// if the demand for BW has the highest percentage
-		else if (demandBw >= demandStorageIO) {
-			allocatedBw = maxMin.evaluate(requestedBw, bwProvisioner.getBw());
-			for (Vm vm : vms) {
-				String uid = (String) vm.getUid();
-				double dampingFactor = requestedBw.get(uid)
-						/ allocatedBw.get(uid);
-				if (dampingFactor != 0 && !Double.isNaN(dampingFactor)) {
-
-					double cpu = requestedCpu.get(uid);
-					requestedCpu.put(uid, cpu / dampingFactor);
-					double storageIO = requestedStorageIO.get(uid);
-					requestedStorageIO.put(uid, storageIO / dampingFactor);
 				}
-
+				demandBw = -1;
 			}
+			// if the demand for storage has the highest percentage
+			else {
+				allocatedStorageIO = maxMin.evaluate(requestedStorageIO,
+						sProvisioner.getStorageIO());
+				for (Vm vm : vms) {
+					String uid = (String) vm.getUid();
+					double dampingFactor = requestedStorageIO.get(uid)
+							/ allocatedStorageIO.get(uid);
+					if (dampingFactor != 0 && !Double.isNaN(dampingFactor)) {
+						double cpu = requestedCpu.get(uid);
+						requestedCpu.put(uid, cpu / dampingFactor);
+						double bw = requestedBw.get(uid);
+						requestedBw.put(uid, bw / dampingFactor);
+					}
 
-		}
-		// if the demand for storage has the highest percentage
-		else {
-			allocatedStorageIO = maxMin.evaluate(requestedStorageIO,
-					sProvisioner.getStorageIO());
-			for (Vm vm : vms) {
-				String uid = (String) vm.getUid();
-				double dampingFactor = requestedStorageIO.get(uid)
-						/ allocatedStorageIO.get(uid);
-				if (dampingFactor != 0 && !Double.isNaN(dampingFactor)) {
-					double cpu = requestedCpu.get(uid);
-					requestedCpu.put(uid, cpu / dampingFactor);
-					double bw = requestedBw.get(uid);
-					requestedBw.put(uid, bw / dampingFactor);
 				}
-
+				demandStorageIO = -1;
 			}
-
 		}
 
-		if (allocatedCpu == null) {
-			allocatedCpu = maxMin.evaluate(requestedCpu, mipsCapacity);
-		}
-		if (allocatedBw == null) {
-			allocatedBw = maxMin.evaluate(requestedBw,
-					bwProvisioner.getBw());
-		}
-		if (allocatedStorageIO == null) {
-			allocatedStorageIO = maxMin.evaluate(requestedStorageIO,
-					sProvisioner.getStorageIO());
-
-		}
 		for (Vm vm : vms) {
 
 			double mips = allocatedCpu.get(vm.getUid());
