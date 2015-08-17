@@ -13,6 +13,7 @@ import java.util.Date;
 
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.Config_1;
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig;
+import ch.uzh.ifi.csg.cloudsim.rda.greediness.Greediness;
 
 public class ExperimentRunner {
 
@@ -21,7 +22,7 @@ public class ExperimentRunner {
 
 	private static String pythonPath = "python bin";
 
-	private static ExperimentConfig workloadConfig = new Config_1();
+	private static ExperimentConfig config = new Config_1();
 
 	private static int vmCnt = 9;
 	private static int hostCnt = 3;
@@ -53,7 +54,7 @@ public class ExperimentRunner {
 
 		if (args.length > 5) {
 			try {
-				workloadConfig = (ExperimentConfig) Class.forName(args[5])
+				config = (ExperimentConfig) Class.forName(args[5])
 						.newInstance();
 			} catch (InstantiationException e) {
 				e.printStackTrace();
@@ -76,14 +77,16 @@ public class ExperimentRunner {
 			priorityUpdateInterval = Double.valueOf(args[8]);
 		}
 
+		Greediness.setPythonPath(pythonPath);
+		Greediness.initialize();
+
 		System.out.println("Running experiments with parameters:");
 		String params = "vmCnt: " + vmCnt + ", hostCnt: " + hostCnt
 				+ ", userCnt: " + userCnt + ", workloadLength: "
 				+ workloadLength + ", experimentCnt: " + experimentCnt
-				+ ", workloadConfig: "
-				+ workloadConfig.getClass().getSimpleName()
+				+ ", workloadConfig: " + config.getClass().getSimpleName()
 				+ ", priorityUpdateInterval: " + priorityUpdateInterval + ", "
-				+ workloadConfig.getDescription() + ",";
+				+ config.getDescription() + ",";
 		System.out.println(params);
 
 		String homeDir = new File("output/").getAbsolutePath();
@@ -96,19 +99,20 @@ public class ExperimentRunner {
 			e1.printStackTrace();
 		}
 		String paramsMaster = vmCnt + "," + userCnt + "," + hostCnt + ","
-				+ workloadLength + ","
-				+ workloadConfig.getClass().getSimpleName() + ","
-				+ workloadConfig.getDescription() + ","
-				+ priorityUpdateInterval + ","
-				+ workloadConfig.getHostConfig().getMips() + ","
-				+ workloadConfig.getHostConfig().getRam() + ","
-				+ workloadConfig.getHostConfig().getBw() + ","
-				+ workloadConfig.getHostConfig().getStorageIO() + ",";
+				+ workloadLength + "," + config.getClass().getSimpleName()
+				+ "," + config.getDescription() + "," + priorityUpdateInterval
+				+ "," + config.getHostConfig().getMips() + ","
+				+ config.getHostConfig().getRam() + ","
+				+ config.getHostConfig().getBw() + ","
+				+ config.getHostConfig().getStorageIO() + ","
+				+ config.getVmConfig().getMips() + ","
+				+ config.getVmConfig().getRam() + ","
+				+ config.getVmConfig().getBw() + ",";
 
 		// number of experiments to conduct
 		for (int exp = 0; exp < experimentCnt; exp++) {
 
-			String dirString = workloadConfig.getClass().getSimpleName() + "_"
+			String dirString = config.getClass().getSimpleName() + "_"
 					+ df.format(new Date());
 			String baseDir = new File(homeDir + "/" + dirString)
 					.getAbsolutePath();
@@ -130,8 +134,8 @@ public class ExperimentRunner {
 			}
 
 			// generating input data that can be used for the experiments
-			ArrayList<ArrayList<double[]>> inputData = workloadConfig
-					.generateWorkload(vmCnt, workloadLength);
+			ArrayList<ArrayList<double[]>> inputData = config.generateWorkload(
+					vmCnt, workloadLength);
 
 			int i = 0;
 			for (ArrayList<double[]> wl : inputData) {
@@ -171,7 +175,8 @@ public class ExperimentRunner {
 			DRFExperimentalSuite drfSuite = new DRFExperimentalSuite();
 			drfSuite.setInputData(inputData);
 			drfSuite.setTrace(logTrace);
-			drfSuite.setHostConfig(workloadConfig.getHostConfig());
+			drfSuite.setHostConfig(config.getHostConfig());
+			drfSuite.setVmConfig(config.getVmConfig());
 
 			// VMs and Hosts and users to create
 			drfSuite.simulate(vmCnt, hostCnt, userCnt);
@@ -190,7 +195,8 @@ public class ExperimentRunner {
 			drfMhSuite.setInputData(inputData);
 			drfMhSuite.setTrace(logTrace);
 			drfMhSuite.setPriorityUpdateInterval(priorityUpdateInterval);
-			drfMhSuite.setHostConfig(workloadConfig.getHostConfig());
+			drfMhSuite.setHostConfig(config.getHostConfig());
+			drfMhSuite.setVmConfig(config.getVmConfig());
 
 			// VMs and Hosts and users to create
 			drfMhSuite.simulate(vmCnt, hostCnt, userCnt);
@@ -205,7 +211,8 @@ public class ExperimentRunner {
 			ExperimentalSuite suite = new ExperimentalSuite();
 			suite.setInputData(inputData);
 			suite.setTrace(logTrace);
-			suite.setHostConfig(workloadConfig.getHostConfig());
+			suite.setHostConfig(config.getHostConfig());
+			suite.setVmConfig(config.getVmConfig());
 
 			// VMs and Hosts and users to create
 			suite.simulate(vmCnt, hostCnt, userCnt);
@@ -224,7 +231,8 @@ public class ExperimentRunner {
 			userAwareSuite.setInputData(inputData);
 			userAwareSuite.setTrace(logTrace);
 			userAwareSuite.setPriorityUpdateInterval(priorityUpdateInterval);
-			userAwareSuite.setHostConfig(workloadConfig.getHostConfig());
+			userAwareSuite.setHostConfig(config.getHostConfig());
+			userAwareSuite.setVmConfig(config.getVmConfig());
 
 			// VMs and Hosts and users to create
 			userAwareSuite.simulate(vmCnt, hostCnt, userCnt);

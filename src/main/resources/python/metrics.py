@@ -50,8 +50,8 @@ class VM:
 
 		return '\nVM %s, greed: %.3f + %.3f = %.3f\n\tweight: %f \n'%(self.name,self.greed_self,self.greed_user,(self.greed_self + self.greed_user),self.weight) + "gets  " + str(neu) + "\nwants " + str(neu2) + "\nstarv " + str(neu3)
 
-starve_design_parameter = 0.66
-final_normalizer = 1.
+starve_design_parameter = 0.5
+final_normalizer = 1.0
 normalizer = final_normalizer
 
 increase_normalizer = True
@@ -122,15 +122,31 @@ def initialize_raw( endowments, demands, weights = 0):
 	#np.sum(...) calculates the overall request for each resource, which subsequently is divided by the resources supply to arrive at the scarcity of a resource
 	norm_w_scarcity = ((np.sum(demands, axis=0)*1.0)/resources) * norm
 	
-	return { 'resources': resources, 'norm': norm, 'endowments' : endowments, "norm_w_scarcity" : norm_w_scarcity }
+	norm_only_scarc = np.divide( normalizer, resources ) 	
+	
+	scarce = ((np.sum(demands, axis=0)*1.0)/resources)[0]
+	for i in range(len(norm_only_scarc[0])):
+		norm_only_scarc[0,i] = norm_only_scarc[0,i] * math.floor(scarce[i])
+	
+#	print "sum"
+#	print ((np.sum(demands, axis=0)*1.0))
+#	print "res"
+#	print resources
+#	print "combined"
+#	print ((np.sum(demands, axis=0)*1.0)/resources)
+	
+#	print "norm"
+#	print norm
+#	print "norm w scarcity"
+#	print norm_w_scarcity
+	
+	return { 'resources': resources, 'norm': norm, 'endowments' : endowments, "norm_w_scarcity" : norm_w_scarcity, "norm_only_scarc": norm_only_scarc }
 
 # This function calculates the greediness of each customer by simply normalizing and adding up his requests
 def get_JustSum( endowments, demands, weights = 0 ):
-
-	init = initialize_raw( endowments, demands, weights )
-
 	# Multiply the resquest of each resource with the normalization vector. The vector's length is equal to the number of columns of the demand matrix and a vector entry is multiplied with each entry in the respective column
 	# subsequently each row is added up (np.sum)
+	init = initialize_raw( endowments, demands, weights )
 	return np.sum(demands*init['norm'],axis=1)
 
 # This function calculates the greediness of each customer by simply normalizing and adding up his requests. However, before the requests are added up, each request is also multiplied by the scarcity of the resource (demand/supply)
@@ -138,23 +154,15 @@ def get_JustSumWScarcity( endowments, demands, weights = 0 ):
 	init = initialize_raw( endowments, demands, weights )
 	return np.sum(demands*init['norm_w_scarcity'],axis=1)
 
-def get_Greediness( endowments, demands, weights = 0):	
+def get_JustSumOScarcity( endowments, demands, weights = 0 ):
 	init = initialize_raw( endowments, demands, weights )
-	
-#	print "***"
-#	print init['endowments']
-#	print demands
-#	print init['norm']
-#	print init['resources']
-#	print "+++"
-	
-	return greediness_raw( init['endowments'], demands, init['norm'], init['resources'] )
+	return np.sum(demands*init['norm_only_scarc'],axis=1)
 
-def get_GreedinessWScarcity( endowments, demands, weights = 0 ):
+def get_GreedinessWScarcity( endowments, demands, weights = 0 , discount = 1.0):
 	init = initialize_raw( endowments, demands, weights )
 	# Compared to the "normal" greediness metric, this metric takes the scarcity of resources into account
 	# Therefore each resource request is not only weighted by the normalization factor (depending on the overall amounts of resources) but also by the amount of requests divided by the supply, as calculated here
-	return greediness_raw( init['endowments'], demands, init['norm_w_scarcity'], init['resources'] )
+	return greediness_raw( init['endowments'], demands, init['norm_w_scarcity'], init['resources'], discount )
 
 def get_DRF( endowments, demands, weights = 0 ):
 
@@ -169,7 +177,11 @@ def get_DRF( endowments, demands, weights = 0 ):
 		ret[i] = np.max( (demands[i,:]*1.0)/endowments )
 	return ret
 
-def greediness_raw( endowments, demands, factor, resources ):
+def get_Greediness( endowments, demands, weights = 0, discount = 1.0):
+	init = initialize_raw( endowments, demands, weights )
+	return greediness_raw( init['endowments'], demands, init['norm'], init['resources'], discount )
+
+def greediness_raw( endowments, demands, factor, resources, discount ):
 
 	if endowments.shape[0] == 1:
 		temp = endowments*1.0/demands.shape[0]	# # If endowments is a vector, it depicts the total supply of resource. Therefore the endowment of a consumer to a resource is an nth (demands.shape[0] is the number of consumers) of the supply
@@ -184,7 +196,61 @@ def greediness_raw( endowments, demands, factor, resources ):
 	posDem = maxi(diffToEqualShare)
 	negDem = mini(diffToEqualShare)
 	ratio = np.divide( np.sum( posDem,axis=0 ), makeNotZero( np.sum( negDem,axis=0 ) ) )
-	return np.sum((posDem-(negDem*(makeAtLeastMinusOne(ratio))))*factor,axis=1)
+#	print
+#	print ("alt   "),
+#	print ratio
+
+	return np.sum((posDem-(discount*negDem*(makeAtLeastMinusOne(ratio))))*factor,axis=1)
+
+def get_Greediness_neu( endowments, demands, weights = 0, discount = 1.0):
+	init = initialize_raw( endowments, demands, weights )
+	return greediness_neu_raw( init['endowments'], demands, init['norm'], init['resources'], discount )
+
+def greediness_neu_raw( endowments, demands, factor, resources, discount ):
+
+	if endowments.shape[0] == 1:
+		temp = endowments*1.0/demands.shape[0]	# # If endowments is a vector, it depicts the total supply of resource. Therefore the endowment of a consumer to a resource is an nth (demands.shape[0] is the number of consumers) of the supply
+		endowments = temp
+		for i in (range(demands.shape[0]-1)):	# concatenate the endowments vector 
+			endowments = np.concatenate((endowments, temp), axis=0)
+	diffToEqualShare = demands-endowments
+	maxi = np.vectorize(gez)
+	mini = np.vectorize(lez)
+	makeAtLeastMinusOne = np.vectorize(duc)
+	makeNotZero = np.vectorize(notZero)
+	posDem = maxi(diffToEqualShare)
+	negDem = mini(diffToEqualShare)
+	ratio = np.divide( np.sum( posDem,axis=0 ), makeNotZero( np.sum( negDem,axis=0 ) ) )
+	
+	for i in range(len(ratio)):
+	
+#		print "-%f-"%ratio[i]
+#		print "+%f+"%discount
+		if ratio[i] < -discount:
+#			print "***"		
+			ratio[i] = -discount
+#		print
+#	print
+#	print ("neu   "),
+#	print ratio
+	return np.sum((posDem-(negDem*(ratio)))*factor,axis=1)
+
+def get_root_penalty( endowments, demands, weights = 0, discount = 1.0):
+	ret = np.zeros(demands.shape[0])
+	for vm in range(demands.shape[0]):
+		result = 1.0
+#		print
+#		print "User %i\t"%vm
+		
+		for res in range(len(endowments)):
+#			print ("%.3f"%(1.0 - (1.0*demands[vm,res]) / (endowments[res]*1.0))),
+#			print (" * "),
+			result *= 1.0 - (1.0*demands[vm,res]) / (endowments[res]*1.0)
+		ret[vm] = 1.0 - pow(result, 1.0 / len(endowments) )
+#		print (" = "),
+#		print ret[vm]
+
+	return ret
 
 def get_starvation_factors( VMs , basic_endowment = 0 ):
 	
@@ -203,7 +269,7 @@ def get_starvation_factors( VMs , basic_endowment = 0 ):
 			VMs[i].starve_vector = basic_endowment * starvation_factors[i]
 #			print("Greed %f, weight %d starvation: %f"%( (VMs[i].greed_user + VMs[i].greed_self), VMs[i].weight, starvation_factors[i] ))
 
-	return starvation_factors
+	return starvation_factors * starve_design_parameter
 
 def starvation_factors_raw( greediness , weight ):
 	starvation_factors = np.zeros(len(greediness))
@@ -239,7 +305,6 @@ def get_Target_allocation(VMs_in, supply):
 		total_request += vm.request_scalar
 	
 	if total_request <= supply:
-	
 		alloc = np.zeros(len(VMs))			
 		for i in range(len(VMs)):
 			VMs[i].receive_scalar = VMs[i].request_scalar
@@ -380,7 +445,7 @@ def get_Target_allocation(VMs_in, supply):
 		i.receive_scalar += i.starve_scalar
 		i.request_scalar += i.starve_scalar
 		i.greed_self 	*= norm
-		i.greed_self -= i.weight # because receiving one "unit" of the resource is covered by the endowment of the VM
+		i.greed_self -= final_normalizer * i.weight # because receiving one "unit" of the resource is covered by the endowment of the VM
 		i.greed_user *= norm
 				
 	return {'supply_left' : supply}
@@ -476,7 +541,9 @@ def get_only_greediness_FOR_requests( VMs, supply ):
 #	- In particular the .gets attribute is set with the values that the VM should receive of each resource
 #	- Also the .greed_self attribute is updated with the greediness this VM has, when it receives the resources as specified by .gets
 
-def get_allocation_for_leontief( VMs, supply):
+def get_allocation_for_leontief( VMs, supply, fin_norm = final_normalizer):
+	global final_normalizer
+	final_normalizer = fin_norm
 	output = False
 #	depletion_order = list()
 
@@ -543,7 +610,7 @@ def get_allocation_for_leontief( VMs, supply):
 		else:
 			starvation_limits[i,:] = np.zeros(demands.shape[1])
 		
-		starvation_limits[i,:] *= starve_design_parameter	
+#		starvation_limits[i,:] *= starve_design_parameter	
 		VMs[i].starve_vector = np.array(starvation_limits[i,:])
 
 	# this allocation matrix is altered in the loop to arrive at the final allocation

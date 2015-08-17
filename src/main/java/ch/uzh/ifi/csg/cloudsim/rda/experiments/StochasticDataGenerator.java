@@ -158,7 +158,7 @@ public class StochasticDataGenerator {
 			if (storageIO > minStorage * 3) {
 				storageIO = minStorage * 3;
 			}
-			
+
 			// hard limits for bw
 			if (bw < minBw * 0.2) {
 				bw = minBw * 0.2;
@@ -166,7 +166,7 @@ public class StochasticDataGenerator {
 			if (bw > minBw * 3) {
 				bw = minBw * 3;
 			}
-			
+
 			checkValidity(mips, ram, bw, storageIO);
 
 			double[] entry = { mips, ram, bw, storageIO };
@@ -220,6 +220,9 @@ public class StochasticDataGenerator {
 
 		return result;
 	}
+
+
+	
 
 	public ArrayList<double[]> generateWaveingData(double medianMips,
 			double standardDivMips, double medianRam, double standardDivRam,

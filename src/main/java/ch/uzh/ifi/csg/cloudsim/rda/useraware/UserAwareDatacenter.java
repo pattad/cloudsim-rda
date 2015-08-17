@@ -95,14 +95,17 @@ public class UserAwareDatacenter extends RdaDatacenter {
 				}
 			}
 
-			// putting the mean value of the collected values into the userPriorities map
+			// putting the mean value of the collected values into the
+			// userPriorities map
 			for (String customer : collectedPriorities.keySet()) {
 				ArrayList<Float> currentVal = collectedPriorities.get(customer);
 				float total = 0.0f;
 				for (float val : currentVal) {
 					total += val;
+					// total += Math.pow(1 + val, 2) - 1;
 				}
-				userPriorities.put(customer, total/currentVal.size());
+				userPriorities.put(customer, total / currentVal.size());
+				// userPriorities.put(customer, total); // Taking the SUM instead
 			}
 
 			lastUpdateTime = currentTime;

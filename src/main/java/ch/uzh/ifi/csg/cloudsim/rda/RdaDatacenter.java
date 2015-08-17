@@ -1,11 +1,6 @@
 package ch.uzh.ifi.csg.cloudsim.rda;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -26,6 +21,8 @@ import org.cloudbus.cloudsim.core.SimEvent;
 import org.cloudbus.cloudsim.core.predicates.PredicateType;
 import org.cloudbus.cloudsim.power.PowerDatacenter;
 import org.cloudbus.cloudsim.power.PowerHost;
+
+import ch.uzh.ifi.csg.cloudsim.rda.greediness.Greediness;
 
 /**
  * This data center implementation must be used, when using the RDA module.
@@ -69,10 +66,6 @@ public class RdaDatacenter extends PowerDatacenter {
 	private double unusedAllocation = 0.0d;
 
 	private int measurementCnt = 0;
-
-	BufferedWriter out;
-	Process p = null;
-	BufferedReader in;
 
 	/**
 	 * Instantiates a new RDA datacenter.
@@ -118,13 +111,6 @@ public class RdaDatacenter extends PowerDatacenter {
 				new File("utilization.csv").getAbsoluteFile(), "UTF-8");
 		jainsTrace = new PrintWriter(new File("jains.csv").getAbsoluteFile(),
 				"UTF-8");
-		try {
-			p = Runtime.getRuntime().exec("python bin/getGreediness.py");
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-		out = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
 	}
 
 	@Override
@@ -142,9 +128,11 @@ public class RdaDatacenter extends PowerDatacenter {
 
 	public String getEvaluationtString() {
 		return "Avg. asset fairness (Jain's): "
-				+ roundTwoPositions(assetFairness / measurementCnt)
+				+ roundFourPositions(assetFairness / measurementCnt)
 				+ ", Avg. DRF fairness (Jain's) "
-				+ roundTwoPositions(DRF / measurementCnt)
+				+ roundFourPositions(DRF / measurementCnt)
+				+ ", Avg. Greediness fairness (Jain's) "
+				+ roundFourPositions(greedFairness / measurementCnt)
 				+ ", avg. asset fairness (absolute): "
 				+ roundTwoPositions(-assetUnfairness / measurementCnt)
 				+ ", Avg. resource fairness: "
@@ -308,7 +296,7 @@ public class RdaDatacenter extends PowerDatacenter {
 					shares.add(share);
 					maxShares.add(maxShare);
 				}
-				
+
 				totalMaxShares += maxShare;
 				totalShare += share;
 			}
@@ -358,63 +346,9 @@ public class RdaDatacenter extends PowerDatacenter {
 
 			DRF += jainsDRF;
 
-			// greediness XXX VERY UGLY CODING HERE, SORRYY
-			Map<String, Float> userPriorities = new HashMap<String, Float>();
-
-			String requestedResources = "";
-
-			for (String customer : new TreeMap<String, double[]>(
-					utilizationByUser).keySet()) {
-				double[] util = utilizationByUser.get(customer);
-				requestedResources += customer + " "
-						+ this.roundFourPositions(util[0]) + " "
-						+ this.roundFourPositions(util[1]) + " "
-						+ this.roundFourPositions(util[2]) + " "
-						+ this.roundFourPositions(util[3]) + " ";
-			}
-			String supply = (int) mipsCapacity + " " + (int) ramCapacity + " "
-					+ (int) bwCapacity + " " + (int) diskCapacity;
-			Log.printLine("Determining greediness on DATACENTER level: ");
-			try {
-				Log.printLine(supply + " " + requestedResources);
-				out.write(supply + " " + requestedResources);
-				out.flush();
-				out.newLine();
-				out.flush();
-
-				int i = 0;
-				String inLine = in.readLine();
-				while (inLine != null) {
-					if (i == userCnt) {
-						break;
-					}
-					if (inLine.contains("greed")) {
-						Log.printLine(inLine);
-						inLine = inLine.substring(3);
-						String userName = inLine
-								.substring(0, line.indexOf(","));
-						inLine = inLine.substring(inLine.indexOf(":") + 1);
-						inLine = inLine.substring(0, inLine.indexOf("+"));
-						float greediness = Float.valueOf(inLine);
-
-						if (userPriorities.containsKey(userName)) {
-							Float currentVal = userPriorities.get(userName);
-							userPriorities.put(userName, currentVal
-									+ greediness);
-						} else {
-							userPriorities.put(userName, greediness);
-						}
-						i++;
-					}
-
-					inLine = in.readLine();
-
-				}
-
-			} catch (IOException e) {
-				Log.printLine("Error while getting greediness: "
-						+ e.getMessage());
-			}
+			Map<String, Float> userPriorities = Greediness.getGreediness(
+					utilizationByUser, (int) mipsCapacity, (int) ramCapacity,
+					(int) bwCapacity, (int) diskCapacity);
 
 			double denominatorGreed = 0.0d;
 			double totalGreed = 0.0d;
@@ -426,6 +360,10 @@ public class RdaDatacenter extends PowerDatacenter {
 
 			double jainsGreed = Math.pow(totalGreed, 2)
 					/ (userCnt * denominatorGreed);
+
+			if (userCnt == 1 | userCnt == 0) {
+				jainsGreed = 1;
+			}
 
 			greedFairness += jainsGreed;
 

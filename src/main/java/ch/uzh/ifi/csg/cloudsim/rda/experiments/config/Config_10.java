@@ -58,4 +58,14 @@ public class Config_10 implements ExperimentConfig {
 	public String getDescription() {
 		return "Only WS";
 	}
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#getVmConfig
+	 * ()
+	 */
+	public VmConfig getVmConfig() {
+		return new VmConfig();
+	}
 }

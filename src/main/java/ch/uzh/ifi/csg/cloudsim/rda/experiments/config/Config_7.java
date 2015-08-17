@@ -9,6 +9,17 @@ public class Config_7 implements ExperimentConfig {
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#getVmConfig
+	 * ()
+	 */
+	public VmConfig getVmConfig() {
+		return new VmConfig();
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
 	 * generateWorkload(int, int)
 	 */
@@ -41,7 +52,7 @@ public class Config_7 implements ExperimentConfig {
 	 * getDescription()
 	 */
 	public String getDescription() {
-		return "DS WS WS";
+		return "DB WS WS";
 	}
 	/*
 	 * (non-Javadoc)

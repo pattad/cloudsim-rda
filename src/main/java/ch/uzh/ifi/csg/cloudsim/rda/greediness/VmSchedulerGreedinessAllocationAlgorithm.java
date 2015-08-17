@@ -110,6 +110,15 @@ public class VmSchedulerGreedinessAllocationAlgorithm extends
 			double reqCpu = ((RdaCloudletScheduler) vm.getCloudletScheduler())
 					.getCurrentUtilizationOfCpu();
 
+			// this is the situation, when a process just started. Here we don't
+			// want to have the greediness, because the CPU is having it's
+			// requested value and not the actual used value. This is a current
+			// limitation of the Cloudlet Implementation and has be considered
+			// in this scheduler.
+			if (reqRam == 0.0d) {
+				reqCpu = 0.0d;
+			}
+
 			reqCpu = roundUpToZero(reqCpu);
 			reqRam = roundUpToZero(reqRam);
 			reqBw = roundUpToZero(reqBw);

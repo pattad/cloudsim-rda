@@ -9,6 +9,17 @@ public class Config_21 implements ExperimentConfig {
 	/*
 	 * (non-Javadoc)
 	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#getVmConfig
+	 * ()
+	 */
+	public VmConfig getVmConfig() {
+		return new VmConfig();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
 	 * generateWorkload(int, int)
 	 */
@@ -46,6 +57,7 @@ public class Config_21 implements ExperimentConfig {
 		}
 		return inputData;
 	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -55,6 +67,7 @@ public class Config_21 implements ExperimentConfig {
 	public String getDescription() {
 		return "CI WS CI WS";
 	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -65,7 +78,7 @@ public class Config_21 implements ExperimentConfig {
 	public HostConfig getHostConfig() {
 		int mips = 2000;
 		int peCnt = 1;
-		
+
 		int ram = 4096; // host memory (MB)
 		long storage = 1000000; // host storage (MB)
 		int bw = 1000; // MBit/s

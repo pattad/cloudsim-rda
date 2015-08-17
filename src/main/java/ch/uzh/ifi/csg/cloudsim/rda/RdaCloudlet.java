@@ -169,7 +169,7 @@ public class RdaCloudlet extends Cloudlet {
 
 		super.setCloudletLength((long) instructions);
 
-		this.mips = result[0][CPU_INDEX]; // initial mips
+		this.mips = result[0][CPU_INDEX]; // initial mips TODO
 
 		this.record = record;
 

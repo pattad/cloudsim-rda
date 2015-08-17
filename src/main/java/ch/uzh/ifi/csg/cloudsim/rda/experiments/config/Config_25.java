@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.StochasticDataGenerator;
 
-public class Config_20 implements ExperimentConfig {
+public class Config_25 implements ExperimentConfig {
 
 	/*
 	 * (non-Javadoc)
@@ -31,21 +31,15 @@ public class Config_20 implements ExperimentConfig {
 
 		for (int i = 0; i < vmCnt; i++) {
 
-			if (i % 4 == 0) {
-				// computing intensive workload, lot's of memory and cpu and
-				// network
-				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateWaveingData(600, 20, 500, 10, 0.75, 0.1);
-				inputData.add(workloadData);
-			} else if (i % 4 == 1) {
+			if (i % 3 == 0) {
 				// web-server: network intensive workload
 				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateWaveingData(400, 10, 250, 10, 1, 0.1);
+						.generateWaveingData(200, 20, 250, 10, 0.3, 0.05);
 				inputData.add(workloadData);
 			} else {
-				// database workload
+				// computing intensive workload, lot's of memory and cpu
 				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateWaveingData(200, 10, 1000, 10, 0.1, 7);
+						.generateWaveingData(500, 20, 800, 10, 0.005, 0.1);
 				inputData.add(workloadData);
 			}
 		}
@@ -58,7 +52,7 @@ public class Config_20 implements ExperimentConfig {
 	 * getDescription()
 	 */
 	public String getDescription() {
-		return "CI WS DB DB";
+		return "CI CI WS";
 	}
 	/*
 	 * (non-Javadoc)
@@ -68,10 +62,11 @@ public class Config_20 implements ExperimentConfig {
 	 * ()
 	 */
 	public HostConfig getHostConfig() {
-		int mips = 2000;
+		
+		int mips = 1000;
 		int peCnt = 1;
 		
-		int ram = 4096; // host memory (MB)
+		int ram = 2048; // host memory (MB)
 		long storage = 1000000; // host storage (MB)
 		int bw = 1000; // MBit/s
 		int storageIO = 4000;

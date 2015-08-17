@@ -5,6 +5,16 @@ import java.util.ArrayList;
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.StochasticDataGenerator;
 
 public class Config_6 implements ExperimentConfig {
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#getVmConfig
+	 * ()
+	 */
+	public VmConfig getVmConfig() {
+		return new VmConfig();
+	}
 
 	/*
 	 * (non-Javadoc)
@@ -40,6 +50,7 @@ public class Config_6 implements ExperimentConfig {
 		}
 		return inputData;
 	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -49,6 +60,7 @@ public class Config_6 implements ExperimentConfig {
 	public String getDescription() {
 		return "CI WS DB";
 	}
+
 	/*
 	 * (non-Javadoc)
 	 * 

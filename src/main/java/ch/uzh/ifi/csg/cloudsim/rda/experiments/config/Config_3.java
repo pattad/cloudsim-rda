@@ -5,8 +5,18 @@ import java.util.ArrayList;
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.StochasticDataGenerator;
 
 public class Config_3 implements ExperimentConfig {
-	
-	
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#getVmConfig
+	 * ()
+	 */
+	public VmConfig getVmConfig() {
+		return new VmConfig();
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -25,7 +35,7 @@ public class Config_3 implements ExperimentConfig {
 				// network intensive workload, lots of network
 				ArrayList<double[]> workloadData = randomDataGenerator
 						.generateData(200, 200, 20, 250, 10, 0.8, 10, 0.8, 75);
-				inputData.add(workloadData);		
+				inputData.add(workloadData);
 			} else {
 				// computing intensive workload, lot's of memory and cpu
 				ArrayList<double[]> workloadData = randomDataGenerator
@@ -35,7 +45,7 @@ public class Config_3 implements ExperimentConfig {
 		}
 		return inputData;
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -45,7 +55,7 @@ public class Config_3 implements ExperimentConfig {
 	public String getDescription() {
 		return "CI CI WS";
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 

@@ -34,6 +34,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.RdaHost;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
 import ch.uzh.ifi.csg.cloudsim.rda.VmSchedulerMaxMinFairShare;
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.HostConfig;
+import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.VmConfig;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.BwProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
@@ -70,7 +71,16 @@ public class ExperimentalSuite {
 		return hostConfig;
 	}
 
+	public VmConfig getVmConfig() {
+		return vmConfig;
+	}
+
+	public void setVmConfig(VmConfig vmConfig) {
+		this.vmConfig = vmConfig;
+	}
+
 	private HostConfig hostConfig = new HostConfig();
+	private VmConfig vmConfig = new VmConfig();
 
 	/**
 	 * Main method to run this example as an application.
@@ -203,12 +213,12 @@ public class ExperimentalSuite {
 	public RdaVm createVm(int vmId, int brokerId, String userName) {
 		// VM description, this resources will be checked, when allocating
 		// it to a host
-		int mips = 300;
-		long size = 10000; // image size (MB)
-		int ram = 512; // vm memory (MB)
-		long bw = 1000;
-		int pesNumber = 1; // number of cpus
-		String vmm = "Xen"; // VMM name
+		int mips = vmConfig.getMips();
+		long size = vmConfig.getSize(); // image size (MB)
+		int ram = vmConfig.getRam(); // vm memory (MB)
+		long bw = vmConfig.getBw();
+		int pesNumber = vmConfig.getPeCnt(); // number of cpus
+		String vmm = vmConfig.getVmm(); // VMM name
 		// create VM
 		RdaVm vm = new RdaVm(vmId, brokerId, mips, pesNumber, ram, bw, size, 1,
 				vmm, new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber,
@@ -308,7 +318,6 @@ public class ExperimentalSuite {
 	private void printCloudletList(List<Cloudlet> cloudlets, List<Vm> vms,
 			int userCnt) {
 		int size = cloudlets.size();
-		double[][] userTotals = new double[userCnt][4];
 
 		Cloudlet cloudlet;
 
@@ -316,6 +325,7 @@ public class ExperimentalSuite {
 
 		String indent = "    ";
 		TreeMap<String, Double> totalTime = new TreeMap<String, Double>();
+		TreeMap<String, double[]> resourcesByUser = new TreeMap<String, double[]>();
 
 		result.append(System.getProperty("line.separator")
 				+ " ========== RESULT ========== "
@@ -355,24 +365,33 @@ public class ExperimentalSuite {
 						+ dft.format(cloudlet.getExecStartTime()) + indent
 						+ indent + dft.format(cloudlet.getFinishTime())
 						+ indent + indent + indent + customer);
+
+				ArrayList<double[]> workload = this.getInputData().get(
+						cloudlet.getCloudletId());
+
+				double totalCpu = 0.0d;
+				double totalBw = 0.0d;
+				double totalStorageIO = 0.0d;
+				for (double[] line : workload) {
+					totalCpu += line[0];
+					totalBw += line[2];
+					totalStorageIO += line[3];
+				}
+
+				double[] resources;
+
+				if (resourcesByUser.get(customer) != null) {
+					resources = resourcesByUser.get(customer);
+				} else {
+					resources = new double[4];
+				}
+
+				resources[0] += totalCpu / workload.size();
+				resources[1] += totalBw / workload.size();
+				resources[2] += totalStorageIO / workload.size();
+				resourcesByUser.put(customer, resources);
+
 			}
-
-			ArrayList<double[]> workload = this.getInputData().get(
-					cloudlet.getCloudletId());
-
-			double totalCpu = 0.0d;
-			double totalBw = 0.0d;
-			double totalStorageIO = 0.0d;
-			for (double[] line : workload) {
-				totalCpu += line[0];
-				totalBw += line[2];
-				totalStorageIO += line[3];
-			}
-
-			userTotals[i % userCnt][0] = userTotals[i % userCnt][0] + totalCpu;
-			userTotals[i % userCnt][1] = userTotals[i % userCnt][1] + totalBw;
-			userTotals[i % userCnt][2] = userTotals[i % userCnt][2]
-					+ totalStorageIO;
 
 			result.append(System.getProperty("line.separator"));
 			// Log.printLine(cloudlet.getCloudletHistory());
@@ -386,16 +405,12 @@ public class ExperimentalSuite {
 				+ System.getProperty("line.separator"));
 		timeTotal = 0;
 
-		int n = 0;
 		for (String cust : totalTime.keySet()) {
 
 			double time = round(totalTime.get(cust));
 			result.append(cust + " time: " + time
 					+ System.getProperty("line.separator"));
 			timeTotal += totalTime.get(cust);
-
-			userTotals[n % userCnt][3] = time;
-			n++;
 		}
 
 		result.append("sum time: " + round(timeTotal)
@@ -403,18 +418,20 @@ public class ExperimentalSuite {
 
 		result.append("Resources: " + System.getProperty("line.separator"));
 
-		int i = 0;
 		double totalCpu = 0.0d;
 		double totalBw = 0.0d;
 		double totalStorageIO = 0.0d;
-		for (double[] entry : userTotals) {
+		for (String customer : resourcesByUser.keySet()) {
+			double[] entry = resourcesByUser.get(customer);
 			result.append("mips: " + round(entry[0]) + ", bw: "
 					+ round(entry[1]) + ", disk I/O: " + round(entry[2])
 					+ System.getProperty("line.separator"));
 			totalCpu += entry[0];
 			totalBw += entry[1];
 			totalStorageIO += entry[2];
-			i++;
+
+			entry[3] = totalTime.get(customer);
+
 		}
 
 		result.append("sum mips: " + round(totalCpu) + ", bw: "
@@ -423,7 +440,7 @@ public class ExperimentalSuite {
 
 		result.append("Percentages: " + System.getProperty("line.separator"));
 
-		for (double[] entry : userTotals) {
+		for (double[] entry : resourcesByUser.values()) {
 			result.append("mips: " + roundFine(entry[0] * 100 / totalCpu / 100)
 					+ ", bw: " + roundFine(entry[1] * 100 / totalBw / 100)
 					+ ", disk I/O: "
@@ -437,7 +454,7 @@ public class ExperimentalSuite {
 		double mipsTotal = 0;
 		double bwTotal = 0;
 		double diskTotal = 0;
-		for (double[] entry : userTotals) {
+		for (double[] entry : resourcesByUser.values()) {
 			double time = round(entry[3] * 100 / timeTotal / 100);
 
 			double mips = Math.abs(time - (entry[0] * 100 / totalCpu / 100));

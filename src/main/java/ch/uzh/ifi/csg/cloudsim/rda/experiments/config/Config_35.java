@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.StochasticDataGenerator;
 
-public class Config_20 implements ExperimentConfig {
+public class Config_35 implements ExperimentConfig {
 
 	/*
 	 * (non-Javadoc)
@@ -16,9 +16,13 @@ public class Config_20 implements ExperimentConfig {
 	public VmConfig getVmConfig() {
 		return new VmConfig();
 	}
-	
+
 	/*
-	 * (non-Javadoc)
+	 * (non-Javadoc)3 customer mit je einer VM [8/14/2015 7:58:43 PM] Patrick
+	 * Pou: 1 host [8/14/2015 7:58:51 PM] Patrick Pou: alle VMs wollen mehr CPU
+	 * [8/14/2015 7:59:02 PM] Patrick Pou: VM1 will auch mehr RAM als FS
+	 * [8/14/2015 7:59:12 PM] Patrick Pou: VM2 verbraucht bei RAM genau FS
+	 * [8/14/2015 7:59:26 PM] Patrick Pou: VM3 braucht weniger RAM
 	 * 
 	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
 	 * generateWorkload(int, int)
@@ -31,26 +35,26 @@ public class Config_20 implements ExperimentConfig {
 
 		for (int i = 0; i < vmCnt; i++) {
 
-			if (i % 4 == 0) {
-				// computing intensive workload, lot's of memory and cpu and
-				// network
+			if (i % 3 == 0) {
+				// web-server: network intensive workload (35% more RAM) 921
 				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateWaveingData(600, 20, 500, 10, 0.75, 0.1);
+						.generateWaveingData(400, 10, 921, 0.001, 0.3, 0.1);
 				inputData.add(workloadData);
-			} else if (i % 4 == 1) {
-				// web-server: network intensive workload
+			} else if (i % 3 == 1) {
+				// web-server: network intensive workload (RAM = equal share)
 				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateWaveingData(400, 10, 250, 10, 1, 0.1);
+						.generateWaveingData(400, 10, 628, 0.001, 0.3, 0.1);
 				inputData.add(workloadData);
 			} else {
-				// database workload
+				// web-server: network intensive workload
 				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateWaveingData(200, 10, 1000, 10, 0.1, 7);
+						.generateWaveingData(400, 10, 477, 0.001, 0.3, 0.1);
 				inputData.add(workloadData);
 			}
 		}
 		return inputData;
 	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -58,8 +62,9 @@ public class Config_20 implements ExperimentConfig {
 	 * getDescription()
 	 */
 	public String getDescription() {
-		return "CI WS DB DB";
+		return "Only WS, RAM differentiates";
 	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -68,10 +73,11 @@ public class Config_20 implements ExperimentConfig {
 	 * ()
 	 */
 	public HostConfig getHostConfig() {
-		int mips = 2000;
+
+		int mips = 1000;
 		int peCnt = 1;
-		
-		int ram = 4096; // host memory (MB)
+
+		int ram = 2048; // host memory (MB)
 		long storage = 1000000; // host storage (MB)
 		int bw = 1000; // MBit/s
 		int storageIO = 4000;

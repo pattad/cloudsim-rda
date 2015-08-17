@@ -29,9 +29,12 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
 
 /**
- * A simple example showing how to create a data center with one host and run 2
- * cloudlets on it.
+ * A simple example showing how to create a datacenter with one host and run 2
+ * VMs with each 1 cloudlet on it.
  * 
+ * It uses the VmSchedulerMaxMinFairShare VM scheduler policy.
+ * 
+ * @see VmSchedulerMaxMinFairShare
  */
 public class FairShareExample2 {
 	/** The cloudlet list. */
@@ -84,7 +87,7 @@ public class FairShareExample2 {
 
 			// VM description, this resources will be checked, when allocating
 			// it to a host
-			int mips = 200;
+			int mips = 1000;
 			long size = 10000; // image size (MB)
 			int ram = 512; // vm memory (MB)
 			long bw = 1000;
@@ -98,9 +101,11 @@ public class FairShareExample2 {
 					schedulingInterval);
 			// add the VM to the vmList
 			vmlist.add(vm);
+			((RdaVm)vm).setCustomer("user_0");
 			vm = new RdaVm(1, brokerId, mips, pesNumber, ram, bw, size, 1, vmm,
 					new RdaCloudletSchedulerDynamicWorkload(mips, pesNumber,
 							scarcitySchedulingInterval), schedulingInterval);
+			((RdaVm)vm).setCustomer("user_1");
 			// add the VM to the vmList
 			vmlist.add(vm);
 
@@ -119,7 +124,7 @@ public class FairShareExample2 {
 			cloudlet.setUserId(brokerId);
 			cloudlet.setVmId(0);
 			cloudletList.add(cloudlet);
-
+		
 			// submit cloudlet list to the broker
 			broker.submitCloudletList(cloudletList);
 
