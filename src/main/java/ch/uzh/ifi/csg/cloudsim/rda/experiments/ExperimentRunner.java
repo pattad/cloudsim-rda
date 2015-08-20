@@ -116,6 +116,7 @@ public class ExperimentRunner {
 					+ df.format(new Date());
 			String baseDir = new File(homeDir + "/" + dirString)
 					.getAbsolutePath();
+			System.out.println("Running simulation: " + dirString);
 
 			setCurrentDirectory(baseDir);
 

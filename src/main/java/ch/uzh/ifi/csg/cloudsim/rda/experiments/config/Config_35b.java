@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.StochasticDataGenerator;
 
-public class Config_11 implements ExperimentConfig {
+public class Config_35b implements ExperimentConfig {
 
 	/*
 	 * (non-Javadoc)
@@ -16,9 +16,8 @@ public class Config_11 implements ExperimentConfig {
 	public VmConfig getVmConfig() {
 		return new VmConfig();
 	}
-	
+
 	/*
-	 * (non-Javadoc)
 	 * 
 	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
 	 * generateWorkload(int, int)
@@ -32,26 +31,35 @@ public class Config_11 implements ExperimentConfig {
 		for (int i = 0; i < vmCnt; i++) {
 
 			if (i % 3 == 0) {
-				// computing intensive workload, lot's of memory and cpu and network
+				// web-server: network intensive workload (20% more RAM than Fair Share)
 				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateWaveingData(600, 20, 500, 10, 0.3, 0.1);
+						.generateWaveingData(400, 10, 818, 0.001, 0.3, 0.1);
 				inputData.add(workloadData);
-			} else if (i % 3 == 2) {
-				// web-server: network intensive workload
+			} else if (i % 3 == 1) {
+				// web-server: network intensive workload (RAM = equal than fair share)
 				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateWaveingData(400, 10, 250, 10, 0.3, 0.1);
+						.generateWaveingData(400, 10, 682, 0.001, 0.3, 0.1);
 				inputData.add(workloadData);
 			} else {
-				// database workload
+				// web-server: network intensive workload (less than fair share)
 				ArrayList<double[]> workloadData = randomDataGenerator
-						.generateWaveingData(200, 10, 1000, 10, 0.1, 7);
+						.generateWaveingData(400, 10, 545, 0.001, 0.3, 0.1);
 				inputData.add(workloadData);
 			}
 		}
 		return inputData;
 	}
-	
-	
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
+	 * getDescription()
+	 */
+	public String getDescription() {
+		return "Only WS - RAM differentiates";
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -70,15 +78,5 @@ public class Config_11 implements ExperimentConfig {
 		int storageIO = 4000;
 
 		return new HostConfig(peCnt, mips, ram, storage, bw, storageIO);
-	}
-	
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig#
-	 * getDescription()
-	 */
-	public String getDescription() {
-		return "CI WS DB";
 	}
 }

@@ -372,8 +372,10 @@ public class ExperimentalSuite {
 				double totalCpu = 0.0d;
 				double totalBw = 0.0d;
 				double totalStorageIO = 0.0d;
+				double totalRam = 0.0d;
 				for (double[] line : workload) {
 					totalCpu += line[0];
+					totalRam += line[1];
 					totalBw += line[2];
 					totalStorageIO += line[3];
 				}
@@ -383,12 +385,13 @@ public class ExperimentalSuite {
 				if (resourcesByUser.get(customer) != null) {
 					resources = resourcesByUser.get(customer);
 				} else {
-					resources = new double[4];
+					resources = new double[5];
 				}
 
 				resources[0] += totalCpu / workload.size();
 				resources[1] += totalBw / workload.size();
 				resources[2] += totalStorageIO / workload.size();
+				resources[4] += totalRam / workload.size();
 				resourcesByUser.put(customer, resources);
 
 			}
@@ -421,27 +424,31 @@ public class ExperimentalSuite {
 		double totalCpu = 0.0d;
 		double totalBw = 0.0d;
 		double totalStorageIO = 0.0d;
+		double totalRam = 0.0d;
 		for (String customer : resourcesByUser.keySet()) {
 			double[] entry = resourcesByUser.get(customer);
-			result.append("mips: " + round(entry[0]) + ", bw: "
-					+ round(entry[1]) + ", disk I/O: " + round(entry[2])
+			result.append("mips: " + round(entry[0]) + ", ram: "
+					+ round(entry[4]) + ", bw: " + round(entry[1])
+					+ ", disk I/O: " + round(entry[2])
 					+ System.getProperty("line.separator"));
 			totalCpu += entry[0];
 			totalBw += entry[1];
 			totalStorageIO += entry[2];
+			totalRam += entry[4];
 
 			entry[3] = totalTime.get(customer);
 
 		}
 
-		result.append("sum mips: " + round(totalCpu) + ", bw: "
-				+ round(totalBw) + ", disk I/O: " + round(totalStorageIO)
-				+ System.getProperty("line.separator"));
+		result.append("sum mips: " + round(totalCpu) + ", ram: "
+				+ round(totalRam) + ", bw: " + round(totalBw) + ", disk I/O: "
+				+ round(totalStorageIO) + System.getProperty("line.separator"));
 
 		result.append("Percentages: " + System.getProperty("line.separator"));
 
 		for (double[] entry : resourcesByUser.values()) {
 			result.append("mips: " + roundFine(entry[0] * 100 / totalCpu / 100)
+					+ ", ram: " + roundFine(entry[4] * 100 / totalRam / 100)
 					+ ", bw: " + roundFine(entry[1] * 100 / totalBw / 100)
 					+ ", disk I/O: "
 					+ roundFine(entry[2] * 100 / totalStorageIO / 100)
@@ -454,6 +461,7 @@ public class ExperimentalSuite {
 		double mipsTotal = 0;
 		double bwTotal = 0;
 		double diskTotal = 0;
+		double ramTotal = 0;
 		for (double[] entry : resourcesByUser.values()) {
 			double time = round(entry[3] * 100 / timeTotal / 100);
 
@@ -461,17 +469,20 @@ public class ExperimentalSuite {
 			double bw = Math.abs(time - (entry[1] * 100 / totalBw / 100));
 			double disk = Math.abs(time
 					- (entry[2] * 100 / totalStorageIO / 100));
-
-			result.append("mips: " + roundFine(mips) + ", bw: " + roundFine(bw)
+			double ram = Math.abs(time - (entry[4] * 100 / totalRam / 100));
+			result.append("mips: " + roundFine(mips) + ", ram: "
+					+ roundFine(ram) + ", bw: " + roundFine(bw)
 					+ ", disk I/O: " + roundFine(disk)
 					+ System.getProperty("line.separator"));
 			mipsTotal += mips;
 			bwTotal += bw;
 			diskTotal += disk;
+			ramTotal += ram;
 		}
 
-		result.append("sum mips: " + roundFine(mipsTotal) + ", bw: "
-				+ roundFine(bwTotal) + ", disk I/O: " + roundFine(diskTotal)
+		result.append("sum mips: " + roundFine(mipsTotal) + ", ram: "
+				+ roundFine(ramTotal) + ", bw: " + roundFine(bwTotal)
+				+ ", disk I/O: " + roundFine(diskTotal)
 				+ System.getProperty("line.separator"));
 		System.out.print(result);
 
