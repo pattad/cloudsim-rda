@@ -17,7 +17,7 @@ public class Greediness {
 	private static Process p = null;
 	private static BufferedReader in;
 
-	private static String pythonPath = "python bin";
+	private static String pythonPath = null;
 
 	public static String getPythonPath() {
 		return pythonPath;
@@ -43,6 +43,11 @@ public class Greediness {
 	public static Map<String, Float> getGreediness(
 			TreeMap<String, double[]> utilizationByUser, int mipsCapacity,
 			int ramCapacity, int bwCapacity, int diskCapacity) {
+		
+		if(pythonPath == null){
+			return new HashMap<String, Float>();
+		}
+		
 		Map<String, Float> userPriorities = new HashMap<String, Float>();
 
 		String requestedResources = "";

@@ -107,13 +107,8 @@ public class ExperimentalSuite {
 		try {
 			if (trace) {
 				try {
-					SimpleDateFormat df = new SimpleDateFormat(
-							"yyyyMMddhhmmssSSS");
-
-					Log.setOutput(new FileOutputStream(new File(df
-							.format(new Date()) + "_trace.log")
+					Log.setOutput(new FileOutputStream(new File("trace.log")
 							.getAbsoluteFile()));
-
 				} catch (FileNotFoundException e) {
 					e.printStackTrace();
 				}
