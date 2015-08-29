@@ -10,7 +10,6 @@ import org.cloudbus.cloudsim.Host;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.Storage;
 import org.cloudbus.cloudsim.power.PowerVmAllocationPolicySimple;
-import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
 import ch.uzh.ifi.csg.cloudsim.rda.RdaHost;
 import ch.uzh.ifi.csg.cloudsim.rda.greediness.VmSchedulerGreedinessAllocationAlgorithm;
@@ -21,8 +20,10 @@ import ch.uzh.ifi.csg.cloudsim.rda.useraware.RdaHostUserAware;
 import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareDatacenter;
 
 /**
+ * This experimental suite uses the VmSchedulerGreedinessAllocationAlgorithm to
+ * schedule workloads.
  * 
- * @author pat
+ * @author Patrick A. Taddei
  *
  */
 public class GreedinessExperimentalSuite extends ExperimentalSuite {

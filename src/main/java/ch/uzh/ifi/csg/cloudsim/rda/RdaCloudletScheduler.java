@@ -34,16 +34,16 @@ public interface RdaCloudletScheduler {
 	 * 
 	 * @param currentTime
 	 *            current simulation time
-	 * @return list of cpu cores with their utilization
+	 * @return list of CPU cores with their utilization
 	 */
 	public List<Double> getCurrentRequestedMips(double currentTime);
 
 	/**
-	 * Returns the requested ram utilization at the given time.
+	 * Returns the requested RAM utilization at the given time.
 	 * 
 	 * @param currentTime
 	 *            current simulation time
-	 * @return requested ram
+	 * @return requested RAM
 	 */
 	public double getCurrentRequestedUtilizationOfRam(double currentTime);
 
@@ -66,9 +66,9 @@ public interface RdaCloudletScheduler {
 	public double getCurrentRequestedUtilizationOfStorageIO(double currentTime);
 
 	/**
-	 * The current requested gradient of the cpu.
+	 * The current requested gradient of the CPU.
 	 * 
-	 * @return gradient of the cpu
+	 * @return gradient of the CPU
 	 */
 	public double getCurrentRequestedGradCpu();
 
@@ -86,22 +86,41 @@ public interface RdaCloudletScheduler {
 	 */
 	public double getCurrentRequestedGradStorageIO();
 
-	public double getCurrentUtilizationOfStorageIO();
-	public double getCurrentUtilizationOfBw();
-	public double getCurrentUtilizationOfRam();
-	public double getCurrentUtilizationOfCpu();
-	
 	/**
-	 * Returns the requested cpu utilization.
 	 * 
-	 * @return list of cpu cores with their utilization
+	 * @return the current utilization of disk I/O
+	 */
+	public double getCurrentUtilizationOfStorageIO();
+
+	/**
+	 * 
+	 * @return the current utilization of network bandwidth
+	 */
+	public double getCurrentUtilizationOfBw();
+
+	/**
+	 * 
+	 * @return the current utilization of RAM
+	 */
+	public double getCurrentUtilizationOfRam();
+
+	/**
+	 * 
+	 * @return the current utilization of CPU
+	 */
+	public double getCurrentUtilizationOfCpu();
+
+	/**
+	 * Returns the requested CPU utilization.
+	 * 
+	 * @return list of CPU cores with their utilization
 	 */
 	public List<Double> getCurrentRequestedMips();
 
 	/**
-	 * Returns the requested ram utilization
+	 * Returns the requested RAM utilization
 	 * 
-	 * @return requested ram
+	 * @return requested RAM
 	 */
 	public double getCurrentRequestedUtilizationOfRam();
 

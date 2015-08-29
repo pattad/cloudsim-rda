@@ -11,6 +11,13 @@ import java.util.TreeMap;
 
 import org.cloudbus.cloudsim.Log;
 
+/**
+ * This class delivers the greediness. It works only with the metrics.py script.
+ * TODO: Implement this in pure JAVA.
+ * 
+ * @author Patrick A. Taddei
+ * 
+ */
 public class Greediness {
 
 	private static BufferedWriter out;
@@ -43,11 +50,11 @@ public class Greediness {
 	public static Map<String, Float> getGreediness(
 			TreeMap<String, double[]> utilizationByUser, int mipsCapacity,
 			int ramCapacity, int bwCapacity, int diskCapacity) {
-		
-		if(pythonPath == null){
+
+		if (pythonPath == null) {
 			return new HashMap<String, Float>();
 		}
-		
+
 		Map<String, Float> userPriorities = new HashMap<String, Float>();
 
 		String requestedResources = "";

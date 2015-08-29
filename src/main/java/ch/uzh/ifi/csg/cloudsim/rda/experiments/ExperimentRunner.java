@@ -15,6 +15,14 @@ import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.Config_1;
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.config.ExperimentConfig;
 import ch.uzh.ifi.csg.cloudsim.rda.greediness.Greediness;
 
+/**
+ * This experiment runner can be used to conduct multiple simulations with
+ * multiple scheduling policies. Please refer to the thesis appendix for a
+ * detailed description of the parameters.
+ * 
+ * @author Patrick A. Taddei
+ *
+ */
 public class ExperimentRunner {
 
 	private static SimpleDateFormat df = new SimpleDateFormat(

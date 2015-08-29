@@ -17,25 +17,25 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
 /**
  * This VM scheduler is the standard VM scheduler to be used within the RDA
  * module.
- * 
+ *  <br/> <br/>
  * This scheduler uses the Max-Min Fair Share (MMFS) algorithm to allocate the
  * resource to the different VMs. The MMFS algorithm is the basic way, how
  * multiple processes on one host are sharing the physical resources.
- * 
+ * <br/> <br/>
  * How does it work:
- * 
+ *  <br/> <br/>
  * 1. Check which resource is the most scarce of the resources cpu, bandwidth
  * and storage I/O.
- * 
+ *  <br/> <br/>
  * 2. Downgrade that resource for all VMs
- * 
+ *  <br/> <br/>
  * 3. Downgrade all the other resources of each VM. According to the Leontief
  * production function dependencies.
- * 
+ *  <br/> <br/>
  * 4. Repeat the step 1-3 for the remaining resources.
- * 
+ *  <br/> <br/>
  * This procedure guarantees that the host resources are not overused.
- * 
+ *  <br/> <br/>
  * @author Patrick A. Taddei
  * @see MaxMinAlgorithm
  */

@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * This class is an implementation of the Max-Min fair share (MMFS) algorithm.
+ * This class is an implementation of the max-min fair share (MMFS) algorithm.
  * 
  * The available capacity is split among the customers in a fair manner. So that
  * no customer gets a share larger than its demand and the remaining customers

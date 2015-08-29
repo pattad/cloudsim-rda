@@ -9,6 +9,7 @@ import org.cloudbus.cloudsim.Cloudlet;
 import ch.uzh.ifi.csg.cloudsim.rda.RdaCloudlet;
 
 /**
+ * A sample experiment.
  * 
  * @author pat
  *

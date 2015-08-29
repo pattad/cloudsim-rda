@@ -9,10 +9,11 @@ import org.cloudbus.cloudsim.power.PowerVm;
 /**
  * The RdaVm particularly supports multiple resources. The central method
  * updateVmProcessing() had to be extended to support the bandwidth and storage
- * I/O, besides cpu speed. Moreover, some methods had also to be adapted to
- * support decimal places for ram and bandwidth.
+ * I/O, besides CPU speed. Moreover, some methods had also to be adapted to
+ * support decimal places for RAM and network bandwidth.
  * 
  * @author Patrick A. Taddei
+ * 
  */
 public class RdaVm extends PowerVm {
 
@@ -25,7 +26,7 @@ public class RdaVm extends PowerVm {
 	private double currentAllocatedBw;
 
 	private String customer;
-	
+
 	private float currentPriority;
 
 	public RdaVm(int id, int userId, double mips, int pesNumber, int ram,

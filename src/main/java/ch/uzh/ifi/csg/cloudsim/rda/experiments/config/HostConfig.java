@@ -6,6 +6,12 @@ import java.util.List;
 import org.cloudbus.cloudsim.Pe;
 import org.cloudbus.cloudsim.provisioners.PeProvisionerSimple;
 
+/**
+ * Encapsulates the different configuration parameters to setup a host.
+ * 
+ * @author Patrick A. Taddei
+ *
+ */
 public class HostConfig {
 
 	private int mips = 1000;

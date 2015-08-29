@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import ch.uzh.ifi.csg.cloudsim.rda.experiments.StochasticDataGenerator;
 
+
 public class Config_1 implements ExperimentConfig {
 
 	/*
@@ -38,6 +39,7 @@ public class Config_1 implements ExperimentConfig {
 	public HostConfig getHostConfig() {
 		return new HostConfig();
 	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -47,6 +49,7 @@ public class Config_1 implements ExperimentConfig {
 	public String getDescription() {
 		return "Only WS";
 	}
+
 	/*
 	 * (non-Javadoc)
 	 * 

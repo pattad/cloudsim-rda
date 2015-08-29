@@ -20,6 +20,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.useraware.UserAwareDatacenter;
 import ch.uzh.ifi.csg.cloudsim.rda.useraware.VmSchedulerDRFMH;
 
 /**
+ * This experimental suite applies the VmSchedulerDRFMH.
  * 
  * @author pat
  *

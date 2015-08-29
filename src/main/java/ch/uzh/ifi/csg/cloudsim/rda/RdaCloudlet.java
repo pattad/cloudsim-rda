@@ -8,9 +8,7 @@ import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedList;
 
 import org.cloudbus.cloudsim.Cloudlet;
@@ -21,26 +19,26 @@ import org.cloudbus.cloudsim.core.CloudSim;
 import ch.uzh.ifi.csg.cloudsim.rda.util.CsvReader;
 
 /**
- * This Cloudlet works in a progress aware fashion. This means that it requests
+ * This Cloudlet works in a progress aware way. This means that it requests
  * computing resources, dependent on the already progressed workload. This
  * behavior becomes visible, as soon as there is a time of scarcity and it
- * didn't got all requested resources. This is resulting into a down-graded
- * processing speed for the time, where scarcity exists. Naturally, this is also
+ * didn't get all requested resources. This is resulting into a down-graded
+ * processing speed. Naturally, this is also
  * reflected in the overall processing time of the Cloudlet that will increase.
- * 
+ * <br/>
  * It must be instantiated with a CSV input file that contains the requested
  * resources for cpu, ram, bandwidth & storage I/O. <br/>
  * Example CSV file:<br/>
  * <code>
  * cpu,ram,network,storage
- * 150,50,0,0
- * 280,300,0,0
+ * 150,50,0,0<br/>
+ * 280,300,0,0<br/>
  * </code> <br/>
  * cpu in MIPS (million instructions per second)<br/>
  * ram in MB<br/>
  * network in MB/s<br/>
  * storage in MB/s<br/>
- * 
+ * <br/>
  * The fist line of the input values represents the requested values at 0
  * second, second line 1 second and so on.
  * 
@@ -169,7 +167,7 @@ public class RdaCloudlet extends Cloudlet {
 
 		super.setCloudletLength((long) instructions);
 
-		this.mips = result[0][CPU_INDEX]; // initial mips TODO
+		this.mips = result[0][CPU_INDEX]; // initial mips
 
 		this.record = record;
 

@@ -25,7 +25,11 @@ import org.cloudbus.cloudsim.power.PowerHost;
 import ch.uzh.ifi.csg.cloudsim.rda.greediness.Greediness;
 
 /**
- * This data center implementation must be used, when using the RDA module.
+ * This data center implementation must be used, when using the RDA module. It
+ * support multiple fairness measures and generates multiple CSV output files.
+ * Please consult the thesis report for a detailed description of the various files. The
+ * fairness measures (Asset Fairness, DRF, GM) are scaled by using the Jain's
+ * index.
  * 
  * @author Patrick A. Taddei
  */

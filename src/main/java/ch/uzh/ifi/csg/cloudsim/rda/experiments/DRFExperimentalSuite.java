@@ -11,8 +11,9 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
 
 /**
+ * This experimental suite applies the VmSchedulerDRF.
  * 
- * @author pat
+ * @author Patrick A. Taddei
  *
  */
 public class DRFExperimentalSuite extends ExperimentalSuite {

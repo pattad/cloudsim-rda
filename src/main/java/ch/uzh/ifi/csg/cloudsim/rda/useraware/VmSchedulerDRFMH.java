@@ -21,6 +21,10 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
  * This VM scheduler is the Dominan Resource Fairness (DRF) VM scheduler to be
  * used within the RDA module.
  * 
+ * TODO: This is only a example implementation. Currently there are no
+ * differences observable from the VmSchedulerDRF. The concept for such an
+ * algorithm has to be developed and than implemented in this class.
+ * 
  * @author Patrick A. Taddei
  * @see MaxMinAlgorithm
  */
@@ -55,7 +59,8 @@ public class VmSchedulerDRFMH extends VmSchedulerTimeShared implements
 	}
 
 	/**
-	 * XXX comment it...
+	 * Retrieves the percentages of the Dominant Resource Fairness of the
+	 * customers.
 	 */
 	public Map<String, Float> getUserPriorities(double currentTime, List<Vm> vms) {
 		int vmCnt = vms.size();
@@ -72,15 +77,15 @@ public class VmSchedulerDRFMH extends VmSchedulerTimeShared implements
 		HashMap<String, Double> requestedStorageIO = new HashMap<String, Double>();
 
 		for (Vm vm : vms) {
-			double reqRam = ((RdaCloudletScheduler) vm
-					.getCloudletScheduler()).getCurrentUtilizationOfRam();
-			double reqBw = ((RdaCloudletScheduler) vm
-					.getCloudletScheduler()).getCurrentUtilizationOfBw();
+			double reqRam = ((RdaCloudletScheduler) vm.getCloudletScheduler())
+					.getCurrentUtilizationOfRam();
+			double reqBw = ((RdaCloudletScheduler) vm.getCloudletScheduler())
+					.getCurrentUtilizationOfBw();
 			double reqStorage = ((RdaCloudletScheduler) vm
 					.getCloudletScheduler()).getCurrentUtilizationOfStorageIO();
-			double reqCpu=  ((RdaCloudletScheduler) vm
-					.getCloudletScheduler()).getCurrentUtilizationOfCpu();
-			
+			double reqCpu = ((RdaCloudletScheduler) vm.getCloudletScheduler())
+					.getCurrentUtilizationOfCpu();
+
 			String uid = (String) vm.getUid();
 
 			requestedCpu.put(uid, reqCpu);

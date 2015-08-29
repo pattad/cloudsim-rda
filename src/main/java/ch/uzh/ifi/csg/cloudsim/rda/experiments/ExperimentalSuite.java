@@ -7,10 +7,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeMap;
@@ -40,7 +38,11 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisionerSimple;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisionerSimple;
 
 /**
+ * This suite is the foundation for the experiments. It instantiates all
+ * required components to make a simulation running. It has also enhanced
+ * logging capabilities.
  * 
+ * @author Patrick A. Taddei
  */
 public class ExperimentalSuite {
 

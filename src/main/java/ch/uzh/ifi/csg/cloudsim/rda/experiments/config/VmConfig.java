@@ -1,5 +1,11 @@
 package ch.uzh.ifi.csg.cloudsim.rda.experiments.config;
 
+/**
+ * Encapsulates the different configuration parameters to setup a VM.
+ * 
+ * @author Patrick A. Taddei
+ *
+ */
 public class VmConfig {
 
 	private String vmm = "Xen"; // VMM name
@@ -18,10 +24,11 @@ public class VmConfig {
 		this.bw = bw;
 		this.peCnt = peCnt;
 	}
+
 	public VmConfig() {
 		super();
 	}
-	
+
 	public int getPeCnt() {
 		return peCnt;
 	}

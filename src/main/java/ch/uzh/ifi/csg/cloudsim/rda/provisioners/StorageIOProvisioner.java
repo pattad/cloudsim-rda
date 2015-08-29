@@ -7,7 +7,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.RdaVm;
  * policy of storageIO to virtual machines inside a Host. When extending this
  * class, care must be taken to guarantee that the field availableStorageIO will
  * always contain the amount of free storage IO available for future
- * allocations. // XXX comment this class little better
+ * allocations. 
  * 
  * 
  * @author Patrick A. Taddei

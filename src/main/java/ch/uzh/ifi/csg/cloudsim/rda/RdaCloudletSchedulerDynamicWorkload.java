@@ -14,12 +14,12 @@ import org.cloudbus.cloudsim.core.CloudSim;
 
 /**
  * Implements a policy of scheduling performed by a virtual machine. Currently
- * this scheduler only supports one cloudlet at a time. If multiple cloudlets
+ * this scheduler only supports one Cloudlet at a time. If multiple Cloudlets
  * are submitted, they will proportionally degraded, in case of scarcity. A an
  * implementation with the Max-Min Fair-Share algorithm would be appropriate in
  * such situations. Please feel free to contribute such an update.
  * 
- * This cloudlet scheduler, makes sure that the Leontief dependencies are taken
+ * This Cloudlet scheduler, makes sure that the Leontief dependencies are taken
  * care of. This results in an equal percentage drop of the other resources, as
  * soon as one resource experiences scarcity. It checks, which resource is the
  * most scarce resource and down-grades the other resources according to this
@@ -239,10 +239,7 @@ public class RdaCloudletSchedulerDynamicWorkload extends
 				} else {
 					nextChangeTime = cloudlet.getEstimatedNextChangeTime();
 				}
-				Log.printLine("nextChangeTime: " + nextChangeTime); // XXX
-																	// remove
-																	// this
-																	// traces
+				Log.printLine("nextChangeTime: " + nextChangeTime);
 				if (nextChangeTime < nextEvent) {
 					nextEvent = nextChangeTime;
 				}

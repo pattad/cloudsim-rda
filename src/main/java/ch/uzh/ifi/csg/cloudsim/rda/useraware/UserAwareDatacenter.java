@@ -102,10 +102,8 @@ public class UserAwareDatacenter extends RdaDatacenter {
 				float total = 0.0f;
 				for (float val : currentVal) {
 					total += val;
-					// total += Math.pow(1 + val, 2) - 1;
 				}
 				userPriorities.put(customer, total / currentVal.size());
-				// userPriorities.put(customer, total); // Taking the SUM instead
 			}
 
 			lastUpdateTime = currentTime;

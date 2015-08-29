@@ -28,7 +28,7 @@ import ch.uzh.ifi.csg.cloudsim.rda.useraware.RdaUserAwareVmScheduler;
  * implements the RdaUserAwareVmScheduler interface, which supports a
  * user/customer aware scenario.
  * 
- * This class solely wraps the python script, where one can find the actual
+ * This class solely wraps the Python script, where one can find the actual
  * implementation of the greediness metric.
  * 
  * @author Patrick A. Taddei

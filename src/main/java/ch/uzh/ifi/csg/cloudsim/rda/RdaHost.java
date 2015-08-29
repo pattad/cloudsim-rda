@@ -19,19 +19,19 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
  * This RDA specific host, supports the resource dependency aware scheduling
  * mechanisms and represents like its superclass an individual host in the
  * datacenter that may run VMs.
- * 
+ * <br/><br/>
  * It uses the RDA specific resource provisioners for a finer allocation that
  * works with decimal places (doubles). Because of this, some methods of the
  * superclass Host had to be overridden and adapted to work with the RDA
  * provisioners.
- * 
+ * <br/><br/>
  * However, the central method that does process the workloads on the host is:
- * 
- * public double updateVmsProcessing(double currentTime)
- * 
+ * <br/><br/>
+ * <code>public double updateVmsProcessing(double currentTime)</code>
+ * <br/><br/>
  * This methods call then the scheduler the VM scheduler to reallocate the
  * resources for all VMs on the particular host. It supports scheduling for
- * multiple resources, such as cpu, ram, bandwidth and storage I/O.
+ * multiple resources, such as CPU, RAM, network bandwidth and disk I/O.
  * 
  * 
  * @author Patrick A. Taddei
@@ -44,10 +44,10 @@ public class RdaHost extends PowerHost {
 	/** storage I/O provisioner */
 	public StorageIOProvisioner storageIOProvisioner;
 
-	/** The ram provisioner. */
+	/** The RAM provisioner. */
 	private RamProvisioner ramProvisioner;
 
-	/** The bw provisioner. */
+	/** The BW provisioner. */
 	private BwProvisioner bwProvisioner;
 
 	/**

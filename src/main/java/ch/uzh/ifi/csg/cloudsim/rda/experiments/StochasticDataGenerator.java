@@ -5,6 +5,13 @@ import java.util.Random;
 
 import org.apache.commons.math3.random.RandomDataGenerator;
 
+/**
+ * 
+ * This stochastic data generator can be used to generate workloads.
+ * 
+ * @author Patrick A. Taddei
+ *
+ */
 public class StochasticDataGenerator {
 
 	RandomDataGenerator rd = new RandomDataGenerator();
@@ -20,6 +27,17 @@ public class StochasticDataGenerator {
 		this.sampleLength = sampleLength;
 	}
 
+	/**
+	 * Generates stochastic data in a sinus curved way.
+	 * 
+	 * @param median
+	 *            median of the resource CPU
+	 * @param standardDiv
+	 *            standard deviation
+	 * @param stretch
+	 *            vertical stretch
+	 * @return an list of generated workloads
+	 */
 	public ArrayList<double[]> generateWebServerDataSinusCurved(double median,
 			double standardDiv, double stretch) {
 
@@ -49,47 +67,28 @@ public class StochasticDataGenerator {
 		return result;
 	}
 
-	public ArrayList<double[]> generateWebServerDataStepped(double median,
-			double standardDiv, double stretch, int periodLength) {
-
-		ArrayList<double[]> result = new ArrayList<double[]>();
-
-		Random random = new Random();
-		double deviation = 0d;
-
-		for (int i = 0; i <= sampleLength; i++) {
-
-			if (i % periodLength == 0) {
-				deviation = (random.nextInt(100) - 50) / 100.0;
-			}
-
-			double mips = Math.round(rd.nextGaussian(median
-					+ (median * deviation * stretch), standardDiv));
-			double ram = 260 + 10 * deviation * stretch;
-			double bw = mips / 3.0;
-			double storageIO = mips / 2.0;
-
-			checkValidity(mips, ram, bw, storageIO);
-
-			double[] entry = { mips, ram, bw, storageIO };
-			result.add(entry);
-
-		}
-
-		return result;
-	}
-
 	/**
+	 * Generates stochastic workloads in a pile like way.
 	 * 
 	 * @param minCpu
+	 *            minimal CPU
 	 * @param minBw
+	 *            minimal BW
 	 * @param minStorage
+	 *            minimal Disk I/O
 	 * @param medianRam
+	 *            minimal RAM
 	 * @param standardDiv
+	 *            standard deviation
 	 * @param verticalStretch
+	 *            vertical stretch
 	 * @param periodLength
+	 *            major period length
 	 * @param dependencyFactor
-	 * @return
+	 *            dependency between CPU / BW / DISK IO
+	 * @param expMean
+	 *            exponential factor (default 75)
+	 * @return an list of generated workloads
 	 */
 	public ArrayList<double[]> generateData(double minCpu, double minBw,
 			double minStorage, double medianRam, double standardDiv,
@@ -177,7 +176,7 @@ public class StochasticDataGenerator {
 		return result;
 	}
 
-	public void checkValidity(double mips, double ram, double bw,
+	private void checkValidity(double mips, double ram, double bw,
 			double storageIO) {
 		if (mips <= 0) {
 			throw new RuntimeException(
@@ -201,29 +200,23 @@ public class StochasticDataGenerator {
 		}
 	}
 
-	public ArrayList<double[]> generateWebServerData(double median,
-			double standardDiv) {
-
-		ArrayList<double[]> result = new ArrayList<double[]>();
-
-		for (int i = 0; i <= sampleLength; i++) {
-			double mips = Math.round(rd.nextGaussian(median, standardDiv));
-			double ram = 260;
-			double bw = mips / 3.0;
-			double storageIO = 0.0;
-
-			checkValidity(mips, ram, bw, storageIO);
-
-			double[] entry = { mips, ram, bw, storageIO };
-			result.add(entry);
-		}
-
-		return result;
-	}
-
-
-	
-
+	/**
+	 * Generates stochastic workloads in a waveing form.
+	 * 
+	 * @param medianMips
+	 *            median of CPU
+	 * @param standardDivMips
+	 *            standard deviation of CPU
+	 * @param medianRam
+	 *            median RAM
+	 * @param standardDivRam
+	 *            standard deviation of RAM
+	 * @param bwFactor
+	 *            multiplication factor of CPU
+	 * @param storageFactor
+	 *            multiplication factor of CPU
+	 * @return an list of generated workloads
+	 */
 	public ArrayList<double[]> generateWaveingData(double medianMips,
 			double standardDivMips, double medianRam, double standardDivRam,
 			double bwFactor, double storageFactor) {
