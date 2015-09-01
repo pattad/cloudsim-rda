@@ -201,7 +201,7 @@ public class StochasticDataGenerator {
 	}
 
 	/**
-	 * Generates stochastic workloads in a waveing form.
+	 * Generates stochastic workloads in a waving form.
 	 * 
 	 * @param medianMips
 	 *            median of CPU

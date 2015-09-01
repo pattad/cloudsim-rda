@@ -18,12 +18,11 @@ import ch.uzh.ifi.csg.cloudsim.rda.provisioners.RamProvisioner;
 import ch.uzh.ifi.csg.cloudsim.rda.provisioners.StorageIOProvisioner;
 
 /**
- * This VM scheduler is the Dominan Resource Fairness (DRF) VM scheduler to be
- * used within the RDA module.
  * 
- * TODO: This is only a example implementation. Currently there are no
- * differences observable from the VmSchedulerDRF. The concept for such an
- * algorithm has to be developed and than implemented in this class.
+ * TODO: This is only an example class, with a possible implementation of multi
+ * host DRF algorithm. Currently there are no differences observable to the
+ * VmSchedulerDRF for only one hosts. The concept for such an algorithm has to
+ * be developed and than implemented in this class.
  * 
  * @author Patrick A. Taddei
  * @see MaxMinAlgorithm
